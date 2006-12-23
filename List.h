@@ -59,6 +59,9 @@ public:
 
 	List<TObject, TKey> &operator =(const List &list) { return assign(list); }
 	List<TObject, TKey> &assign(const List &list);
+	List<TObject, TKey> &merge(const List &list);
+	List<TObject, TKey> &mergeAscent(const List &list, bool unique_key = true);
+	List<TObject, TKey> &mergeDescent(const List &list, bool unique_key = true);
 
 	ListItem<TObject, TKey> *moveFirst();
 	ListItem<TObject, TKey> *moveLast();
@@ -78,15 +81,15 @@ public:
 	int addLastItem(ListItem<TObject, TKey> *item);
 	int addNextItem(ListItem<TObject, TKey> *item);
 	int addPrevItem(ListItem<TObject, TKey> *item);
-	int addAscentItem(ListItem<TObject, TKey> *item);
-	int addDescentItem(ListItem<TObject, TKey> *item);
+	int addAscentItem(ListItem<TObject, TKey> *item, bool from_last = true);
+	int addDescentItem(ListItem<TObject, TKey> *item, bool from_last = true);
 
 	int addFirst(TObject *obj, TKey key = 0);
 	int addLast(TObject *obj, TKey key = 0);
 	int addNext(TObject *obj, TKey key = 0);
 	int addPrev(TObject *obj, TKey key = 0);
-	int addAscent(TObject *obj, TKey key = 0);
-	int addDescent(TObject *obj, TKey key = 0);
+	int addAscent(TObject *obj, TKey key = 0, bool from_last = true);
+	int addDescent(TObject *obj, TKey key = 0, bool from_last = true);
 
 	int removeFirst();
 	int removeLast();
@@ -198,11 +201,99 @@ inline List<TObject, TKey> &List<TObject, TKey>::assign(const List &list)
 {
 	ListItem<TObject, TKey> *temp;
 	removeAll();
+	merge(list);
+	return *this;
+}
+
+template <class TObject, class TKey>
+inline List<TObject, TKey> &List<TObject, TKey>::merge(const List &list)
+{
+	ListItem<TObject, TKey> *temp;
 	temp = list.m_first;
 	while (temp != NULL) {
 		addLastItem(new ListItem<TObject, TKey>(*temp));
 		temp = temp->m_next;
 	}
+	return *this;
+}
+
+template <class TObject, class TKey>
+inline List<TObject, TKey> &List<TObject, TKey>::mergeAscent(const List &list, bool unique_key)
+{
+	ListItem<TObject, TKey> *temp, *item;
+	temp = m_current;
+	m_current = m_first;
+	item = list.m_first;
+	if (unique_key) {
+		while (m_current != NULL && item != NULL) {
+			if (m_current->m_key == item->m_key) {
+				item = item->m_next;
+			}
+			else if (m_current->m_key <= item->m_key) {
+				m_current = m_current->m_next;
+			}
+			else {
+				addPrevItem(new ListItem<TObject, TKey>(*item));
+				item = item->m_next;
+			}
+		}
+	}
+	else {
+		while (m_current != NULL && item != NULL) {
+			if (m_current->m_key <= item->m_key) {
+				m_current = m_current->m_next;
+			}
+			else {
+				addPrevItem(new ListItem<TObject, TKey>(*item));
+				item = item->m_next;
+			}
+		}
+	}
+	while (item != NULL) {
+		addLastItem(new ListItem<TObject, TKey>(*item));
+		item = item->m_next;
+	}
+	m_current = temp;
+	return *this;
+}
+
+template <class TObject, class TKey>
+inline List<TObject, TKey> &List<TObject, TKey>::mergeDescent(const List &list, bool unique_key)
+{
+	ListItem<TObject, TKey> *temp, *item;
+	temp = m_current;
+	m_current = m_first;
+	item = list.m_first;
+	if (unique_key) {
+		while (m_current != NULL && item != NULL) {
+			if (m_current->m_key == item->m_key) {
+				item = item->m_next;
+			}
+			else if (m_current->m_key >= item->m_key) {
+				m_current = m_current->m_next;
+			}
+			else {
+				addPrevItem(new ListItem<TObject, TKey>(*item));
+				item = item->m_next;
+			}
+		}
+	}
+	else {
+		while (m_current != NULL && item != NULL) {
+			if (m_current->m_key >= item->m_key) {
+				m_current = m_current->m_next;
+			}
+			else {
+				addPrevItem(new ListItem<TObject, TKey>(*item));
+				item = item->m_next;
+			}
+		}
+	}
+	while (item != NULL) {
+		addLastItem(new ListItem<TObject, TKey>(*item));
+		item = item->m_next;
+	}
+	m_current = temp;
 	return *this;
 }
 
@@ -388,27 +479,45 @@ inline int List<TObject, TKey>::addPrevItem(ListItem<TObject, TKey> *item)
 }
 
 template <class TObject, class TKey>
-inline int List<TObject, TKey>::addAscentItem(ListItem<TObject, TKey> *item)
+inline int List<TObject, TKey>::addAscentItem(ListItem<TObject, TKey> *item, bool from_last)
 {
 	ListItem<TObject, TKey> *temp = m_current;
-	m_current = m_first;
-	while (m_current != NULL && m_current->m_key < item->m_key) {
-		m_current = m_current->m_next;
+	if (from_last) {
+		m_current = m_last;
+		while (m_current != NULL && m_current->m_key > item->m_key) {
+			m_current = m_current->m_prev;
+		}
+		addNextItem(item);
 	}
-	addPrevItem(item);
+	else {
+		m_current = m_first;
+		while (m_current != NULL && m_current->m_key < item->m_key) {
+			m_current = m_current->m_next;
+		}
+		addPrevItem(item);
+	}
 	m_current = temp;
 	return m_size;
 }
 
 template <class TObject, class TKey>
-inline int List<TObject, TKey>::addDescentItem(ListItem<TObject, TKey> *item)
+inline int List<TObject, TKey>::addDescentItem(ListItem<TObject, TKey> *item, bool from_last)
 {
 	ListItem<TObject, TKey> *temp = m_current;
-	m_current = m_last;
-	while (m_current != NULL && m_current->m_key < item->m_key) {
-		m_current = m_current->m_prev;
+	if (from_last) {
+		m_current = m_last;
+		while (m_current != NULL && m_current->m_key < item->m_key) {
+			m_current = m_current->m_prev;
+		}
+		addNextItem(item);
 	}
-	addNextItem(item);
+	else {
+		m_current = m_first;
+		while (m_current != NULL && m_current->m_key > item->m_key) {
+			m_current = m_current->m_next;
+		}
+		addPrevItem(item);
+	}
 	m_current = temp;
 	return m_size;
 }
@@ -438,15 +547,15 @@ inline int List<TObject, TKey>::addPrev(TObject *obj, TKey key)
 }
 
 template <class TObject, class TKey>
-inline int List<TObject, TKey>::addAscent(TObject *obj, TKey key)
+inline int List<TObject, TKey>::addAscent(TObject *obj, TKey key, bool from_last)
 {
-	return addAscentItem(new ListItem<TObject, TKey> (obj, key));
+	return addAscentItem(new ListItem<TObject, TKey> (obj, key), from_last);
 }
 
 template <class TObject, class TKey>
-inline int List<TObject, TKey>::addDescent(TObject *obj, TKey key)
+inline int List<TObject, TKey>::addDescent(TObject *obj, TKey key, bool from_last)
 {
-	return addDescentItem(new ListItem<TObject, TKey> (obj, key));
+	return addDescentItem(new ListItem<TObject, TKey> (obj, key), from_last);
 }
 
 template <class TObject, class TKey>
