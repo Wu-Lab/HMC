@@ -5,7 +5,7 @@
 #include "HMC.h"
 
 
-const char *HMC::m_version = "0.6.003";
+const char *HMC::m_version = "0.6.004";
 const char *HMC::m_year = "2006";
 
 
@@ -69,17 +69,17 @@ void HMC::defineOptions()
 
 	// model options
 	option = m_args.addOption("mc_order", "mo", true);
-	option = m_args.addOption("min_freq_rel", "mfr", true, "0.002");
-	option = m_args.addOption("min_freq_abs", "mfa", true);
+	option = m_args.addOption("min_freq_rel", "mfr", true);
+	option = m_args.addOption("min_freq_abs", "mfa", true, "2.0");
 	option = m_args.addOption("min_pattern_len", "minpl", true);
-	option = m_args.addOption("max_pattern_len", "maxpl", true);
+	option = m_args.addOption("max_pattern_len", "maxpl", true, "30");
 	option = m_args.addOption("num_patterns", "np", true);
 
 	option = m_args.addOption("iteration_number", "i", true, "1");
 	option = m_args.addOption("output_patterns", "op", true);
 
 	// for poor machine
-	option = m_args.addOption("ram_limit", "ram", true, "100000");
+	option = m_args.addOption("ram_limit", "ram", true, "10000000");
 	option->addHelpInfo("Set memory limitation, used when the memory of the machine is poor.");
 
 	// conflicts between options
@@ -230,8 +230,7 @@ void HMC::run()
 
 void HMC::resolve()
 {
-	int i, iter, max_iter, max_geno;
-	double max_weight;
+	int i, iter, max_iter;
 	HaploData unphased_genos;
 	List<HaploPair, double> res_list;
 
@@ -249,36 +248,23 @@ void HMC::resolve()
 	max_iter = Utils::min(m_genos.unphased_num(), m_args.getOption("iteration_number")->getValueAsInt());
 	for (iter=0; iter<max_iter; iter++) {
 		m_builder.build(unphased_genos);
-		max_weight = 0;
-		max_geno = -1;
 		for (i=0; i<m_genos.unphased_num(); i++) {
-			if (!unphased_genos[i].isPhased()) {
+//			if (!unphased_genos[i].isPhased()) {
 				Logger::status("Iteration %d: Resolving Genotype[%d] %s ...", iter, i, m_genos[i].id());
 				m_builder.resolve(unphased_genos[i], m_resolutions.genotype(i), res_list);
 				m_resolutions.genotype(i).setID(m_genos[i].id());
 				if (res_list.size() == 0) {
 					Logger::warning("Unable to resolve Genotype[%d]: %s!", i, m_genos[i].id());
 				}
-				if (m_resolutions[i].weight() > max_weight) {
-					max_weight = m_resolutions[i].weight();
-					max_geno = i;
-				}
-			}
+				unphased_genos.genotype(i) = m_resolutions[i];
+				unphased_genos.genotype(i).setIsPhased(true);
+//			}
 		}
 
 		HaploComp compare(&m_genos, &m_resolutions);
 		Logger::info("");
 		Logger::info("  Switch Error = %f, IHP = %f, IGP = %f",
 			compare.switch_error(), compare.incorrect_haplotype_percentage(), compare.incorrect_genotype_percentage());
-
-		if (max_geno >= 0) {
-			m_resolutions.genotype(max_geno).setIsPhased(true);
-			unphased_genos.genotype(max_geno) = m_resolutions[max_geno];
-			Logger::debug("id: %d = %f", max_geno, max_weight);
-		}
-		else {
-			break;
-		}
 	}
 	Logger::verbose("");
 	Logger::endTimer(2);

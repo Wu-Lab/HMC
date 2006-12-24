@@ -192,8 +192,8 @@ void HaploData::checkAlleleFrequency()
 			for (k=0; k<m_genotype_len; k++) {
 				if (h[k] >= 0) {
 					l = getAlleleIndex(k, h[k]);
-					m_allele_frequency[k][l] += h.m_weight;
-					total_weight[k] += h.m_weight;
+					m_allele_frequency[k][l] += h.weight();
+					total_weight[k] += h.weight();
 				}
 			}
 		}

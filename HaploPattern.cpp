@@ -233,6 +233,7 @@ void HaploPattern::releaseMatchGenotype()
 double HaploPattern::checkFrequency()
 {
 	int i;
+	double w;
 	if (m_haplo_data != NULL) {
 		if (m_length == 0) {
 			m_frequency = m_genotype_num;
@@ -246,22 +247,24 @@ double HaploPattern::checkFrequency()
 			m_frequency = 0;
 			m_weight = 0;
 			for (i=0; i<m_genotype_num; i++) {
-				if (m_haplo_data->m_genotypes[i].isPhased()) {
-					m_match_genotype[i] = false;
-					m_match_frequency[i] = 0;
-					if (isMatch(m_haplo_data->m_genotypes[i](0))) {
-						m_match_genotype[i] = true;
-						m_frequency += 0.5;
+				m_match_genotype[i] = isMatch(m_haplo_data->m_genotypes[i]);
+				m_match_frequency[i] = 0;
+				if (m_match_genotype[i]) {
+					if (m_haplo_data->m_genotypes[i].isPhased()) {
+						if (m_haplo_data->m_genotypes[i].weight() < 1) {
+							m_match_frequency[i] = getMatchingFrequency(i, m_alleles, m_start, m_length);
+							m_frequency += m_match_frequency[i] * (1 - m_haplo_data->m_genotypes[i].weight());
+						}
+						w = 0;
+						if (isMatch(m_haplo_data->m_genotypes[i](0))) {
+							w += 0.5;
+						}
+						if (isMatch(m_haplo_data->m_genotypes[i](1))) {
+							w += 0.5;
+						}
+						m_frequency += w * m_haplo_data->m_genotypes[i].weight();
 					}
-					if (isMatch(m_haplo_data->m_genotypes[i](1))) {
-						m_match_frequency[i] = 1.0;
-						m_frequency += 0.5;
-					}
-
-				}
-				else {
-					m_match_genotype[i] = isMatch(m_haplo_data->m_genotypes[i]);
-					if (m_match_genotype[i]) {
+					else {
 						m_match_frequency[i] = getMatchingFrequency(i, m_alleles, m_start, m_length);
 						m_frequency += m_match_frequency[i];
 					}
@@ -275,6 +278,7 @@ double HaploPattern::checkFrequency()
 double HaploPattern::checkFrequencyWithExtension(int ext, int len)
 {
 	int i;
+	double w;
 	if (m_haplo_data != NULL) {
 		if (m_length == 0) {
 			m_frequency = m_genotype_num;
@@ -287,25 +291,27 @@ double HaploPattern::checkFrequencyWithExtension(int ext, int len)
 			m_frequency = 0;
 			m_weight = 0;
 			for (i=0; i<m_genotype_num; i++) {
-				if (m_haplo_data->m_genotypes[i].isPhased()) {
-					if (m_match_genotype[i] && isMatch(m_haplo_data->m_genotypes[i](0), ext, len)) {
-						m_frequency += 0.5;
-					}
-					else {
-						m_match_genotype[i] = false;
-					}
-					if (m_match_frequency[i] > 0 && isMatch(m_haplo_data->m_genotypes[i](1), ext, len)) {
-						m_frequency += 0.5;
-					}
-					else {
-						m_match_frequency[i] = 0.0;
-					}
-				}
-				else if (m_match_genotype[i]) {
+				if (m_match_genotype[i]) {
 					m_match_genotype[i] = isMatch(m_haplo_data->m_genotypes[i], ext, len);
 					if (m_match_genotype[i]) {
-						m_match_frequency[i] *= getMatchingFrequency(i, m_alleles+ext-m_start, ext, len);
-						m_frequency += m_match_frequency[i];
+						if (m_haplo_data->m_genotypes[i].isPhased()) {
+							if (m_haplo_data->m_genotypes[i].weight() < 1) {
+								m_match_frequency[i] *= getMatchingFrequency(i, m_alleles+ext-m_start, ext, len);
+								m_frequency += m_match_frequency[i] * (1 - m_haplo_data->m_genotypes[i].weight());
+							}
+							w = 0;
+							if (isMatch(m_haplo_data->m_genotypes[i](0))) {
+								w += 0.5;
+							}
+							if (isMatch(m_haplo_data->m_genotypes[i](1))) {
+								w += 0.5;
+							}
+							m_frequency += w * m_haplo_data->m_genotypes[i].weight();
+						}
+						else {
+							m_match_frequency[i] *= getMatchingFrequency(i, m_alleles+ext-m_start, ext, len);
+							m_frequency += m_match_frequency[i];
+						}
 					}
 				}
 			}

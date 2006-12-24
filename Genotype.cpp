@@ -61,7 +61,8 @@ void Genotype::setHaplotypes(Haplotype &h1, Haplotype &h2)
 	m_haplotypes[0] = h1;
 	m_haplotypes[1] = h2;
 	m_length = h1.length();
-	m_weight = h1.weight() * h2.weight();
+	m_weight = 1.0;
+	m_is_phased = false;
 	checkGenotype();
 }
 

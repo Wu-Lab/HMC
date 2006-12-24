@@ -65,7 +65,6 @@ Genotype HaploPair::getGenotype()
 			g.haplotypes(i) += (*m_patterns[i][j])[m_patterns[i][j]->m_length-1];
 			j++;
 		}
-		g.haplotypes(i).setWeight(m_weight);
 	}
 	g.setWeight(m_weight);
 	g.setLength(m_genotype_len);
