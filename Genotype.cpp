@@ -13,6 +13,7 @@ Genotype::Genotype()
 	m_id[0] = 0;
 	m_length = 0;
 	m_heterozygous_num = 0;
+	m_likelihood = 0;
 	m_weight = 1.0;
 	m_is_phased = false;
 }
@@ -24,6 +25,7 @@ Genotype::Genotype(int len)
 	m_id[0] = 0;
 	m_length = len;
 	m_heterozygous_num = 0;
+	m_likelihood = 0;
 	m_weight = 1.0;
 	m_is_phased = false;
 }
@@ -36,6 +38,7 @@ Genotype::Genotype(const Haplotype &h1, const Haplotype &h2)
 		m_id[0] = 0;
 		m_length = h1.length();
 		checkGenotype();
+		m_likelihood = 0;
 		m_weight = 1.0;
 		m_is_phased = false;
 	}
@@ -52,6 +55,7 @@ Genotype::Genotype(const Genotype &g)
 	strcpy(m_id, g.m_id);
 	m_length = g.m_length;
 	m_heterozygous_num = g.m_heterozygous_num;
+	m_likelihood = g.m_likelihood;
 	m_weight = g.m_weight;
 	m_is_phased = g.m_is_phased;
 }
@@ -61,6 +65,7 @@ void Genotype::setHaplotypes(Haplotype &h1, Haplotype &h2)
 	m_haplotypes[0] = h1;
 	m_haplotypes[1] = h2;
 	m_length = h1.length();
+	m_likelihood = 0;
 	m_weight = 1.0;
 	m_is_phased = false;
 	checkGenotype();
@@ -108,6 +113,7 @@ Genotype &Genotype::assign(const Genotype &g)
 	strcpy(m_id, g.m_id);
 	m_length = g.m_length;
 	m_heterozygous_num = g.m_heterozygous_num;
+	m_likelihood = g.m_likelihood;
 	m_weight = g.m_weight;
 	m_is_phased = g.m_is_phased;
 	return *this;
@@ -129,6 +135,7 @@ Genotype &Genotype::concatenate(const Genotype &g1, const Genotype &g2)
 	strcpy(m_id, g1.m_id);
 	m_length = g1.m_length + g2.m_length;
 	m_heterozygous_num = g1.m_heterozygous_num + g2.m_heterozygous_num;
+	m_likelihood = g1.m_likelihood;
 	m_weight = g1.m_weight;
 	m_is_phased = g1.m_is_phased;
 	return *this;

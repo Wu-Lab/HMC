@@ -33,6 +33,7 @@ public:
 	~HaploPattern();
 
 	const HaploData *haplo_data() { return m_haplo_data; }
+	unsigned int id() { return m_id; }
 	int start() const { return m_start; }
 	int end() const { return m_end; }
 	double frequency() const { return m_frequency; }
@@ -57,10 +58,13 @@ public:
 
 	bool isMatch(const Haplotype &h) const;
 	bool isMatch(const Genotype &g) const;
+	bool isMatch(const HaploPattern &hp) const;
 	bool isMatch(const Haplotype &h, int locus) const;
 	bool isMatch(const Genotype &g, int locus) const;
+	bool isMatch(const HaploPattern &hp, int locus) const;
 	bool isMatch(const Haplotype &h, int start, int len) const;
 	bool isMatch(const Genotype &g, int start, int len) const;
+	bool isMatch(const HaploPattern &hp, int start, int len) const;
 
 	char *read(char *buffer, int len = 0);
 	char *write(char *buffer, bool long_format = true) const;
@@ -107,6 +111,20 @@ inline bool HaploPattern::isMatch(const Genotype &g) const
 	return g.isMatch(*this, m_start, 0, m_length);	
 }
 
+inline bool HaploPattern::isMatch(const HaploPattern &hp) const
+{
+	int start, len;
+	start = m_start > hp.m_start ? m_start : hp.m_start;
+	len = m_end < hp.m_end ? m_end : hp.m_end;
+	len -= start;
+	if (len <= 0) {
+		return true;
+	}
+	else {
+		return isMatch(hp, start, len);
+	}
+}
+
 inline bool HaploPattern::isMatch(const Haplotype &h, int locus) const
 {
 	return h.isMatch(m_alleles[locus-m_start], locus);	
@@ -117,6 +135,16 @@ inline bool HaploPattern::isMatch(const Genotype &g, int locus) const
 	return g.isMatch(m_alleles[locus-m_start], locus);	
 }
 
+inline bool HaploPattern::isMatch(const HaploPattern &hp, int locus) const
+{
+	if (locus < m_start || locus >= m_end || locus < hp.m_start || locus >= hp.m_end) {
+		return true;
+	}
+	else {
+		return AlleleSequence::isMatch(hp.m_alleles[locus-hp.m_start], locus-m_start);
+	}
+}
+
 inline bool HaploPattern::isMatch(const Haplotype &h, int start, int len) const
 {
 	return h.isMatch(*this, start, start-m_start, len);	
@@ -125,6 +153,11 @@ inline bool HaploPattern::isMatch(const Haplotype &h, int start, int len) const
 inline bool HaploPattern::isMatch(const Genotype &g, int start, int len) const
 {
 	return g.isMatch(*this, start, start-m_start, len);	
+}
+
+inline bool HaploPattern::isMatch(const HaploPattern &hp, int start, int len) const
+{
+	return AlleleSequence::isMatch(hp, start-m_start, start-hp.m_start, len);
 }
 
 inline double HaploPattern::checkFrequencyWithExtension(int ext)

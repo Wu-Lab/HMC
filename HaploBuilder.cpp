@@ -187,6 +187,7 @@ HaploBuilder::HaploBuilder()
 	m_pattern_tree = NULL;
 	m_heads = NULL;
 	m_best_pair = NULL;
+	m_target_pattern = NULL;
 }
 
 HaploBuilder::~HaploBuilder()
@@ -204,6 +205,7 @@ void HaploBuilder::clear()
 	m_pattern_tree = NULL;
 	m_heads = NULL;
 	m_best_pair = NULL;
+	m_target_pattern = NULL;
 }
 
 void HaploBuilder::setHaploData(HaploData &hd)
@@ -271,48 +273,60 @@ void HaploBuilder::initialize()
 	m_best_pair = new List<ListItem<HaploPair>, int> [m_pattern_num];
 }
 
-void HaploBuilder::adjust(const Haplotype &h_old, const Haplotype &h_new)
+void HaploBuilder::adjust()
 {
-	int i, j;
+	int i;
+	double *new_frequency;
 	HaploPattern *hp;
-	for (i=m_head_len; i<=m_genotype_len; i++) {
-// 		j = i;
-// 		while (j > 0) {
-// 			hp = m_pattern_tree->findLongestMatchPattern(i, &h_old, j, i-j);
-// 			if (hp != NULL) {
-// 				hp->m_weight -= 0.5;
-// 				j = hp->m_length - 1;
-// 			}
-// 			else {
-// 				break;
-// 			}
-// 		}
-		j = i;
-		while (j > i-1) {
-			hp = m_pattern_tree->findLongestMatchPattern(i, &h_new, j, i-j);
-			if (hp != NULL) {
-				hp->m_weight += 1;
-				j = hp->m_length - 1;
-			}
-			else {
-				break;
+	Genotype res;
+	List<HaploPair, double> res_list;
+	new_frequency = new double [m_pattern_num];
+	hp = m_haplo_pattern.getFirst();
+	while (hp != NULL) {
+		new_frequency[hp->id()] = 0;
+		for (i=0; i<m_haplo_data->m_genotype_num; i++) {
+			if (hp->isMatch(m_haplo_data->genotype(i))) {
+				resolve(m_haplo_data->genotype(i), res, res_list, hp);
+				new_frequency[hp->id()] += res.likelihood() / m_haplo_data->genotype(i).likelihood();
 			}
 		}
+		Logger::status("Adjust haplotype patterns: %d     ", hp->id());
+		hp = m_haplo_pattern.getNext();
 	}
+	hp = m_haplo_pattern.getFirst();
+	while (hp != NULL) {
+		hp->m_frequency = new_frequency[hp->id()];
+		hp = m_haplo_pattern.getNext();
+	}
+	hp = m_haplo_pattern.getFirst();
+	while (hp != NULL) {
+		if (hp->m_prefix != NULL) {
+			if (hp->m_frequency > hp->m_prefix->m_frequency) {
+				Logger::error("Mistake in adjusting the pattern frequencies!");
+				exit(1);
+			}
+			if (hp->m_prefix->m_frequency > 1e-6) {
+				hp->m_transition_prob = hp->m_frequency / hp->m_prefix->m_frequency;
+			}
+			else {
+				hp->m_transition_prob = 0;
+			}
+		}
+		else {
+			hp->m_transition_prob = hp->m_frequency / m_haplo_data->m_genotype_num;
+		}
+		hp = m_haplo_pattern.getNext();
+	}
+	delete[] new_frequency;
 }
 
-void HaploBuilder::adjust(const Genotype &g_old, const Genotype &g_new)
-{
-	adjust(g_old(0), g_new(0));
-	adjust(g_old(1), g_new(1));
-}
-
-void HaploBuilder::resolve(const Genotype &genotype, Genotype &resolution, List<HaploPair, double> &res_list)
+void HaploBuilder::resolve(const Genotype &genotype, Genotype &resolution, List<HaploPair, double> &res_list, HaploPattern *target_pattern)
 {
 	int i, j, k;
 	Allele a, b;
 	double weight, total_likelihood;
 	HaploPair *hp, *best;
+	m_target_pattern = target_pattern;
 	m_last_list = new List<HaploPair>;
 	m_new_list = new List<HaploPair>;
 	initHeadList(genotype);
@@ -352,32 +366,37 @@ void HaploBuilder::resolve(const Genotype &genotype, Genotype &resolution, List<
 		delete m_last_list;
 		m_last_list = m_new_list;
 		m_new_list = new List<HaploPair>;
+		if (m_last_list->size() <= 0) {
+			break;
+		}
 	}
 	for (i=0; i<m_pattern_num; i++) {
 		m_best_pair[i].releaseAll();
 	}
-	weight = m_haplo_data->m_genotype_num * m_haplo_data->m_genotype_num;
-	total_likelihood = 0;
-	res_list.removeAll();
-	hp = m_last_list->getFirst();
-	while (hp != NULL) {
-		hp->m_likelihood /= weight;
-		hp->m_total_likelihood /= weight;
-		total_likelihood += hp->m_total_likelihood;
-		res_list.addDescent(hp, hp->m_likelihood);
-		hp = m_last_list->getNext();
-	}
-	m_last_list->releaseAll();
-	hp = res_list.getFirst();
-	best = hp;
-	while (hp != NULL) {
-		if (hp->m_likelihood >= best->m_likelihood) {
-			best = hp;
+	if (m_last_list->size() > 0) {
+		weight = m_haplo_data->m_genotype_num * m_haplo_data->m_genotype_num;
+		total_likelihood = 0;
+		res_list.removeAll();
+		hp = m_last_list->getFirst();
+		while (hp != NULL) {
+			hp->m_likelihood /= weight;
+			hp->m_total_likelihood /= weight;
+			total_likelihood += hp->m_total_likelihood;
+			res_list.addDescent(hp, hp->m_likelihood);
+			hp = m_last_list->getNext();
 		}
-		hp->m_weight = hp->m_likelihood / total_likelihood;
-		hp = res_list.getNext();
+		m_last_list->releaseAll();
+		best = res_list.getFirst();
+		resolution = best->getGenotype();
+		resolution.setLikelihood(total_likelihood);
+		resolution.setWeight(best->likelihood() / total_likelihood);
 	}
-	resolution = best->getGenotype();
+	else {
+		res_list.removeAll();
+		resolution = genotype;
+		resolution.setLikelihood(0);
+		resolution.setWeight(0);
+	}
 	delete m_last_list;
 	delete m_new_list;
 }
@@ -457,7 +476,7 @@ void HaploBuilder::initHeadList(const Genotype &genotype)
 			as = as_list.getFirst();
 			while (as != NULL) {
 				hp = m_pattern_tree->findLongestMatchPattern(m_head_len, as);
-				if (hp != NULL && hp->m_id >= m_heads[i]->m_id) addHaploPair(m_last_list, new HaploPair(m_heads[i], hp));
+				if (hp != NULL && hp->m_id >= m_heads[i]->m_id) addHaploPair(m_last_list, new HaploPair(m_heads[i], hp, m_target_pattern));
 				as = as_list.getNext();
 			}
 			as_list.removeAll();
@@ -479,25 +498,13 @@ void HaploBuilder::extendAll(Allele a1, Allele a2)
 void HaploBuilder::extend(HaploPair *hp, Allele a1, Allele a2)
 {
 	HaploPair *new_hp;
-	HaploPattern *c1, *c2;
 	int b1, b2;
 	b1 = m_haplo_data->getAlleleIndex(hp->end(), a1);
 	b2 = m_haplo_data->getAlleleIndex(hp->end(), a2);
-	if (hp->extendable(b1, b2)) {
+	if (hp->extendable(b1, b2, m_target_pattern)) {
 		new_hp = new HaploPair(*hp);
 		new_hp->extend(b1, b2);
 		addHaploPair(m_new_list, new_hp);
-// 		c1 = m_pattern_tree->getSingleAllelePattern(hp->end()+1, b1);
-// 		c2 = m_pattern_tree->getSingleAllelePattern(hp->end()+1, b2);
-// 		new_hp = new HaploPair(*hp);
-// 		new_hp->extend(b1, b2, c1, NULL);
-// 		addHaploPair(m_new_list, new_hp);
-// 		new_hp = new HaploPair(*hp);
-// 		new_hp->extend(b1, b2, NULL, c2);
-// 		addHaploPair(m_new_list, new_hp);
-// 		new_hp = new HaploPair(*hp);
-// 		new_hp->extend(b1, b2, c1, c2);
-// 		addHaploPair(m_new_list, new_hp);
 	}
 }
 

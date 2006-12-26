@@ -11,13 +11,13 @@ class HaploPair {
 	int m_end;
 	int m_genotype_len;
 	HaploPattern **m_patterns[2];
-	double m_weight;
 	double m_likelihood;
 	double m_total_likelihood;
 	bool m_homogenous;
+	bool m_half, m_match_a, m_match_b, m_match_next_a, m_match_next_b;
 
 public:
-	HaploPair(HaploPattern *hpa, HaploPattern *hpb);
+	HaploPair(HaploPattern *hpa, HaploPattern *hpb, HaploPattern *target_pattern = NULL);
 	HaploPair(const HaploPair &hp);
 	~HaploPair();
 
@@ -28,8 +28,8 @@ public:
 	Genotype getGenotype();
 
 	void getID(int id[2]);
-	bool extendable(int a, int b);
-	void extend(int a, int b, HaploPattern *hpa = NULL, HaploPattern *hpb = NULL);
+	bool extendable(int a, int b, HaploPattern *target_pattern = NULL);
+	void extend(int a, int b);
 
 	friend class HaploBuilder;
 };

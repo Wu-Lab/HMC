@@ -3,9 +3,10 @@
 #include <math.h>
 
 #include "HMC.h"
+#include "Version.h"
 
 
-const char *HMC::m_version = "0.6.004";
+const char *HMC::m_version = "0.6.5";
 const char *HMC::m_year = "2006";
 
 
@@ -246,8 +247,9 @@ void HMC::resolve()
 
 	m_resolutions = unphased_genos;
 	max_iter = Utils::min(m_genos.unphased_num(), m_args.getOption("iteration_number")->getValueAsInt());
+	m_builder.build(unphased_genos);
 	for (iter=0; iter<max_iter; iter++) {
-		m_builder.build(unphased_genos);
+		double ll = 0;
 		for (i=0; i<m_genos.unphased_num(); i++) {
 //			if (!unphased_genos[i].isPhased()) {
 				Logger::status("Iteration %d: Resolving Genotype[%d] %s ...", iter, i, m_genos[i].id());
@@ -257,14 +259,17 @@ void HMC::resolve()
 					Logger::warning("Unable to resolve Genotype[%d]: %s!", i, m_genos[i].id());
 				}
 				unphased_genos.genotype(i) = m_resolutions[i];
-				unphased_genos.genotype(i).setIsPhased(true);
+// 				unphased_genos.genotype(i).setIsPhased(true);
 //			}
+			ll += log(m_resolutions[i].likelihood());
 		}
 
 		HaploComp compare(&m_genos, &m_resolutions);
 		Logger::info("");
-		Logger::info("  Switch Error = %f, IHP = %f, IGP = %f",
-			compare.switch_error(), compare.incorrect_haplotype_percentage(), compare.incorrect_genotype_percentage());
+		Logger::info("  Switch Error = %f, IHP = %f, IGP = %f, LL = %f",
+			compare.switch_error(), compare.incorrect_haplotype_percentage(), compare.incorrect_genotype_percentage(), ll);
+
+		m_builder.adjust();
 	}
 	Logger::verbose("");
 	Logger::endTimer(2);

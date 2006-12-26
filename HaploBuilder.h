@@ -63,6 +63,7 @@ protected:
 	List<ListItem<HaploPair>, int> *m_best_pair;
 	List<HaploPair> *m_last_list;
 	List<HaploPair> *m_new_list;
+	HaploPattern *m_target_pattern;
 
 public:
 	HaploBuilder();
@@ -74,10 +75,9 @@ public:
 	void setHaploData(HaploData &hd);
 
 	void initialize();
-	void adjust(const Haplotype &h_old, const Haplotype &h_new);
-	void adjust(const Genotype &g_old, const Genotype &g_new);
+	void adjust();
 
-	void resolve(const Genotype &genotype, Genotype &resolution, List<HaploPair, double> &res_list);
+	void resolve(const Genotype &genotype, Genotype &resolution, List<HaploPair, double> &res_list, HaploPattern *target_pattern = NULL);
 
 	double getLikelihood(const Haplotype &haplotype);
 	double getLikelihood(const Genotype &genotype);

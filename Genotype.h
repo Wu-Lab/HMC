@@ -14,6 +14,7 @@ protected:
 	int m_heterozygous_num;
 	int m_missing_num;
 	int m_missing_allele_num;
+	double m_likelihood;
 	double m_weight;
 	bool m_is_phased;
 
@@ -30,11 +31,13 @@ public:
 	int heterozygous_num() const { return m_heterozygous_num; }
 	int missing_num() const { return m_missing_num; }
 	int missing_allele_num() const { return m_missing_allele_num; }
+	double likelihood() const { return m_likelihood; }
 	double weight() const { return m_weight; }
 	bool isPhased() const { return m_is_phased; }
 
 	void setID(const char *id) { strcpy(m_id, id); }
 	void setLength(int len) { m_length = len; }
+	void setLikelihood(double likelihood) { m_likelihood = likelihood; }
 	void setWeight(double weight) { m_weight = weight; }
 	void setIsPhased(bool state) { m_is_phased = state; }
 	void setHaplotypes(Haplotype &h1, Haplotype &h2);
