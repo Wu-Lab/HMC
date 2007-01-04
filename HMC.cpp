@@ -6,8 +6,8 @@
 #include "Version.h"
 
 
-const char *HMC::m_version = "0.6.5";
-const char *HMC::m_year = "2006";
+const char *HMC::m_version = "0.7.0";
+const char *HMC::m_year = "2007";
 
 
 HMC::HMC(int argc, char *argv[])
