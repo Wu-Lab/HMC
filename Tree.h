@@ -129,9 +129,13 @@ inline TreeNode<TObject, TKey>::TreeNode(const TreeNode &node)
 template <class TObject, class TKey>
 inline TreeNode<TObject, TKey>::~TreeNode()
 {
+	int i;
 	delete m_object;
 	m_key = 0;
 	m_parent = NULL;
+	for (i=0; i<m_children_num; i++) {
+		delete m_children[i];
+	}
 	delete[] m_children;
 	m_children = NULL;
 	m_children_num = 0;
@@ -142,6 +146,9 @@ inline void TreeNode<TObject, TKey>::setChildrenNum(int child_num)
 {
 	int i;
 	if (m_children_num != child_num) {
+		for (i=0; i<m_children_num; i++) {
+			delete m_children[i];
+		}
 		delete[] m_children;
 		m_children_num = child_num;
 		m_children = new TreeNode * [m_children_num];

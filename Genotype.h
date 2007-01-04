@@ -3,6 +3,7 @@
 #define __GENOTYPE_H
 
 
+#include "Utils.h"
 #include "Haplotype.h"
 
 

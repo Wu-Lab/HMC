@@ -3,14 +3,24 @@
 #define __UTILS_H
 
 
+#include <list>
+#include <vector>
+#include <deque>
+#include <stack>
+#include <algorithm>
+
 #include <stdio.h>
 #include <stdarg.h>
 #include <string.h>
 #include <time.h>
 
+#include "MemLeak.h"
 #include "List.h"
 #include "Tree.h"
 #include "Matrix.h"
+
+
+using namespace std;
 
 
 class Utils {
@@ -227,6 +237,19 @@ public:
 
 	char *printDef(char *buffer);
 	char *printVal(char *buffer);
+};
+
+
+// something for using with STL
+
+struct DeleteObject {
+	template<typename T>
+	void operator()(const T* ptr) const { delete ptr; }
+};
+
+template<typename T>
+void DeleteAllObjects(const T& c) {
+	for_each(c.begin(), c.end(), DeleteObject());
 };
 
 

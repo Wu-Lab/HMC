@@ -3,12 +3,13 @@
 #define __HAPLOPAIR_H
 
 
+#include "Utils.h"
 #include "Genotype.h"
 #include "HaploPattern.h"
 
 
 class HaploPair {
-	int m_end;
+	int m_end, m_id[2];
 	int m_genotype_len;
 	HaploPattern **m_patterns[2];
 	double m_likelihood;
@@ -27,12 +28,21 @@ public:
 
 	Genotype getGenotype();
 
-	void getID(int id[2]);
 	bool extendable(int a, int b, HaploPattern *target_pattern = NULL);
+	void extend_trial(int a, int b, int id[2], double &likelihood, double &total_likelihood);
 	void extend(int a, int b);
 
+	static void getID(int id[2], HaploPattern *hpa, HaploPattern *hpb);
+
 	friend class HaploBuilder;
+	friend bool greater_likelihood(const HaploPair *hp1, const HaploPair *hp2);
 };
+
+
+inline bool greater_likelihood(const HaploPair *hp1, const HaploPair *hp2)
+{
+	return hp1->m_likelihood > hp2->m_likelihood;
+}
 
 
 #endif // __HAPLOPAIR_H

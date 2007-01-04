@@ -3,6 +3,7 @@
 #define __HAPLOFILE_H
 
 
+#include "Utils.h"
 #include "HaploData.h"
 #include "HaploPattern.h"
 #include "HaploBuilder.h"

@@ -125,6 +125,7 @@ void HaploFile::writePattern(HaploBuilder &hb, const char *suffix)
 	FILE *fp;
 	char output_file[STR_LEN_FILE_NAME], buf[STR_LEN_FILE_LINE];
 	HaploPattern *hp;
+	list<HaploPattern*>::iterator i_hp;
 	m_haplo_data = hb.haplo_data();
 	makeFileName(output_file, suffix);
 	fp = fopen(output_file, "w");
@@ -133,10 +134,9 @@ void HaploFile::writePattern(HaploBuilder &hb, const char *suffix)
 		exit(1);
 	}
 	fprintf(fp, "Frequency\tLength\t%s\n", writeAlleleName(buf));
-	hp = hb.haplo_pattern().getFirst();
-	while (hp != NULL) {
+	for (i_hp = hb.haplo_pattern().begin(); i_hp != hb.haplo_pattern().end(); i_hp++) {
+		hp = *i_hp;
 		fprintf(fp, "%f\t%d\t%s\n", hp->frequency() / m_haplo_data->genotype_num(), hp->length(), hp->write(buf, true));
-		hp = hb.haplo_pattern().getNext();
 	}
 	fclose(fp);
 }

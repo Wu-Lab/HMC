@@ -12,6 +12,17 @@ HaploModel::HaploModel()
 	m_min_freq_rel = -1;
 }
 
+double HaploModel::getMinFreq() const
+{
+	double min_freq;
+	if (m_min_freq_abs > 0) {
+		return m_min_freq_abs;
+	}
+	else {
+		return m_min_freq_rel * m_haplo_data->genotype_num();
+	}
+}
+
 void HaploModel::build(HaploData &hd)
 {
 	setHaploData(hd);

@@ -3,6 +3,7 @@
 #define __HMC_H
 
 
+#include "Utils.h"
 #include "HaploData.h"
 #include "HaploFile.h"
 #include "HaploModel.h"
@@ -21,6 +22,7 @@ class HMC {
 
 public:
 	HMC(int argc = 0, char *argv[] = NULL);
+	~HMC();
 
 	void usage();
 	void copyright();

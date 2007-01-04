@@ -3,6 +3,7 @@
 #define __HAPLOCOMP_H
 
 
+#include "Utils.h"
 #include "HaploData.h"
 
 

@@ -50,19 +50,18 @@ inline HaploPattern *PatternTree::getSingleAllelePattern(int end, int index)
 class HaploBuilder {
 protected:
 	HaploData *m_haplo_data;
-	List<HaploPattern> m_haplo_pattern;
+	list<HaploPattern*> m_haplo_pattern;
 	int m_genotype_len;
 	int m_pattern_num;
 
 	PatternTree *m_pattern_tree;
-	HaploPattern **m_heads;
-	int m_head_num;
+	list<HaploPattern*> m_head_list;
 	int m_head_len;
 
 	Haplotype *m_genotype;
-	List<ListItem<HaploPair>, int> *m_best_pair;
-	List<HaploPair> *m_last_list;
-	List<HaploPair> *m_new_list;
+	vector<pair<int, int> > *m_best_pair;
+	vector<HaploPair*> m_last_list;
+	vector<HaploPair*> m_new_list;
 	HaploPattern *m_target_pattern;
 
 public:
@@ -70,14 +69,14 @@ public:
 	~HaploBuilder();
 
 	HaploData *haplo_data() { return m_haplo_data; }
-	List<HaploPattern> &haplo_pattern() { return m_haplo_pattern; }
+	list<HaploPattern*> &haplo_pattern() { return m_haplo_pattern; }
 
 	void setHaploData(HaploData &hd);
 
 	void initialize();
-	void adjust();
+	void adjust(double min_freq = 0);
 
-	void resolve(const Genotype &genotype, Genotype &resolution, List<HaploPair, double> &res_list, HaploPattern *target_pattern = NULL);
+	void resolve(const Genotype &genotype, Genotype &resolution, vector<HaploPair*> &res_list, HaploPattern *target_pattern = NULL);
 
 	double getLikelihood(const Haplotype &haplotype);
 	double getLikelihood(const Genotype &genotype);
@@ -88,15 +87,15 @@ protected:
 
 	void extendAll(Allele a1, Allele a2);
 	void extend(HaploPair *hp, Allele a1, Allele a2);
-	void addHaploPair(List<HaploPair> *hp_list, HaploPair *hp);
+	void addHaploPair(vector<HaploPair*> &hp_list, HaploPair *hp);
 
 	void findHaploPatternByFreq(double min_freq, int min_len = 1, int max_len = -1);
 	void findHaploPatternByNum(int max_num, int min_len = 1, int max_len = -1);
 	void findHaploPatternBlockByFreq(double min_freq, int min_len = 1, int max_len = -1);
 	void findHaploPatternBlockByNum(int max_num, int min_len = 1, int max_len = -1);
 
-	void generateHaploPatternCandidate(List<HaploPattern> &candidates);
-	void searchHaploPattern(List<HaploPattern> &candidates, double min_freq, int min_num, int *min_len, int *max_len);
+	void generateHaploPatternCandidate(vector<HaploPattern*> &candidates);
+	void searchHaploPattern(vector<HaploPattern*> &candidates, double min_freq, int min_num, int *min_len, int *max_len);
 	void searchHaploPatternBlock(int min_len, int max_len);
 
 	friend class HaploData;

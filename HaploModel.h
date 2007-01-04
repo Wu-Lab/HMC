@@ -3,6 +3,7 @@
 #define __HAPLOMODEL_H
 
 
+#include "Utils.h"
 #include "HaploBuilder.h"
 
 
@@ -21,12 +22,20 @@ protected:
 public:
 	HaploModel();
 
+	int min_pattern_len() const { return m_min_pattern_len; }
+	int max_pattern_len() const { return m_max_pattern_len; }
+	int num_patterns() const { return m_num_patterns; }
+	double min_freq_abs() const { return m_min_freq_abs; }
+	double min_freq_rel() const { return m_min_freq_rel; }
+
 	void setModel(HaploModelTypes model) { m_model = model; }
 	void setMinPatternLen(int len) { m_min_pattern_len = len; }
 	void setMaxPatternLen(int len) { m_max_pattern_len = len; }
 	void setNumPatterns(int num) { m_num_patterns = num; }
 	void setMinFreqAbs(double freq) { m_min_freq_abs = freq; }
 	void setMinFreqRel(double freq) { m_min_freq_rel = freq; }
+
+	double getMinFreq() const;
 
 	void build(HaploData &hd);
 

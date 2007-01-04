@@ -19,6 +19,7 @@ HaploPair::HaploPair(HaploPattern *hpa, HaploPattern *hpb, HaploPattern *target_
 	}
 	m_patterns[0][m_end] = hpa;
 	m_patterns[1][m_end] = hpb;
+	getID(m_id, hpa, hpb);
 	m_likelihood = hpa->m_frequency * hpb->m_frequency;
 	m_total_likelihood = m_likelihood;
 	m_homogenous = false;
@@ -46,6 +47,7 @@ HaploPair::HaploPair(HaploPattern *hpa, HaploPattern *hpb, HaploPattern *target_
 HaploPair::HaploPair(const HaploPair &hp)
 {
 	int i;
+	Logger::resumeTimer(3);
 	m_end = hp.m_end;
 	m_genotype_len = hp.m_genotype_len;
 	m_patterns[0] = new HaploPattern * [m_genotype_len+1];
@@ -62,6 +64,7 @@ HaploPair::HaploPair(const HaploPair &hp)
 	m_match_b = hp.m_match_b;
 	m_match_next_a = hp.m_match_next_a;
 	m_match_next_b = hp.m_match_next_b;
+	Logger::pauseTimer(3);
 }
 
 HaploPair::~HaploPair()
@@ -86,31 +89,6 @@ Genotype HaploPair::getGenotype()
 	g.setLength(m_genotype_len);
 	g.checkGenotype();
 	return g;
-}
-
-void HaploPair::getID(int id[2])
-{
-	if (m_patterns[0][m_end] == NULL || m_patterns[1][m_end] == NULL) {
-		id[0] = -1;
-		id[1] = -1;
-		Logger::warning("Invalid HaploPair!");
-	}
-	else if (m_patterns[0][m_end]->m_start < m_patterns[1][m_end]->m_start) {
-		id[0] = m_patterns[0][m_end]->m_id;
-		id[1] = m_patterns[1][m_end]->m_id;
-	}
-	else if (m_patterns[0][m_end]->m_start > m_patterns[1][m_end]->m_start) {
-		id[0] = m_patterns[1][m_end]->m_id;
-		id[1] = m_patterns[0][m_end]->m_id;
-	}
-	else if (m_patterns[0][m_end]->m_id < m_patterns[1][m_end]->m_id) {
-		id[0] = m_patterns[0][m_end]->m_id;
-		id[1] = m_patterns[1][m_end]->m_id;
-	}
-	else {
-		id[0] = m_patterns[1][m_end]->m_id;
-		id[1] = m_patterns[0][m_end]->m_id;
-	}
 }
 
 bool HaploPair::extendable(int a, int b, HaploPattern *target_pattern)
@@ -145,16 +123,33 @@ bool HaploPair::extendable(int a, int b, HaploPattern *target_pattern)
 	return false;
 }
 
+void HaploPair::extend_trial(int a, int b, int id[2], double &likelihood, double &total_likelihood)
+{
+	HaploPattern *hpa, *hpb;
+	hpa = m_patterns[0][m_end]->m_successors[a];
+	hpb = m_patterns[1][m_end]->m_successors[b];
+	getID(id, hpa, hpb);
+	likelihood = m_likelihood * hpa->m_transition_prob * hpb->m_transition_prob;
+	total_likelihood = m_total_likelihood * hpa->m_transition_prob * hpb->m_transition_prob;
+	if (m_half) {
+		likelihood *= 0.5;
+		total_likelihood *= 0.5;
+	}
+}
+
+
 void HaploPair::extend(int a, int b)
 {
-	m_patterns[0][m_end+1] = m_patterns[0][m_end]->m_successors[a];
-	m_patterns[1][m_end+1] = m_patterns[1][m_end]->m_successors[b];
-	m_end++;
-	m_likelihood *= m_patterns[0][m_end]->m_transition_prob;
-	m_likelihood *= m_patterns[1][m_end]->m_transition_prob;
-	m_total_likelihood *= m_patterns[0][m_end]->m_transition_prob;
-	m_total_likelihood *= m_patterns[1][m_end]->m_transition_prob;
-	if (m_homogenous && m_patterns[0][m_end]->m_id != m_patterns[1][m_end]->m_id) {
+	HaploPattern *hpa, *hpb;
+	hpa = m_patterns[0][m_end]->m_successors[a];
+	hpb = m_patterns[1][m_end]->m_successors[b];
+	m_patterns[0][m_end+1] = hpa;
+	m_patterns[1][m_end+1] = hpb;
+	m_likelihood *= hpa->m_transition_prob;
+	m_likelihood *= hpb->m_transition_prob;
+	m_total_likelihood *= hpa->m_transition_prob;
+	m_total_likelihood *= hpb->m_transition_prob;
+	if (m_homogenous && hpa->m_id != hpb->m_id) {
 		m_homogenous = false;
 	}
 	if (m_half) {
@@ -164,4 +159,31 @@ void HaploPair::extend(int a, int b)
 	m_half = false;
 	m_match_a = m_match_next_a;
 	m_match_b = m_match_next_b;
+	getID(m_id, hpa, hpb);
+	m_end++;
+}
+
+void HaploPair::getID(int id[2], HaploPattern *hpa, HaploPattern *hpb)
+{
+	if (hpa == NULL || hpb == NULL) {
+		id[0] = -1;
+		id[1] = -1;
+		Logger::warning("Invalid HaploPair ID!");
+	}
+	else if (hpa->m_start < hpb->m_start) {
+		id[0] = hpa->m_id;
+		id[1] = hpb->m_id;
+	}
+	else if (hpa->m_start > hpb->m_start) {
+		id[0] = hpb->m_id;
+		id[1] = hpa->m_id;
+	}
+	else if (hpa->m_id < hpb->m_id) {
+		id[0] = hpa->m_id;
+		id[1] = hpb->m_id;
+	}
+	else {
+		id[0] = hpb->m_id;
+		id[1] = hpa->m_id;
+	}
 }

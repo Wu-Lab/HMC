@@ -3,6 +3,7 @@
 #define __HAPLODATA_H
 
 
+#include "Utils.h"
 #include "Genotype.h"
 
 

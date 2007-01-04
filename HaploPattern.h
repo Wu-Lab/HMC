@@ -3,6 +3,7 @@
 #define __HAPLOPATTERN_H
 
 
+#include "Utils.h"
 #include "Allele.h"
 #include "Haplotype.h"
 #include "Genotype.h"

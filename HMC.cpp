@@ -17,6 +17,11 @@ HMC::HMC(int argc, char *argv[])
 	parseOptions(argc, argv);
 }
 
+HMC::~HMC()
+{
+	delete m_haplo_file;
+}
+
 void HMC::usage()
 {
 	char buf[10000];
@@ -233,10 +238,12 @@ void HMC::resolve()
 {
 	int i, iter, max_iter;
 	HaploData unphased_genos;
-	List<HaploPair, double> res_list;
+	vector<HaploPair*> res_list;
 
 	Logger::verbose("");
-	Logger::beginTimer(2, "Resolve Genotype");
+	Logger::beginTimer(3, "Find bottleneck");
+
+	Logger::pauseTimer(3);
 
 	unphased_genos = m_genos;
 	unphased_genos.randomizePhase();
@@ -244,10 +251,13 @@ void HMC::resolve()
 	Logger::info("");
 	Logger::info("  Switch Error = %f, IHP = %f, IGP = %f",
 		compare.switch_error(), compare.incorrect_haplotype_percentage(), compare.incorrect_genotype_percentage());
-
 	m_resolutions = unphased_genos;
-	max_iter = Utils::min(m_genos.unphased_num(), m_args.getOption("iteration_number")->getValueAsInt());
 	m_builder.build(unphased_genos);
+
+	Logger::verbose("");
+	Logger::beginTimer(2, "Resolve Genotype");
+
+	max_iter = Utils::min(m_genos.unphased_num(), m_args.getOption("iteration_number")->getValueAsInt());
 	for (iter=0; iter<max_iter; iter++) {
 		double ll = 0;
 		for (i=0; i<m_genos.unphased_num(); i++) {
@@ -258,8 +268,7 @@ void HMC::resolve()
 				if (res_list.size() == 0) {
 					Logger::warning("Unable to resolve Genotype[%d]: %s!", i, m_genos[i].id());
 				}
-				unphased_genos.genotype(i) = m_resolutions[i];
-// 				unphased_genos.genotype(i).setIsPhased(true);
+				unphased_genos.genotype(i).setLikelihood(m_resolutions[i].likelihood());
 //			}
 			ll += log(m_resolutions[i].likelihood());
 		}
@@ -269,8 +278,10 @@ void HMC::resolve()
 		Logger::info("  Switch Error = %f, IHP = %f, IGP = %f, LL = %f",
 			compare.switch_error(), compare.incorrect_haplotype_percentage(), compare.incorrect_genotype_percentage(), ll);
 
-		m_builder.adjust();
+		if (iter < max_iter - 1) m_builder.adjust(0.000001);
 	}
+	Logger::verbose("");
+	Logger::endTimer(3);
 	Logger::verbose("");
 	Logger::endTimer(2);
 	Logger::info("Solving Time = %f", Logger::timer(1).time()+Logger::timer(2).time());
