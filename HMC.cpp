@@ -278,7 +278,7 @@ void HMC::resolve()
 		Logger::info("  Switch Error = %f, IHP = %f, IGP = %f, LL = %f",
 			compare.switch_error(), compare.incorrect_haplotype_percentage(), compare.incorrect_genotype_percentage(), ll);
 
-		if (iter < max_iter - 1) m_builder.adjust(0.000001);
+		if (iter < max_iter - 1) m_builder.adjust(2);
 	}
 	Logger::verbose("");
 	Logger::endTimer(3);

@@ -3,6 +3,8 @@
 #define __UTILS_H
 
 
+#include <boost/shared_ptr.hpp>
+
 #include <list>
 #include <vector>
 #include <deque>
@@ -21,6 +23,11 @@
 
 
 using namespace std;
+
+
+namespace std {
+	namespace tr1 = ::boost;
+}
 
 
 class Utils {

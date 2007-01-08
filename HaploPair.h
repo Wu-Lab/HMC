@@ -8,10 +8,17 @@
 #include "HaploPattern.h"
 
 
+struct PatternPair {
+	HaploPattern &pattern_a, &pattern_b;
+	tr1::shared_ptr<PatternPair> prev;
+
+	PatternPair(HaploPattern *hpa, HaploPattern *hpb) : pattern_a(*hpa), pattern_b(*hpb) {};
+};
+
+
 class HaploPair {
+	tr1::shared_ptr<PatternPair> m_pair;
 	int m_end, m_id[2];
-	int m_genotype_len;
-	HaploPattern **m_patterns[2];
 	double m_likelihood;
 	double m_total_likelihood;
 	bool m_homogenous;
@@ -19,11 +26,8 @@ class HaploPair {
 
 public:
 	HaploPair(HaploPattern *hpa, HaploPattern *hpb, HaploPattern *target_pattern = NULL);
-	HaploPair(const HaploPair &hp);
-	~HaploPair();
 
 	int end() const { return m_end; }
-	HaploPattern *patterns(int i) const { return m_patterns[i][m_end]; }
 	double likelihood() const { return m_likelihood; }
 
 	Genotype getGenotype();

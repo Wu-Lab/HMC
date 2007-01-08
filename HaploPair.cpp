@@ -3,22 +3,13 @@
 
 
 HaploPair::HaploPair(HaploPattern *hpa, HaploPattern *hpb, HaploPattern *target_pattern)
+: m_pair(new PatternPair(hpa, hpb)),
+  m_end(hpa->m_end)
 {
-	int i;
 	if (hpa->m_end != hpb->m_end) {
 		Logger::error("Inconsistent HaploPattern!");
 		exit(1);
 	}
-	m_end = hpa->m_end;
-	m_genotype_len = hpa->m_haplo_data->m_genotype_len;
-	m_patterns[0] = new HaploPattern * [m_genotype_len+1];
-	m_patterns[1] = new HaploPattern * [m_genotype_len+1];
-	for (i=0; i<m_end; i++) {
-		m_patterns[0][i] = NULL;
-		m_patterns[1][i] = NULL;
-	}
-	m_patterns[0][m_end] = hpa;
-	m_patterns[1][m_end] = hpb;
 	getID(m_id, hpa, hpb);
 	m_likelihood = hpa->m_frequency * hpb->m_frequency;
 	m_total_likelihood = m_likelihood;
@@ -44,49 +35,29 @@ HaploPair::HaploPair(HaploPattern *hpa, HaploPattern *hpb, HaploPattern *target_
 	}
 }
 
-HaploPair::HaploPair(const HaploPair &hp)
-{
-	int i;
-	Logger::resumeTimer(3);
-	m_end = hp.m_end;
-	m_genotype_len = hp.m_genotype_len;
-	m_patterns[0] = new HaploPattern * [m_genotype_len+1];
-	m_patterns[1] = new HaploPattern * [m_genotype_len+1];
-	for (i=0; i<=m_end; i++) {
-		m_patterns[0][i] = hp.m_patterns[0][i];
-		m_patterns[1][i] = hp.m_patterns[1][i];
-	}
-	m_likelihood = hp.m_likelihood;
-	m_total_likelihood = hp.m_total_likelihood;
-	m_homogenous = hp.m_homogenous;
-	m_half = hp.m_half;
-	m_match_a = hp.m_match_a;
-	m_match_b = hp.m_match_b;
-	m_match_next_a = hp.m_match_next_a;
-	m_match_next_b = hp.m_match_next_b;
-	Logger::pauseTimer(3);
-}
-
-HaploPair::~HaploPair()
-{
-	delete[] m_patterns[0];
-	delete[] m_patterns[1];
-}
-
 Genotype HaploPair::getGenotype()
 {
-	int i, j;
-	Genotype g;
-	for (i=0; i<2; i++) {
-		j = 1;
-		while (j <= m_end && m_patterns[i][j] == NULL) j++;
-		if (j <= m_end) g.haplotypes(i) = (*m_patterns[i][j++]);
-		while (j <= m_end && m_patterns[i][j] != NULL) {
-			g.haplotypes(i) += (*m_patterns[i][j])[m_patterns[i][j]->m_length-1];
-			j++;
+	int i;
+	Genotype g(m_pair->pattern_a.m_haplo_data->m_genotype_len);
+	tr1::shared_ptr<PatternPair> pp;
+	i = m_end - 1;
+	pp = m_pair;
+	while (pp) {
+		if (pp->prev) {
+			g.haplotypes(0).allele(i) = pp->pattern_a[i-pp->pattern_a.start()];
+			g.haplotypes(1).allele(i) = pp->pattern_b[i-pp->pattern_b.start()];
 		}
+		else {
+			while (i >= 0) {
+				g.haplotypes(0).allele(i) = pp->pattern_a[i-pp->pattern_a.start()];
+				g.haplotypes(1).allele(i) = pp->pattern_b[i-pp->pattern_b.start()];
+				i--;
+			}
+			break;
+		}
+		pp = pp->prev;
+		i--;
 	}
-	g.setLength(m_genotype_len);
 	g.checkGenotype();
 	return g;
 }
@@ -100,8 +71,8 @@ bool HaploPair::extendable(int a, int b, HaploPattern *target_pattern)
 	m_half = false;
 	m_match_next_a = m_match_a;
 	m_match_next_b = m_match_b;
-	hpa = m_patterns[0][m_end]->m_successors[a];
-	hpb = m_patterns[1][m_end]->m_successors[b];
+	hpa = m_pair->pattern_a.m_successors[a];
+	hpb = m_pair->pattern_b.m_successors[b];
 	if (hpa != NULL && hpb != NULL) {
 		if (m_homogenous && hpa->m_id > hpb->m_id) {
 			return false;
@@ -126,8 +97,8 @@ bool HaploPair::extendable(int a, int b, HaploPattern *target_pattern)
 void HaploPair::extend_trial(int a, int b, int id[2], double &likelihood, double &total_likelihood)
 {
 	HaploPattern *hpa, *hpb;
-	hpa = m_patterns[0][m_end]->m_successors[a];
-	hpb = m_patterns[1][m_end]->m_successors[b];
+	hpa = m_pair->pattern_a.m_successors[a];
+	hpb = m_pair->pattern_b.m_successors[b];
 	getID(id, hpa, hpb);
 	likelihood = m_likelihood * hpa->m_transition_prob * hpb->m_transition_prob;
 	total_likelihood = m_total_likelihood * hpa->m_transition_prob * hpb->m_transition_prob;
@@ -137,14 +108,14 @@ void HaploPair::extend_trial(int a, int b, int id[2], double &likelihood, double
 	}
 }
 
-
 void HaploPair::extend(int a, int b)
 {
 	HaploPattern *hpa, *hpb;
-	hpa = m_patterns[0][m_end]->m_successors[a];
-	hpb = m_patterns[1][m_end]->m_successors[b];
-	m_patterns[0][m_end+1] = hpa;
-	m_patterns[1][m_end+1] = hpb;
+	hpa = m_pair->pattern_a.m_successors[a];
+	hpb = m_pair->pattern_b.m_successors[b];
+	tr1::shared_ptr<PatternPair> pair(new PatternPair(hpa, hpb));
+	m_pair.swap(pair->prev);
+	m_pair.swap(pair);
 	m_likelihood *= hpa->m_transition_prob;
 	m_likelihood *= hpb->m_transition_prob;
 	m_total_likelihood *= hpa->m_transition_prob;
