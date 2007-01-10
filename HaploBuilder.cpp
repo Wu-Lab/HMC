@@ -506,13 +506,11 @@ void HaploBuilder::extend(HaploPair *hp, Allele a1, Allele a2)
 			}
 		}
 		if (hp_index < 0) {
-			new_hp = new HaploPair(*hp);
-			new_hp->extend(b1, b2);
+			new_hp = new HaploPair(hp, hp->successor_a(b1), hp->successor_b(b2));
 			addHaploPair(m_new_list, new_hp);
 		}
 		else if (likelihood > m_new_list[hp_index]->m_likelihood) {
-			new_hp = new HaploPair(*hp);
-			new_hp->extend(b1, b2);
+			new_hp = new HaploPair(hp, hp->successor_a(b1), hp->successor_b(b2));
 			new_hp->m_total_likelihood += m_new_list[hp_index]->m_total_likelihood;
 			delete m_new_list[hp_index];
 			m_new_list[hp_index] = new_hp;

@@ -34,11 +34,6 @@ class Utils {
 public:
 	template <class T> static int rand_int(T max) { return (int) ((double) rand() * max / RAND_MAX); }
 
-	template <class T> static T min (T i, T j) { return ((i < j) ? i : j); }
-	template <class T> static T max (T i, T j) { return ((i > j) ? i : j); }
-
-	template <class T> static void swap(T &i, T &j) { T temp = i; i = j; j = temp; }
-
 	static void quick_sort_min(int *ind, double *val, int size);
 	static void quick_sort_max(int *ind, double *val, int size);
 
@@ -249,14 +244,14 @@ public:
 
 // something for using with STL
 
-struct DeleteObject {
+struct DeletePtr {
 	template<typename T>
 	void operator()(const T* ptr) const { delete ptr; }
 };
 
 template<typename T>
-void DeleteAllObjects(const T& c) {
-	for_each(c.begin(), c.end(), DeleteObject());
+void DeleteAllObjects(const T& container) {
+	for_each(container.begin(), container.end(), DeletePtr());
 };
 
 

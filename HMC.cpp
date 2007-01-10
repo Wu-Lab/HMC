@@ -242,8 +242,10 @@ void HMC::resolve()
 
 	Logger::verbose("");
 	Logger::beginTimer(3, "Find bottleneck");
+	Logger::beginTimer(4, "Find bottleneck");
 
 	Logger::pauseTimer(3);
+	Logger::pauseTimer(4);
 
 	unphased_genos = m_genos;
 	unphased_genos.randomizePhase();
@@ -257,7 +259,7 @@ void HMC::resolve()
 	Logger::verbose("");
 	Logger::beginTimer(2, "Resolve Genotype");
 
-	max_iter = Utils::min(m_genos.unphased_num(), m_args.getOption("iteration_number")->getValueAsInt());
+	max_iter = min(m_genos.unphased_num(), m_args.getOption("iteration_number")->getValueAsInt());
 	for (iter=0; iter<max_iter; iter++) {
 		double ll = 0;
 		for (i=0; i<m_genos.unphased_num(); i++) {
@@ -280,6 +282,8 @@ void HMC::resolve()
 
 		if (iter < max_iter - 1) m_builder.adjust(2);
 	}
+	Logger::verbose("");
+	Logger::endTimer(4);
 	Logger::verbose("");
 	Logger::endTimer(3);
 	Logger::verbose("");

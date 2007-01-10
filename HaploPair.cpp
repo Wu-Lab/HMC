@@ -1,9 +1,20 @@
 
 #include "HaploPair.h"
 
+#include <boost/pool/object_pool.hpp>
 
-HaploPair::HaploPair(HaploPattern *hpa, HaploPattern *hpb, HaploPattern *target_pattern)
-: m_pair(new PatternPair(hpa, hpb)),
+
+boost::pool<> PatternPair_pool(sizeof(PatternPair));
+
+void del_PatternPair(PatternPair *p)
+{
+	p->~PatternPair();
+	PatternPair_pool.free(p);
+}
+
+
+HaploPair::HaploPair(const HaploPattern *hpa, const HaploPattern *hpb, HaploPattern *target_pattern)
+: m_pair(new (PatternPair_pool.malloc()) PatternPair(hpa, hpb), del_PatternPair),
   m_end(hpa->m_end)
 {
 	if (hpa->m_end != hpb->m_end) {
@@ -35,11 +46,29 @@ HaploPair::HaploPair(HaploPattern *hpa, HaploPattern *hpb, HaploPattern *target_
 	}
 }
 
+HaploPair::HaploPair(HaploPair *hp, const HaploPattern *hpa, const HaploPattern *hpb)
+: m_pair(new (PatternPair_pool.malloc()) PatternPair(hpa, hpb, hp->m_pair), del_PatternPair),
+  m_end(hp->m_end+1),
+  m_likelihood(hp->m_likelihood * hpa->m_transition_prob * hpb->m_transition_prob),
+  m_total_likelihood(hp->m_total_likelihood * hpa->m_transition_prob * hpb->m_transition_prob),
+  m_homogenous(hp->m_homogenous && hpa->m_id == hpb->m_id),
+  m_half(hp->m_half),
+  m_match_a(hp->m_match_next_a),
+  m_match_b(hp->m_match_next_b)
+{
+	if (m_half) {
+		m_likelihood *= 0.5;
+		m_total_likelihood *= 0.5;
+		m_half = false;
+	}
+	getID(m_id, hpa, hpb);
+}
+
 Genotype HaploPair::getGenotype()
 {
 	int i;
 	Genotype g(m_pair->pattern_a.m_haplo_data->m_genotype_len);
-	tr1::shared_ptr<PatternPair> pp;
+	SP_PatternPair pp;
 	i = m_end - 1;
 	pp = m_pair;
 	while (pp) {
@@ -108,33 +137,7 @@ void HaploPair::extend_trial(int a, int b, int id[2], double &likelihood, double
 	}
 }
 
-void HaploPair::extend(int a, int b)
-{
-	HaploPattern *hpa, *hpb;
-	hpa = m_pair->pattern_a.m_successors[a];
-	hpb = m_pair->pattern_b.m_successors[b];
-	tr1::shared_ptr<PatternPair> pair(new PatternPair(hpa, hpb));
-	m_pair.swap(pair->prev);
-	m_pair.swap(pair);
-	m_likelihood *= hpa->m_transition_prob;
-	m_likelihood *= hpb->m_transition_prob;
-	m_total_likelihood *= hpa->m_transition_prob;
-	m_total_likelihood *= hpb->m_transition_prob;
-	if (m_homogenous && hpa->m_id != hpb->m_id) {
-		m_homogenous = false;
-	}
-	if (m_half) {
-		m_likelihood *= 0.5;
-		m_total_likelihood *= 0.5;
-	}
-	m_half = false;
-	m_match_a = m_match_next_a;
-	m_match_b = m_match_next_b;
-	getID(m_id, hpa, hpb);
-	m_end++;
-}
-
-void HaploPair::getID(int id[2], HaploPattern *hpa, HaploPattern *hpb)
+void HaploPair::getID(int id[2], const HaploPattern *hpa, const HaploPattern *hpb)
 {
 	if (hpa == NULL || hpb == NULL) {
 		id[0] = -1;
