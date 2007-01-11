@@ -3,26 +3,35 @@
 #define __ALLELE_H
 
 
+#include <vector>
+
 #include "Utils.h"
 
 
-typedef int Allele;
+class Allele {
+	int m_value;
+
+public:
+	Allele() { m_value = -1; }
+	Allele(int a) { m_value = a; }
+	Allele &operator =(int a) { m_value = a; return *this; }
+	operator int() const { return m_value; }
+};
 
 
 class AlleleSequence {
 protected:
-	Allele *m_alleles;
-	int m_length;
+	vector<Allele> m_alleles;
 
 public:
-	AlleleSequence();
-	AlleleSequence(const AlleleSequence &as);
+	AlleleSequence() { }
 	explicit AlleleSequence(int len);
-	~AlleleSequence();
+	explicit AlleleSequence(const Allele &a);
+	explicit AlleleSequence(const AlleleSequence &as1, const AlleleSequence &as2);
 
 	Allele &operator [](int i) { return m_alleles[i]; }
 	const Allele &operator [](int i) const { return m_alleles[i]; }
-	int length() const { return m_length; }
+	int length() const { return m_alleles.size(); }
 
 	bool isMissing(int i) const { return (m_alleles[i] < 0); }
 	bool isMatch(const Allele &a, int locus) const;
@@ -31,32 +40,43 @@ public:
 	int getDiffNum(const AlleleSequence &as, int start1, int start2, int len) const;
 	int getDiffNum(const AlleleSequence &as) const;
 
-	int setLength(int i);
+	int setLength(int len);
 
 	char *read(const char *types, char *buffer, int len = 0);
 	char *write(const char *types, char *buffer) const;
 
-	AlleleSequence &operator =(const AlleleSequence &as);
+	AlleleSequence &assign(const AlleleSequence &as);
+	AlleleSequence &assign(const AlleleSequence &as, const Allele &a);
+	AlleleSequence &assign(const Allele &a, const AlleleSequence &as);
+	AlleleSequence &assign(const AlleleSequence &as1, const AlleleSequence &as2);
+
 	AlleleSequence &operator +=(const AlleleSequence &as);
 	AlleleSequence &operator +=(const Allele &a);
 
 protected:
-	static char *readAllele(const char type, char *buffer, int &allele);
-	static char *writeAllele(const char type, char *buffer, int &allele);
-
-	AlleleSequence &assign(const AlleleSequence &as);
-	AlleleSequence &concatenate(const AlleleSequence &as);
-	AlleleSequence &concatenate(const Allele &a);
-
-public:
-	friend AlleleSequence operator +(const AlleleSequence &as1, const AlleleSequence &as2);
-	friend AlleleSequence operator +(const AlleleSequence &as, const Allele &a);
-	friend AlleleSequence operator +(const Allele &a, const AlleleSequence &as);
-
-	AlleleSequence &concatenate(const AlleleSequence &as1, const AlleleSequence &as2);
-	AlleleSequence &concatenate(const AlleleSequence &as, const Allele &a);
-	AlleleSequence &concatenate(const Allele &a, const AlleleSequence &as);
+	static char *readAllele(char type, char *buffer, Allele &allele);
+	static char *writeAllele(char type, char *buffer, const Allele &allele);
 };
+
+inline AlleleSequence::AlleleSequence(int len)
+{
+	if (len > 0) {
+		m_alleles.resize(len);
+	}
+	else {
+		m_alleles.clear();
+	}
+}
+
+inline AlleleSequence::AlleleSequence(const Allele &a)
+{
+	m_alleles.push_back(a);
+}
+
+inline AlleleSequence::AlleleSequence(const AlleleSequence &as1, const AlleleSequence &as2)
+{
+	assign(as1, as2);
+}
 
 inline bool AlleleSequence::isMatch(const Allele &a, int locus) const
 {
@@ -65,42 +85,52 @@ inline bool AlleleSequence::isMatch(const Allele &a, int locus) const
 
 inline bool AlleleSequence::isMatch(const AlleleSequence &as) const
 {
-	return (m_length == as.m_length && isMatch(as, 0, 0, m_length));
+	return (length() == as.length() && isMatch(as, 0, 0, length()));
 }
 
 inline int AlleleSequence::getDiffNum(const AlleleSequence &as) const
 {
-	return getDiffNum(as, 0, 0, (m_length < as.m_length ? m_length : as.m_length));
+	return getDiffNum(as, 0, 0, (length() < as.length() ? length() : as.length()));
 }
 
-inline AlleleSequence &AlleleSequence::operator =(const AlleleSequence &as)
+inline AlleleSequence &AlleleSequence::assign(const AlleleSequence &as)
 {
-	return assign(as);
+	m_alleles.assign(as.m_alleles.begin(), as.m_alleles.end());
+	return *this;
+}
+
+inline AlleleSequence &AlleleSequence::assign(const AlleleSequence &as, const Allele &a)
+{
+	assign(as);
+	m_alleles.push_back(a);
+	return *this;
+}
+
+inline AlleleSequence &AlleleSequence::assign(const Allele &a, const AlleleSequence &as)
+{
+	m_alleles.clear();
+	m_alleles.push_back(a);
+	(*this) += as;
+	return *this;
+}
+
+inline AlleleSequence &AlleleSequence::assign(const AlleleSequence &as1, const AlleleSequence &as2)
+{
+	assign(as1);
+	(*this) += as2;
+	return *this;
 }
 
 inline AlleleSequence &AlleleSequence::operator +=(const AlleleSequence &as)
 {
-	return concatenate(as);
+	m_alleles.insert(m_alleles.end(), as.m_alleles.begin(), as.m_alleles.end());
+	return *this;
 }
 
 inline AlleleSequence &AlleleSequence::operator +=(const Allele &a)
 {
-	return concatenate(a);
-}
-
-inline AlleleSequence operator +(const AlleleSequence &as1, const AlleleSequence &as2)
-{
-	return AlleleSequence().concatenate(as1, as2);
-}
-
-inline AlleleSequence operator +(const AlleleSequence &as, const Allele &a)
-{
-	return AlleleSequence().concatenate(as, a);
-}
-
-inline AlleleSequence operator +(const Allele &a, const AlleleSequence &as)
-{
-	return AlleleSequence().concatenate(a, as);
+	m_alleles.push_back(a);
+	return *this;
 }
 
 

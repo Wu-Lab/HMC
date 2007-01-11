@@ -21,7 +21,6 @@ protected:
 
 public:
 	Genotype();
-	Genotype(const Genotype &g);
 	explicit Genotype(int len);
 	explicit Genotype(const Haplotype &h1, const Haplotype &h2);
 
@@ -62,17 +61,13 @@ public:
 	int getSwitchDistance(const Genotype &g) const;
 	int getSwitchDistanceIgnoreMissing(const Genotype &g) const;
 
-	Genotype &operator =(const Genotype &g);
-	Genotype &operator +=(const Genotype &g);
-
-protected:
-	Genotype &assign(const Genotype &g);
-	Genotype &concatenate(const Genotype &g);
-
 public:
 	friend Genotype operator +(const Genotype &g1, const Genotype &g2);
 
-	Genotype &concatenate(const Genotype &g1, const Genotype &g2);
+	Genotype &assign(const Genotype &g);
+	Genotype &assign(const Genotype &g1, const Genotype &g2);
+
+	Genotype &operator +=(const Genotype &g);
 
 	friend class HaploPattern;
 	friend class HaploData;
@@ -101,21 +96,6 @@ inline bool Genotype::isMatch(const Allele &a, int locus) const
 inline bool Genotype::isMatchIgnoreMissing(const Genotype &g) const
 {
 	return (getSwitchDistanceIgnoreMissing(g) == 0);
-}
-
-inline Genotype &Genotype::operator =(const Genotype &g)
-{
-	return assign(g);
-}
-
-inline Genotype &Genotype::operator +=(const Genotype &g)
-{
-	return concatenate(g);
-}
-
-inline Genotype operator +(const Genotype &g1, const Genotype &g2)
-{
-	return Genotype().concatenate(g1, g2);
 }
 
 

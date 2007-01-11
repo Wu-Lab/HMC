@@ -72,31 +72,22 @@ public:
 	char *read(char *buffer, int len = 0);
 	char *write(char *buffer, bool long_format = true) const;
 
+	HaploPattern &assign(const HaploPattern &hp);
+	HaploPattern &assign(const HaploPattern &hp1, const HaploPattern &hp2);
+	HaploPattern &assign(const HaploPattern &hp, const AlleleSequence &as);
+	HaploPattern &assign(const AlleleSequence &as, const HaploPattern &hp);
+	HaploPattern &assign(const HaploPattern &hp, const Allele &a);
+	HaploPattern &assign(const Allele &a, const HaploPattern &hp);
+
 	HaploPattern &operator =(const HaploPattern &hp);
 	HaploPattern &operator +=(const HaploPattern &hp);
 	HaploPattern &operator +=(const AlleleSequence &as);
 	HaploPattern &operator +=(const Allele &a);
 
 protected:
-	double getMatchingFrequency(int h, const Allele *a, int start, int len) const;
-
-	HaploPattern &assign(const HaploPattern &hp);
-	HaploPattern &concatenate(const HaploPattern &hp);
-	HaploPattern &concatenate(const AlleleSequence &as);
-	HaploPattern &concatenate(const Allele &a);
+	double getMatchingFrequency(int h, const Allele *pa, int start, int len) const;
 
 public:
-	friend HaploPattern operator +(const HaploPattern &hp1, const HaploPattern &hp2);
-	friend HaploPattern operator +(const HaploPattern &hp, const AlleleSequence &as);
-	friend HaploPattern operator +(const AlleleSequence &as, const HaploPattern &hp);
-	friend HaploPattern operator +(const HaploPattern &hp, const Allele &a);
-	friend HaploPattern operator +(const Allele &a, const HaploPattern &hp);
-
-	HaploPattern &concatenate(const HaploPattern &hp1, const HaploPattern &hp2);
-	HaploPattern &concatenate(const HaploPattern &hp, const AlleleSequence &as);
-	HaploPattern &concatenate(const AlleleSequence &as, const HaploPattern &hp);
-	HaploPattern &concatenate(const HaploPattern &hp, const Allele &a);
-	HaploPattern &concatenate(const Allele &a, const HaploPattern &hp);
 
 	friend class HaploPair;
 	friend class PatternTree;
@@ -106,12 +97,12 @@ public:
 
 inline bool HaploPattern::isMatch(const Haplotype &h) const
 {
-	return h.isMatch(*this, m_start, 0, m_length);
+	return h.isMatch(*this, m_start, 0, length());
 }
 
 inline bool HaploPattern::isMatch(const Genotype &g) const
 {
-	return g.isMatch(*this, m_start, 0, m_length);	
+	return g.isMatch(*this, m_start, 0, length());	
 }
 
 inline bool HaploPattern::isMatch(const HaploPattern &hp) const
@@ -171,46 +162,6 @@ inline double HaploPattern::checkFrequencyWithExtension(int ext)
 inline HaploPattern &HaploPattern::operator =(const HaploPattern &hp)
 {
 	return assign(hp);
-}
-
-inline HaploPattern &HaploPattern::operator +=(const HaploPattern &hp)
-{
-	return concatenate(hp);
-}
-
-inline HaploPattern &HaploPattern::operator +=(const AlleleSequence &as)
-{
-	return concatenate(as);
-}
-
-inline HaploPattern &HaploPattern::operator +=(const Allele &a)
-{
-	return concatenate(a);
-}
-
-inline HaploPattern operator +(const HaploPattern &hp1, const HaploPattern &hp2)
-{
-	return HaploPattern().concatenate(hp1, hp2);
-}
-
-inline HaploPattern operator +(const HaploPattern &hp, const AlleleSequence &as)
-{
-	return HaploPattern().concatenate(hp, as);
-}
-
-inline HaploPattern operator +(const AlleleSequence &as, const HaploPattern &hp)
-{
-	return HaploPattern().concatenate(as, hp);
-}
-
-inline HaploPattern operator +(const HaploPattern &hp, const Allele &a)
-{
-	return HaploPattern().concatenate(hp, a);
-}
-
-inline HaploPattern operator +(const Allele &a, const HaploPattern &hp)
-{
-	return HaploPattern().concatenate(a, hp);
 }
 
 

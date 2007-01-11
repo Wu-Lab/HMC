@@ -56,7 +56,7 @@ HaploPattern::HaploPattern(const HaploData *haplo, const Allele &a, int start)
 	m_haplo_data = haplo;
 	m_id = 0;
 	m_start = start;
-	m_end = m_start + m_length;
+	m_end = m_start + length();
 	m_frequency = 0;
 	m_genotype_num = m_haplo_data->m_genotype_num;
 	m_match_genotype = NULL;
@@ -78,7 +78,7 @@ HaploPattern::HaploPattern(const HaploData *haplo, const AlleleSequence &as, int
 	m_haplo_data = haplo;
 	m_id = 0;
 	m_start = start;
-	m_end = m_start + m_length;
+	m_end = m_start + length();
 	m_frequency = 0;
 	m_genotype_num = m_haplo_data->m_genotype_num;
 	m_match_genotype = NULL;
@@ -141,9 +141,10 @@ void HaploPattern::setHaploData(const HaploData *haplo)
 
 void HaploPattern::setPattern(const Allele &a, int start)
 {
-	AlleleSequence::assign(AlleleSequence(a));
+	m_alleles.clear();
+	m_alleles.push_back(a);
 	m_start = start;
-	m_end = m_start + m_length;
+	m_end = m_start + length();
 	checkFrequency();
 }
 
@@ -151,18 +152,18 @@ void HaploPattern::setPattern(const AlleleSequence &as, int start)
 {
 	AlleleSequence::assign(as);
 	m_start = start;
-	m_end = m_start + m_length;
+	m_end = m_start + length();
 	checkFrequency();
 }
 
 void HaploPattern::repack()
 {
-	int i, start;
-	Allele *temp;
+	int i, start, len;
+	vector<Allele> temp;
 	bool repacked;
 	start = 0;
 	repacked = false;
-	for (i=0; i<m_length; i++) {
+	for (i=0; i<length(); i++) {
 		if (isMissing(i)) {
 			m_start++;
 			start++;
@@ -172,7 +173,7 @@ void HaploPattern::repack()
 			break;
 		}
 	}
-	for (i=m_length-1; i>=m_start; i--) {
+	for (i=length()-1; i>=m_start; i--) {
 		if (isMissing(i)) {
 			m_end--;
 			repacked = true;
@@ -182,18 +183,14 @@ void HaploPattern::repack()
 		}
 	}
 	if (repacked) {
-		m_length = m_end - m_start;
+		len = m_end - m_start;
 		temp = m_alleles;
-		if (m_length > 0) {
-			m_alleles = new Allele [m_length];
-			for (i=0; i<m_length; i++) {
-				m_alleles[i] = temp[start+i];
-			}
+		if (len > 0) {
+			m_alleles.assign(&temp[start], &temp[start+len]);
 		}
 		else {
-			m_alleles = NULL;
+			m_alleles.clear();
 		}
-		delete[] temp;
 	}
 }
 
@@ -236,7 +233,7 @@ double HaploPattern::checkFrequency()
 	int i;
 	double w;
 	if (m_haplo_data != NULL) {
-		if (m_length == 0) {
+		if (length() == 0) {
 			m_frequency = m_genotype_num;
 		}
 		else
@@ -253,7 +250,7 @@ double HaploPattern::checkFrequency()
 				if (m_match_genotype[i]) {
 					if (m_haplo_data->m_genotypes[i].isPhased()) {
 						if (m_haplo_data->m_genotypes[i].weight() < 1) {
-							m_match_frequency[i] = getMatchingFrequency(i, m_alleles, m_start, m_length);
+							m_match_frequency[i] = getMatchingFrequency(i, &m_alleles[0], m_start, length());
 							m_frequency += m_match_frequency[i] * (1 - m_haplo_data->m_genotypes[i].weight());
 						}
 						w = 0;
@@ -266,7 +263,7 @@ double HaploPattern::checkFrequency()
 						m_frequency += w * m_haplo_data->m_genotypes[i].weight();
 					}
 					else {
-						m_match_frequency[i] = getMatchingFrequency(i, m_alleles, m_start, m_length);
+						m_match_frequency[i] = getMatchingFrequency(i, &m_alleles[0], m_start, length());
 						m_frequency += m_match_frequency[i];
 					}
 				}
@@ -281,7 +278,7 @@ double HaploPattern::checkFrequencyWithExtension(int ext, int len)
 	int i;
 	double w;
 	if (m_haplo_data != NULL) {
-		if (m_length == 0) {
+		if (length() == 0) {
 			m_frequency = m_genotype_num;
 		}
 		else if (m_match_genotype == NULL) {
@@ -297,7 +294,7 @@ double HaploPattern::checkFrequencyWithExtension(int ext, int len)
 					if (m_match_genotype[i]) {
 						if (m_haplo_data->m_genotypes[i].isPhased()) {
 							if (m_haplo_data->m_genotypes[i].weight() < 1) {
-								m_match_frequency[i] *= getMatchingFrequency(i, m_alleles+ext-m_start, ext, len);
+								m_match_frequency[i] *= getMatchingFrequency(i, &m_alleles[ext-m_start], ext, len);
 								m_frequency += m_match_frequency[i] * (1 - m_haplo_data->m_genotypes[i].weight());
 							}
 							w = 0;
@@ -310,7 +307,7 @@ double HaploPattern::checkFrequencyWithExtension(int ext, int len)
 							m_frequency += w * m_haplo_data->m_genotypes[i].weight();
 						}
 						else {
-							m_match_frequency[i] *= getMatchingFrequency(i, m_alleles+ext-m_start, ext, len);
+							m_match_frequency[i] *= getMatchingFrequency(i, &m_alleles[ext-m_start], ext, len);
 							m_frequency += m_match_frequency[i];
 						}
 					}
@@ -321,21 +318,21 @@ double HaploPattern::checkFrequencyWithExtension(int ext, int len)
 	return m_frequency;
 }
 
-double HaploPattern::getMatchingFrequency(int g, const Allele *a, int start, int len) const
+double HaploPattern::getMatchingFrequency(int g, const Allele *pa, int start, int len) const
 {
 	double total_freq, freq;
 	int i, j;
 	Allele b;
 	total_freq = 1.0;
 	for (i=0; i<len; i++) {
-		if (a[i] >= 0) {			// a[i] is not missing
+		if (pa[i] >= 0) {			// pa[i] is not missing
 			freq = 0;
 			for (j=0; j<2; j++) {
 				b = m_haplo_data->m_genotypes[g](j)[start+i];
 				if (b < 0) {			// b is missing
-					freq += m_haplo_data->allele_frequency(start+i, a[i]) > 0 ? (1.0/m_haplo_data->allele_num(start+i)) : 0;
+					freq += m_haplo_data->allele_frequency(start+i, pa[i]) > 0 ? (1.0/m_haplo_data->allele_num(start+i)) : 0;
 				}
-				else if (b == a[i]) {
+				else if (b == pa[i]) {
 					freq += 1;
 				}
 			}
@@ -349,7 +346,7 @@ char *HaploPattern::read(char *buffer, int len)
 {
 	buffer = AlleleSequence::read(NULL, buffer, len);
 	m_start = 0;
-	m_end = m_length;
+	m_end = length();
 	repack();
 	releaseMatchGenotype();
 	checkFrequency();
@@ -389,81 +386,81 @@ HaploPattern &HaploPattern::assign(const HaploPattern &hp)
 	return *this;
 }
 
-HaploPattern &HaploPattern::concatenate(const HaploPattern &hp)
+HaploPattern &HaploPattern::operator +=(const HaploPattern &hp)
 {
 	if (m_end != hp.m_start) {
 		Logger::warning("[HaploPattern::concatenate] Attempt to concatenate incontinuous HaploPatterns!");
 	}
-	AlleleSequence::concatenate(hp);
-	m_end = m_start + m_length;
-	checkFrequencyWithExtension(m_end-hp.m_length, hp.m_length);
+	AlleleSequence::operator +=(hp);
+	m_end = m_start + length();
+	checkFrequencyWithExtension(m_end-hp.length(), hp.length());
 	return *this;
 }
 
-HaploPattern &HaploPattern::concatenate(const AlleleSequence &as)
+HaploPattern &HaploPattern::operator +=(const AlleleSequence &as)
 {
-	AlleleSequence::concatenate(as);
-	m_end = m_start + m_length;
+	AlleleSequence::operator +=(as);
+	m_end = m_start + length();
 	checkFrequencyWithExtension(m_end-as.length(), as.length());
 	return *this;
 }
 
-HaploPattern &HaploPattern::concatenate(const Allele &a)
+HaploPattern &HaploPattern::operator +=(const Allele &a)
 {
-	AlleleSequence::concatenate(a);
-	m_end = m_start + m_length;
+	AlleleSequence::operator +=(a);
+	m_end = m_start + length();
 	checkFrequencyWithExtension(m_end-1);
 	return *this;
 }
 
-HaploPattern &HaploPattern::concatenate(const HaploPattern &hp1, const HaploPattern &hp2)
+HaploPattern &HaploPattern::assign(const HaploPattern &hp1, const HaploPattern &hp2)
 {
 	if (hp1.m_end != hp2.m_start) {
 		Logger::warning("[HaploPattern::concatenate] Attempt to concatenate incontinuous HaploPatterns!");
 	}
-	AlleleSequence::concatenate(hp1, hp2);
+	AlleleSequence::assign(hp1, hp2);
 	m_start = hp1.m_start;
-	m_end = m_start + m_length;
+	m_end = m_start + length();
 	copyMatchGenotype(hp1);
-	checkFrequencyWithExtension(m_end-hp2.m_length, hp2.m_length);
+	checkFrequencyWithExtension(m_end-hp2.length(), hp2.length());
 	return *this;
 }
 
-HaploPattern &HaploPattern::concatenate(const HaploPattern &hp, const AlleleSequence &as)
+HaploPattern &HaploPattern::assign(const HaploPattern &hp, const AlleleSequence &as)
 {
-	AlleleSequence::concatenate(hp, as);
+	AlleleSequence::assign(hp, as);
 	m_start = hp.m_start;
-	m_end = m_start + m_length;
+	m_end = m_start + length();
 	copyMatchGenotype(hp);
 	checkFrequencyWithExtension(m_end-as.length(), as.length());
 	return *this;
 }
 
-HaploPattern &HaploPattern::concatenate(const AlleleSequence &as, const HaploPattern &hp)
+HaploPattern &HaploPattern::assign(const AlleleSequence &as, const HaploPattern &hp)
 {
-	AlleleSequence::concatenate(as, hp);
+	AlleleSequence::assign(as, hp);
 	m_end = hp.m_end;
-	m_start = m_end - m_length;
+	m_start = m_end - length();
 	copyMatchGenotype(hp);
 	checkFrequencyWithExtension(m_start, as.length());
 	return *this;
 }
 
-HaploPattern &HaploPattern::concatenate(const HaploPattern &hp, const Allele &a)
+HaploPattern &HaploPattern::assign(const HaploPattern &hp, const Allele &a)
 {
-	AlleleSequence::concatenate(hp, a);
+	AlleleSequence::assign(hp, a);
 	m_start = hp.m_start;
-	m_end = m_start + m_length;
+	m_end = m_start + length();
 	copyMatchGenotype(hp);
 	checkFrequencyWithExtension(m_end-1);
 	return *this;
 }
 
-HaploPattern &HaploPattern::concatenate(const Allele &a, const HaploPattern &hp)
+HaploPattern &HaploPattern::assign(const Allele &a, const HaploPattern &hp)
 {
-	AlleleSequence::concatenate(a, hp);
+	AlleleSequence::assign(a, hp);
 	m_end = hp.m_end;
-	m_start = m_end - m_length;
+	m_start = m_end - length();
 	copyMatchGenotype(hp);
 	checkFrequencyWithExtension(m_start);
 	return *this;

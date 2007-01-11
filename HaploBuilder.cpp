@@ -36,7 +36,7 @@ void PatternTree::addPattern(int end, HaploPattern *hp)
 		exit(1);
 	}
 	else {
-		addPattern(&m_trees[end].root(), hp, hp->m_length);
+		addPattern(&m_trees[end].root(), hp, hp->length());
 	}
 }
 
@@ -124,8 +124,8 @@ HaploPattern *PatternTree::findLongestMatchPattern(PatternNode *node, const Alle
 				else {
 					temp = node->getChild(i);
 				}
-				if (result == NULL || (temp != NULL && temp->m_length > result->m_length)
-					|| (temp != NULL && temp->m_length >= result->m_length 
+				if (result == NULL || (temp != NULL && temp->length() > result->length())
+					|| (temp != NULL && temp->length() >= result->length() 
 					&& temp->m_transition_prob > result->m_transition_prob)) {
 					result = temp;
 				}
@@ -141,8 +141,8 @@ HaploPattern *PatternTree::findLongestMatchPattern(PatternNode *node, const Alle
 			else {
 				temp = node->getChild(i);
 			}
-			if (result == NULL || (temp != NULL && temp->m_length > result->m_length)
-				|| (temp != NULL && temp->m_length >= result->m_length 
+			if (result == NULL || (temp != NULL && temp->length() > result->length())
+				|| (temp != NULL && temp->length() >= result->length() 
 				&& temp->m_transition_prob > result->m_transition_prob)) {
 				result = temp;
 			}
@@ -221,8 +221,8 @@ void HaploBuilder::setHaploData(HaploData &hd)
 void HaploBuilder::initialize()
 {
 	int i, j;
-	AlleleSequence temp;
 	HaploPattern *hp;
+	AlleleSequence temp;
 	list<HaploPattern*>::iterator i_hp;
 	list<HaploPattern*>::iterator head;
 	clear();
@@ -237,12 +237,12 @@ void HaploBuilder::initialize()
 		m_pattern_tree->addPattern(hp->m_end, hp);
 		if (hp->m_start == 0) {
 			m_head_list.push_back(hp);
-			if (hp->m_length < m_head_len) m_head_len = hp->m_length;
+			if (hp->length() < m_head_len) m_head_len = hp->length();
 		}
 	}
 	head = m_head_list.begin();
 	while (head != m_head_list.end()) {
-		if ((*head)->m_length > m_head_len) {
+		if ((*head)->length() > m_head_len) {
 			head = m_head_list.erase(head);
 		}
 		else {
@@ -263,7 +263,7 @@ void HaploBuilder::initialize()
 	for (i_hp = m_haplo_pattern.begin(); i_hp != m_haplo_pattern.end(); i_hp++) {
 		hp = *i_hp;
 		if (hp->m_end < m_genotype_len) {
-			temp.concatenate(*hp, -1);			// append empty allele
+			temp.assign(*hp, -1);			// append empty allele
 			for (j=0; j<m_haplo_data->allele_num(hp->m_end); j++) {
 				temp[temp.length()-1] = m_haplo_data->allele_symbol(hp->m_end, j);
 				hp->m_successors[j] = m_pattern_tree->findLongestMatchPattern(hp->m_end+1, &temp);
@@ -307,7 +307,7 @@ void HaploBuilder::adjust(double min_freq)
 				exit(1);
 			}
 		}
-		if (hp->m_frequency < min_freq && hp->m_length > 1) {
+		if (hp->m_frequency < min_freq && hp->length() > 1) {
 			delete hp;
 			i_hp = m_haplo_pattern.erase(i_hp);
 		}
@@ -440,7 +440,7 @@ void HaploBuilder::initHeadList(const Genotype &genotype)
 						for (k=0; k<m_haplo_data->allele_num(j); k++) {
 							if (m_haplo_data->m_allele_frequency[j][k] > 0) {
 								new_as = new AlleleSequence;
-								new_as->concatenate(*as, m_haplo_data->allele_symbol(j, k));
+								new_as->assign(*as, m_haplo_data->allele_symbol(j, k));
 								as_list.push_front(new_as);
 							}
 						}
@@ -453,10 +453,10 @@ void HaploBuilder::initHeadList(const Genotype &genotype)
 						as = *i_as;
 						new_as = new AlleleSequence;
 						if ((**head)[j] == genotype(0)[j]) {
-							new_as->concatenate(*as, genotype(1)[j]);
+							new_as->assign(*as, genotype(1)[j]);
 						}
 						else {
-							new_as->concatenate(*as, genotype(0)[j]);
+							new_as->assign(*as, genotype(0)[j]);
 						}
 						as_list.push_front(new_as);
 						delete *i_as;
@@ -467,7 +467,7 @@ void HaploBuilder::initHeadList(const Genotype &genotype)
 					while (i_as != as_list.end()) {
 						as = *i_as;
 						new_as = new AlleleSequence;
-						new_as->concatenate(*as, genotype(0)[j]);
+						new_as->assign(*as, genotype(0)[j]);
 						as_list.push_front(new_as);
 						delete *i_as;
 						i_as = as_list.erase(i_as);
@@ -600,7 +600,7 @@ void HaploBuilder::findHaploPatternByNum(int max_num, int min_len, int max_len)
 		i_hp = m_haplo_pattern.begin();
 		advance(i_hp, last_size);
 		while (i_hp != m_haplo_pattern.end()) {
-			if ((*i_hp)->m_frequency <= min_freq && (*i_hp)->m_length > 1) {
+			if ((*i_hp)->m_frequency <= min_freq && (*i_hp)->length() > 1) {
 				delete *i_hp;
 				i_hp = m_haplo_pattern.erase(i_hp);
 			}
@@ -652,13 +652,13 @@ void HaploBuilder::searchHaploPattern(vector<HaploPattern*> &candidates, double 
 	while (!candidates.empty()) {
 		hp = candidates.back();
 		candidates.pop_back();
-		if (hp->m_frequency >= min_freq || hp->m_length <= 1) {
-			if (hp->m_end < m_genotype_len && hp->m_length < max_len[hp->m_end]) {
+		if (hp->m_frequency >= min_freq || hp->length() <= 1) {
+			if (hp->m_end < m_genotype_len && hp->length() < max_len[hp->m_end]) {
 				for (i=0; i<m_haplo_data->m_allele_num[hp->m_end]; i++) {
 					if (m_haplo_data->m_allele_frequency[hp->m_end][i] > 0) {
 						hp_candidate = new HaploPattern;
-						hp_candidate->concatenate(*hp, m_haplo_data->m_allele_symbol[hp->m_end][i]);
-						if (hp_candidate->m_frequency >= min_freq || hp->m_length <= 1)
+						hp_candidate->assign(*hp, m_haplo_data->m_allele_symbol[hp->m_end][i]);
+						if (hp_candidate->m_frequency >= min_freq || hp->length() <= 1)
 						{
 							candidates.push_back(hp_candidate);
 						}
@@ -673,7 +673,7 @@ void HaploBuilder::searchHaploPattern(vector<HaploPattern*> &candidates, double 
 					}
 				}
 			}
-			if (hp->m_end > 0 && (hp->m_length >= min_len[hp->m_end-1] || hp->m_length == 1)) {
+			if (hp->m_end > 0 && (hp->length() >= min_len[hp->m_end-1] || hp->length() == 1)) {
 				hp->releaseMatchGenotype();
 				m_haplo_pattern.push_back(hp);
 			}
@@ -707,7 +707,7 @@ void HaploBuilder::searchHaploPatternBlock(int min_len, int max_len)
 	}
 	for (i_hp = m_haplo_pattern.begin(); i_hp != m_haplo_pattern.end(); i_hp++) {
 		hp = *i_hp;
-		if (hp->m_length >= min_len && hp->m_length <= max_len && hp->m_length > max_len_vector[hp->m_end-1]) max_len_vector[hp->m_end-1] = hp->m_length;
+		if (hp->length() >= min_len && hp->length() <= max_len && hp->length() > max_len_vector[hp->m_end-1]) max_len_vector[hp->m_end-1] = hp->length();
 		delete hp;
 	}
 	m_haplo_pattern.clear();

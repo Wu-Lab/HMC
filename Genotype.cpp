@@ -48,18 +48,6 @@ Genotype::Genotype(const Haplotype &h1, const Haplotype &h2)
 	}
 }
 
-Genotype::Genotype(const Genotype &g)
-{
-	m_haplotypes[0] = g.m_haplotypes[0];
-	m_haplotypes[1] = g.m_haplotypes[1];
-	strcpy(m_id, g.m_id);
-	m_length = g.m_length;
-	m_heterozygous_num = g.m_heterozygous_num;
-	m_likelihood = g.m_likelihood;
-	m_weight = g.m_weight;
-	m_is_phased = g.m_is_phased;
-}
-
 void Genotype::setHaplotypes(Haplotype &h1, Haplotype &h2)
 {
 	m_haplotypes[0] = h1;
@@ -119,7 +107,7 @@ Genotype &Genotype::assign(const Genotype &g)
 	return *this;
 }
 
-Genotype &Genotype::concatenate(const Genotype &g)
+Genotype &Genotype::operator +=(const Genotype &g)
 {
 	m_haplotypes[0] += g.m_haplotypes[0];
 	m_haplotypes[1] += g.m_haplotypes[1];
@@ -128,10 +116,10 @@ Genotype &Genotype::concatenate(const Genotype &g)
 	return *this;
 }
 
-Genotype &Genotype::concatenate(const Genotype &g1, const Genotype &g2)
+Genotype &Genotype::assign(const Genotype &g1, const Genotype &g2)
 {
-	m_haplotypes[0] = g1.m_haplotypes[0] + g2.m_haplotypes[0];
-	m_haplotypes[1] = g1.m_haplotypes[1] + g2.m_haplotypes[1];
+	m_haplotypes[0].assign(g1.m_haplotypes[0], g2.m_haplotypes[0]);
+	m_haplotypes[1].assign(g1.m_haplotypes[1], g2.m_haplotypes[1]);
 	strcpy(m_id, g1.m_id);
 	m_length = g1.m_length + g2.m_length;
 	m_heterozygous_num = g1.m_heterozygous_num + g2.m_heterozygous_num;

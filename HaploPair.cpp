@@ -74,12 +74,12 @@ Genotype HaploPair::getGenotype()
 			g(1)[i] = pp->m_pattern_b[i-pp->m_pattern_b.start()];
 		}
 		else {
-			copy(&pp->m_pattern_a[0], &pp->m_pattern_a[pp->m_pattern_a.length()], &g(0)[pp->m_pattern_a.start()]);
-			copy(&pp->m_pattern_b[0], &pp->m_pattern_b[pp->m_pattern_b.length()], &g(1)[pp->m_pattern_b.start()]);
+			copy(&pp->m_pattern_a[0], &pp->m_pattern_a[i+1-pp->m_pattern_b.start()], &g(0)[pp->m_pattern_a.start()]);
+			copy(&pp->m_pattern_b[0], &pp->m_pattern_b[i+1-pp->m_pattern_b.start()], &g(1)[pp->m_pattern_b.start()]);
 			break;
 		}
 		pp = pp->m_prev;
-		i--;
+		--i;
 	}
 	g.checkGenotype();
 	return g;
