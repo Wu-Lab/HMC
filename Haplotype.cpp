@@ -1,7 +1,7 @@
 
-#include <string.h>
-
 #include "Haplotype.h"
+
+#include "MemLeak.h"
 
 
 ////////////////////////////////

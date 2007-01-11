@@ -1,5 +1,8 @@
 
 #include "HaploModel.h"
+#include "HaploData.h"
+
+#include "MemLeak.h"
 
 
 HaploModel::HaploModel()

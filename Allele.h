@@ -4,7 +4,6 @@
 
 
 #include "Utils.h"
-#include "Constant.h"
 
 
 typedef int Allele;
@@ -17,12 +16,12 @@ protected:
 
 public:
 	AlleleSequence();
-	AlleleSequence(int len);
 	AlleleSequence(const AlleleSequence &as);
+	explicit AlleleSequence(int len);
 	~AlleleSequence();
 
+	Allele &operator [](int i) { return m_alleles[i]; }
 	const Allele &operator [](int i) const { return m_alleles[i]; }
-	Allele &allele(int i) { return m_alleles[i]; }
 	int length() const { return m_length; }
 
 	bool isMissing(int i) const { return (m_alleles[i] < 0); }

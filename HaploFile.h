@@ -18,7 +18,7 @@ protected:
 
 public:
 	HaploFile();
-	HaploFile(const char *filename);
+	explicit HaploFile(const char *filename);
 
 	const char *filename() const { return m_filename; }
 

@@ -3,16 +3,20 @@
 #define __HAPLOBUILDER_H
 
 
+#include <list>
+#include <vector>
+
 #include "Utils.h"
 #include "Constant.h"
 #include "Allele.h"
-#include "Haplotype.h"
-#include "Genotype.h"
-#include "HaploData.h"
-#include "HaploPattern.h"
-#include "HaploPair.h"
 
 
+class AlleleSequence;
+class Haplotype;
+class Genotype;
+class HaploPattern;
+class HaploPair;
+class HaploData;
 typedef TreeNode<HaploPattern, double> PatternNode;
 
 

@@ -1,12 +1,10 @@
 
-#include <string.h>
-#include <math.h>
-
 #include "HMC.h"
-#include "Version.h"
+#include "HaploFile.h"
+#include "HaploComp.h"
 
 
-const char *HMC::m_version = "0.7.0";
+const char *HMC::m_version = "0.7.1";
 const char *HMC::m_year = "2007";
 
 

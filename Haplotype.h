@@ -15,9 +15,9 @@ protected:
 
 public:
 	Haplotype();
-	Haplotype(int len);
-	Haplotype(const AlleleSequence &as);
 	Haplotype(const Haplotype &h);
+	explicit Haplotype(int len);
+	explicit Haplotype(const AlleleSequence &as);
 
 	char *id() const { return (char *) m_id; }
 	double weight() const { return m_weight; }

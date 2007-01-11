@@ -1,6 +1,8 @@
 
 #include "HaploComp.h"
 
+#include "MemLeak.h"
+
 
 HaploComp::HaploComp()
 {

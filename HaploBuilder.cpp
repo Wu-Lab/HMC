@@ -1,16 +1,12 @@
 
+#include <deque>
+
 #include "HaploBuilder.h"
+#include "HaploPattern.h"
+#include "HaploPair.h"
+#include "HaploData.h"
 
-#include <boost/pool/object_pool.hpp>
-
-
-boost::pool<> HaploPair_pool(sizeof(HaploPair));
-
-void del_HaploPair(HaploPair *p)
-{
-	p->~HaploPair();
-	HaploPair_pool.free(p);
-}
+#include "MemLeak.h"
 
 
 PatternTree::PatternTree(const HaploData *haplo)
@@ -269,7 +265,7 @@ void HaploBuilder::initialize()
 		if (hp->m_end < m_genotype_len) {
 			temp.concatenate(*hp, -1);			// append empty allele
 			for (j=0; j<m_haplo_data->allele_num(hp->m_end); j++) {
-				temp.allele(temp.length()-1) = m_haplo_data->allele_symbol(hp->m_end, j);
+				temp[temp.length()-1] = m_haplo_data->allele_symbol(hp->m_end, j);
 				hp->m_successors[j] = m_pattern_tree->findLongestMatchPattern(hp->m_end+1, &temp);
 			}
 		}
@@ -369,7 +365,7 @@ void HaploBuilder::resolve(const Genotype &genotype, Genotype &resolution, vecto
 		else {
 			extendAll(genotype(0)[i], genotype(1)[i]);
 		}
-		for_each(m_last_list.begin(), m_last_list.end(), del_HaploPair);
+		for_each(m_last_list.begin(), m_last_list.end(), DeletePtr());
 		m_last_list.swap(m_new_list);
 		m_new_list.clear();
 		if (m_last_list.size() <= 0) {
@@ -398,7 +394,7 @@ void HaploBuilder::resolve(const Genotype &genotype, Genotype &resolution, vecto
 		resolution.setLikelihood(0);
 		resolution.setWeight(0);
 	}
-	for_each(m_last_list.begin(), m_last_list.end(), del_HaploPair);
+	for_each(m_last_list.begin(), m_last_list.end(), DeletePtr());
 	m_last_list.clear();
 }
 
@@ -482,8 +478,8 @@ void HaploBuilder::initHeadList(const Genotype &genotype)
 			i_as = as_list.begin();
 			while (i_as != as_list.end()) {
 				hp = m_pattern_tree->findLongestMatchPattern(m_head_len, *i_as);
-				if (hp != NULL && hp->m_id >= (*head)->m_id) addHaploPair(m_last_list, new (HaploPair_pool.malloc()) HaploPair(*head, hp, m_target_pattern));
-				delete *i_as;
+				if (hp != NULL && hp->m_id >= (*head)->m_id) addHaploPair(m_last_list, new HaploPair(*head, hp, m_target_pattern));
+//				delete *i_as;
 				i_as = as_list.erase(i_as);
 			}
 		}
@@ -517,13 +513,13 @@ void HaploBuilder::extend(HaploPair *hp, Allele a1, Allele a2)
 			}
 		}
 		if (hp_index < 0) {
-			new_hp = new (HaploPair_pool.malloc()) HaploPair(hp, hp->successor_a(b1), hp->successor_b(b2));
+			new_hp = new HaploPair(hp, hp->successor_a(b1), hp->successor_b(b2));
 			addHaploPair(m_new_list, new_hp);
 		}
 		else if (likelihood > m_new_list[hp_index]->m_likelihood) {
-			new_hp = new (HaploPair_pool.malloc()) HaploPair(hp, hp->successor_a(b1), hp->successor_b(b2));
+			new_hp = new HaploPair(hp, hp->successor_a(b1), hp->successor_b(b2));
 			new_hp->m_total_likelihood += m_new_list[hp_index]->m_total_likelihood;
-			del_HaploPair(m_new_list[hp_index]);
+			delete m_new_list[hp_index];
 			m_new_list[hp_index] = new_hp;
 		}
 		else {

@@ -21,12 +21,12 @@ protected:
 
 public:
 	Genotype();
-	Genotype(int len);
-	Genotype(const Haplotype &h1, const Haplotype &h2);
 	Genotype(const Genotype &g);
+	explicit Genotype(int len);
+	explicit Genotype(const Haplotype &h1, const Haplotype &h2);
 
+	Haplotype &operator ()(int i) { return m_haplotypes[i]; }
 	const Haplotype &operator ()(int i) const { return m_haplotypes[i]; }
-	Haplotype &haplotypes(int i) { return m_haplotypes[i]; }
 	char *id() const { return (char *) m_id; }
 	int length() const { return m_length; }
 	int heterozygous_num() const { return m_heterozygous_num; }

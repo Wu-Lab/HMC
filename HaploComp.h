@@ -29,7 +29,7 @@ class HaploComp {
 
 public:
 	HaploComp();
-	HaploComp(const HaploData *real, const HaploData *infer, const HaploData *input = NULL);
+	explicit HaploComp(const HaploData *real, const HaploData *infer, const HaploData *input = NULL);
 
 	double switch_error() const { return m_switch_error; }
 	double incorrect_genotype_percentage() const { return m_incorrect_genotype_percentage; }

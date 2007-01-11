@@ -1,20 +1,17 @@
 
 #include "HaploPair.h"
+#include "HaploPattern.h"
+#include "HaploData.h"
 
-#include <boost/pool/object_pool.hpp>
+#include "MemLeak.h"
 
 
-boost::pool<> PatternPair_pool(sizeof(PatternPair));
-
-void del_PatternPair(PatternPair *p)
-{
-	p->~PatternPair();
-	PatternPair_pool.free(p);
-}
+boost::pool<> PatternPair::m_pool(sizeof(PatternPair));
+boost::pool<> HaploPair::m_pool(sizeof(HaploPair));
 
 
 HaploPair::HaploPair(const HaploPattern *hpa, const HaploPattern *hpb, HaploPattern *target_pattern)
-: m_pair(new (PatternPair_pool.malloc()) PatternPair(hpa, hpb), del_PatternPair),
+: m_pair(new PatternPair(hpa, hpb)),
   m_end(hpa->m_end)
 {
 	if (hpa->m_end != hpb->m_end) {
@@ -47,7 +44,7 @@ HaploPair::HaploPair(const HaploPattern *hpa, const HaploPattern *hpb, HaploPatt
 }
 
 HaploPair::HaploPair(HaploPair *hp, const HaploPattern *hpa, const HaploPattern *hpb)
-: m_pair(new (PatternPair_pool.malloc()) PatternPair(hpa, hpb, hp->m_pair), del_PatternPair),
+: m_pair(new PatternPair(hpa, hpb, hp->m_pair)),
   m_end(hp->m_end+1),
   m_likelihood(hp->m_likelihood * hpa->m_transition_prob * hpb->m_transition_prob),
   m_total_likelihood(hp->m_total_likelihood * hpa->m_transition_prob * hpb->m_transition_prob),
@@ -67,24 +64,21 @@ HaploPair::HaploPair(HaploPair *hp, const HaploPattern *hpa, const HaploPattern 
 Genotype HaploPair::getGenotype()
 {
 	int i;
-	Genotype g(m_pair->pattern_a.m_haplo_data->m_genotype_len);
+	Genotype g(m_pair->m_pattern_a.m_haplo_data->m_genotype_len);
 	SP_PatternPair pp;
 	i = m_end - 1;
 	pp = m_pair;
 	while (pp) {
-		if (pp->prev) {
-			g.haplotypes(0).allele(i) = pp->pattern_a[i-pp->pattern_a.start()];
-			g.haplotypes(1).allele(i) = pp->pattern_b[i-pp->pattern_b.start()];
+		if (pp->m_prev) {
+			g(0)[i] = pp->m_pattern_a[i-pp->m_pattern_a.start()];
+			g(1)[i] = pp->m_pattern_b[i-pp->m_pattern_b.start()];
 		}
 		else {
-			while (i >= 0) {
-				g.haplotypes(0).allele(i) = pp->pattern_a[i-pp->pattern_a.start()];
-				g.haplotypes(1).allele(i) = pp->pattern_b[i-pp->pattern_b.start()];
-				i--;
-			}
+			copy(&pp->m_pattern_a[0], &pp->m_pattern_a[pp->m_pattern_a.length()], &g(0)[pp->m_pattern_a.start()]);
+			copy(&pp->m_pattern_b[0], &pp->m_pattern_b[pp->m_pattern_b.length()], &g(1)[pp->m_pattern_b.start()]);
 			break;
 		}
-		pp = pp->prev;
+		pp = pp->m_prev;
 		i--;
 	}
 	g.checkGenotype();
@@ -93,15 +87,15 @@ Genotype HaploPair::getGenotype()
 
 bool HaploPair::extendable(int a, int b, HaploPattern *target_pattern)
 {
-	HaploPattern *hpa, *hpb;
+	const HaploPattern *hpa, *hpb;
 	if (!m_match_a && !m_match_b) {
 		return false;
 	}
 	m_half = false;
 	m_match_next_a = m_match_a;
 	m_match_next_b = m_match_b;
-	hpa = m_pair->pattern_a.m_successors[a];
-	hpb = m_pair->pattern_b.m_successors[b];
+	hpa = successor_a(a);
+	hpb = successor_b(b);
 	if (hpa != NULL && hpb != NULL) {
 		if (m_homogenous && hpa->m_id > hpb->m_id) {
 			return false;
@@ -125,9 +119,9 @@ bool HaploPair::extendable(int a, int b, HaploPattern *target_pattern)
 
 void HaploPair::extend_trial(int a, int b, int id[2], double &likelihood, double &total_likelihood)
 {
-	HaploPattern *hpa, *hpb;
-	hpa = m_pair->pattern_a.m_successors[a];
-	hpb = m_pair->pattern_b.m_successors[b];
+	const HaploPattern *hpa, *hpb;
+	hpa = successor_a(a);
+	hpb = successor_b(b);
 	getID(id, hpa, hpb);
 	likelihood = m_likelihood * hpa->m_transition_prob * hpb->m_transition_prob;
 	total_likelihood = m_total_likelihood * hpa->m_transition_prob * hpb->m_transition_prob;

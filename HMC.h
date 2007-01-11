@@ -5,9 +5,10 @@
 
 #include "Utils.h"
 #include "HaploData.h"
-#include "HaploFile.h"
 #include "HaploModel.h"
-#include "HaploComp.h"
+
+
+class HaploFile;
 
 
 class HMC {
@@ -21,7 +22,7 @@ class HMC {
 	static const char *m_year;
 
 public:
-	HMC(int argc = 0, char *argv[] = NULL);
+	explicit HMC(int argc = 0, char *argv[] = NULL);
 	~HMC();
 
 	void usage();

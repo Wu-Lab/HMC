@@ -1,7 +1,7 @@
 
-#include <string.h>
-
 #include "HaploFile.h"
+
+#include "MemLeak.h"
 
 
 ////////////////////////////////
@@ -504,13 +504,13 @@ char *HaploFileBench::readHaplotype(Haplotype &h, char *buffer, int heterozygous
 	buf = buffer + strspn(buffer, delim);
 	for (i=0; i<h.length(); i++) {
 		if (buf[i] == '0') {
-			h.allele(i) = -1;
+			h[i] = -1;
 		}
 		else if (buf[i] == '9') {
-			h.allele(i) = '0' + heterozygous;
+			h[i] = '0' + heterozygous;
 		}
 		else {
-			h.allele(i) = (unsigned char) buf[i];
+			h[i] = (unsigned char) buf[i];
 		}
 	}
 	buf += h.length();

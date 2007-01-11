@@ -7,7 +7,9 @@
 #include "Allele.h"
 #include "Haplotype.h"
 #include "Genotype.h"
-#include "HaploData.h"
+
+
+class HaploData;
 
 
 class HaploPattern : public AlleleSequence {
@@ -27,10 +29,10 @@ protected:
 
 public:
 	HaploPattern();
-	HaploPattern(const HaploData *haplo, int start = 0);
-	HaploPattern(const HaploData *haplo, const Allele &a, int start = 0);
-	HaploPattern(const HaploData *haplo, const AlleleSequence &as, int start = 0);
 	HaploPattern(const HaploPattern &hp);
+	explicit HaploPattern(const HaploData *haplo, int start = 0);
+	explicit HaploPattern(const HaploData *haplo, const Allele &a, int start = 0);
+	explicit HaploPattern(const HaploData *haplo, const AlleleSequence &as, int start = 0);
 	~HaploPattern();
 
 	const HaploData *haplo_data() { return m_haplo_data; }

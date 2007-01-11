@@ -1,7 +1,7 @@
 
-#include <string.h>
-
 #include "HaploData.h"
+
+#include "MemLeak.h"
 
 
 ////////////////////////////////
@@ -219,15 +219,15 @@ void HaploData::simplify()
 	int i, j, k;
 	for (i=0; i<m_genotype_num; i++) {
 		for (j=0; j<2; j++) {
-			Haplotype &h = m_genotypes[i].haplotypes(j);
+			Haplotype &h = m_genotypes[i](j);
 			for (k=0; k<m_genotype_len; k++) {
 				if (!h.isMissing(k))
 				{
 					if (m_allele_type[k] == 'S') {
-						h.allele(k) = getAlleleIndex(k, h[k]) + '1';
+						h[k] = getAlleleIndex(k, h[k]) + '1';
 					}
 					else {
-						h.allele(k) = getAlleleIndex(k, h[k]) + 1;
+						h[k] = getAlleleIndex(k, h[k]) + 1;
 					}
 				}
 			}

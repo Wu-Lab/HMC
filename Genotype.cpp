@@ -1,7 +1,7 @@
 
-#include <string.h>
-
 #include "Genotype.h"
+
+#include "MemLeak.h"
 
 
 ////////////////////////////////
@@ -89,7 +89,7 @@ void Genotype::randomizePhase()
 {
 	int i;
 	for (i=0; i<m_length; i++) {
-		if (2.0 * rand() < RAND_MAX ) swap(m_haplotypes[0].allele(i), m_haplotypes[1].allele(i));
+		if (2.0 * rand() < RAND_MAX ) swap(m_haplotypes[0][i], m_haplotypes[1][i]);
 	}
 	m_is_phased = false;
 }

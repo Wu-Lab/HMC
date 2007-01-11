@@ -1,7 +1,7 @@
 
-#include <string.h>
-
 #include "Allele.h"
+
+#include "MemLeak.h"
 
 
 ////////////////////////////////

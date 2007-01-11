@@ -1,6 +1,8 @@
 
 #include "HMC.h"
 
+#include "MemLeak.h"
+
 
 int main(int argc, char *argv[])
 {

@@ -3,9 +3,6 @@
 #define __TREE_H
 
 
-#include <stdlib.h>
-
-
 template <class TObject, class TKey = int>
 class Tree;
 

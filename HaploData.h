@@ -4,6 +4,8 @@
 
 
 #include "Utils.h"
+#include "Constant.h"
+#include "Allele.h"
 #include "Genotype.h"
 
 
@@ -23,8 +25,8 @@ protected:
 
 public:
 	HaploData();
-	HaploData(int num, int len);
 	HaploData(const HaploData &hd);
+	explicit HaploData(int num, int len);
 	~HaploData();
 
 	const Genotype &operator [](int i) const { return m_genotypes[i]; }

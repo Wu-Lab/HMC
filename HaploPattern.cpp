@@ -1,7 +1,8 @@
 
-#include <string.h>
-
 #include "HaploPattern.h"
+#include "HaploData.h"
+
+#include "MemLeak.h"
 
 
 ////////////////////////////////
@@ -140,7 +141,7 @@ void HaploPattern::setHaploData(const HaploData *haplo)
 
 void HaploPattern::setPattern(const Allele &a, int start)
 {
-	AlleleSequence::assign(a);
+	AlleleSequence::assign(AlleleSequence(a));
 	m_start = start;
 	m_end = m_start + m_length;
 	checkFrequency();
