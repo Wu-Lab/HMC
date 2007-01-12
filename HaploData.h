@@ -40,6 +40,7 @@ public:
 	int allele_num(int locus) const { return m_allele_num[locus]; }
 	const char *allele_name(int locus) const { return m_allele_name[locus]; }
 	Allele allele_symbol(int locus, int index) const { return m_allele_symbol[locus][index]; }
+	double allele_frequency(int locus, int index) const { return m_allele_frequency[locus][index]; }
 	double allele_frequency(int locus, Allele a) const { return m_allele_frequency[locus][getAlleleIndex(locus, a)]; }
 
 	int getAlleleIndex(int locus, Allele a) const;
@@ -60,10 +61,6 @@ public:
 
 protected:
 	HaploData &assign(const HaploData &hd);
-
-	friend class HaploPattern;
-	friend class HaploPair;
-	friend class HaploBuilder;
 };
 
 inline HaploData &HaploData::operator =(const HaploData &hd)

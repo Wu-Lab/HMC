@@ -62,14 +62,6 @@ public:
 	int getDiffNumIgnoreMissing(const Genotype &g) const;
 	int getSwitchDistance(const Genotype &g) const;
 	int getSwitchDistanceIgnoreMissing(const Genotype &g) const;
-
-public:
-	Genotype &assign(const Genotype &g1, const Genotype &g2);
-
-	Genotype &operator +=(const Genotype &g);
-
-	friend class HaploPattern;
-	friend class HaploData;
 };
 
 inline Genotype::Genotype()

@@ -3,6 +3,9 @@
 #define __HAPLOPATTERN_H
 
 
+#include <list>
+#include <boost/pool/pool.hpp>
+
 #include "Utils.h"
 #include "Allele.h"
 #include "Haplotype.h"
@@ -14,50 +17,44 @@ class HaploData;
 
 class HaploPattern : public AlleleSequence {
 protected:
-	const HaploData *m_haplo_data;
-	unsigned int m_id;
+	static boost::pool<> m_pool;
+	const HaploData &m_haplodata;
 	int m_start, m_end;
+	unsigned int m_id;
 	double m_frequency;
-	double m_weight;
-	int m_genotype_num;
-	bool *m_match_genotype;
-	double *m_match_frequency;
-	int m_successors_num;
-	HaploPattern **m_successors;
 	double m_transition_prob;
-	HaploPattern *m_prefix;
+	const HaploPattern *m_prefix;
+	vector<const HaploPattern*> m_successors;
+	list<pair<int, double> > m_match_frequency;
 
 public:
-	HaploPattern();
-	HaploPattern(const HaploPattern &hp);
-	explicit HaploPattern(const HaploData *haplo, int start = 0);
-	explicit HaploPattern(const HaploData *haplo, const Allele &a, int start = 0);
-	explicit HaploPattern(const HaploData *haplo, const AlleleSequence &as, int start = 0);
-	~HaploPattern();
+	explicit HaploPattern(const HaploData &hd, int start);
 
-	const HaploData *haplo_data() { return m_haplo_data; }
-	unsigned int id() { return m_id; }
+	const HaploData &haplodata() const { return m_haplodata; }
+	unsigned int id() const { return m_id; }
 	int start() const { return m_start; }
 	int end() const { return m_end; }
 	double frequency() const { return m_frequency; }
-	double weight() const { return m_weight; }
-	HaploPattern *successors(int i) const { return m_successors[i]; }
+	double transition_prob() const { return m_transition_prob; }
+	const HaploPattern *prefix() const { return m_prefix; }
+	const HaploPattern *successors(int i) const { return m_successors[i]; }
 
 	int getAlleleIndex(int local_locus) const;
 	int getGlobalLocus(int local_locus) const { return m_start+local_locus; }
 
-	void setHaploData(const HaploData *haplo);
 	void setPattern(const Allele &a, int start = 0);
 	void setPattern(const AlleleSequence &as, int start = 0);
-	void setSuccessor(int i, HaploPattern *pn) { m_successors[i] = pn; }
+	void setID(int i) { m_id = i; }
+	void setFrequency(double f) { m_frequency = f; }
+	void setTransitionProb(double p) { m_transition_prob = p; }
+	void setPrefix(const HaploPattern *p) { m_prefix = p; }
+	void setSuccessor(int i, const HaploPattern *pn) { m_successors.resize(i+1); m_successors[i] = pn; }
 
 	void repack();
 
-	void copyMatchGenotype(const HaploPattern &hp);
-	void releaseMatchGenotype();
+	void releaseMatchGenotype() { m_match_frequency.clear(); }
 	double checkFrequency();
-	double checkFrequencyWithExtension(int ext);
-	double checkFrequencyWithExtension(int ext, int len);
+	double checkFrequencyWithExtension(int ext, int len = 1);
 
 	bool isMatch(const Haplotype &h) const;
 	bool isMatch(const Genotype &g) const;
@@ -72,28 +69,31 @@ public:
 	char *read(char *buffer, int len = 0);
 	char *write(char *buffer, bool long_format = true) const;
 
-	HaploPattern &assign(const HaploPattern &hp);
-	HaploPattern &assign(const HaploPattern &hp1, const HaploPattern &hp2);
-	HaploPattern &assign(const HaploPattern &hp, const AlleleSequence &as);
-	HaploPattern &assign(const AlleleSequence &as, const HaploPattern &hp);
-	HaploPattern &assign(const HaploPattern &hp, const Allele &a);
-	HaploPattern &assign(const Allele &a, const HaploPattern &hp);
-
-	HaploPattern &operator =(const HaploPattern &hp);
-	HaploPattern &operator +=(const HaploPattern &hp);
 	HaploPattern &operator +=(const AlleleSequence &as);
 	HaploPattern &operator +=(const Allele &a);
 
+	static void *operator new(std::size_t) { return m_pool.malloc(); }
+	static void operator delete(void *rawMemory) { m_pool.free(rawMemory); }
+
+#ifdef _DEBUG
+	static void *operator new(unsigned int, int, const char *, int) { return m_pool.malloc(); }
+	static void operator delete(void *rawMemory, int, const char *, int) { m_pool.free(rawMemory); }
+#endif // _DEBUG
+
 protected:
-	double getMatchingFrequency(int h, const Allele *pa, int start, int len) const;
-
-public:
-
-	friend class HaploPair;
-	friend class PatternTree;
-	friend class HaploBuilder;
-	friend class HaploData;
+	double getMatchingFrequency(const Genotype &g, const Allele *pa, int start, int len) const;
 };
+
+HaploPattern::HaploPattern(const HaploData &hd, int start)
+: m_haplodata(hd),
+  m_start(start),
+  m_end(start),
+  m_id(0),
+  m_frequency(0),
+  m_transition_prob(1.0),
+  m_prefix(0)
+{
+}
 
 inline bool HaploPattern::isMatch(const Haplotype &h) const
 {
@@ -154,14 +154,20 @@ inline bool HaploPattern::isMatch(const HaploPattern &hp, int start, int len) co
 	return AlleleSequence::isMatch(hp, start-m_start, start-hp.m_start, len);
 }
 
-inline double HaploPattern::checkFrequencyWithExtension(int ext)
+inline HaploPattern &HaploPattern::operator +=(const AlleleSequence &as)
 {
-	return checkFrequencyWithExtension(ext, 1);
+	AlleleSequence::operator +=(as);
+	m_end += as.length();
+	checkFrequencyWithExtension(m_end-as.length(), as.length());
+	return *this;
 }
 
-inline HaploPattern &HaploPattern::operator =(const HaploPattern &hp)
+inline HaploPattern &HaploPattern::operator +=(const Allele &a)
 {
-	return assign(hp);
+	AlleleSequence::operator +=(a);
+	++m_end;
+	checkFrequencyWithExtension(m_end-1);
+	return *this;
 }
 
 
