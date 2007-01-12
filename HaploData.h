@@ -29,8 +29,8 @@ public:
 	explicit HaploData(int num, int len);
 	~HaploData();
 
+	Genotype &operator [](int i) { return m_genotypes[i]; }
 	const Genotype &operator [](int i) const { return m_genotypes[i]; }
-	Genotype &genotype(int i) { return m_genotypes[i]; }
 	int genotype_num() const { return m_genotype_num; }
 	int genotype_len() const { return m_genotype_len; }
 	int unphased_num() const { return m_unphased_num; }

@@ -150,7 +150,7 @@ void HaploPattern::setPattern(const Allele &a, int start)
 
 void HaploPattern::setPattern(const AlleleSequence &as, int start)
 {
-	AlleleSequence::assign(as);
+	AlleleSequence::operator =(as);
 	m_start = start;
 	m_end = m_start + length();
 	checkFrequency();
@@ -371,7 +371,7 @@ char *HaploPattern::write(char *buffer, bool long_format) const
 HaploPattern &HaploPattern::assign(const HaploPattern &hp)
 {
 	int i;
-	AlleleSequence::assign(hp);
+	AlleleSequence::operator =(hp);
 	m_id = hp.m_id;
 	m_start = hp.m_start;
 	m_end = hp.m_end;

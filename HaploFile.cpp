@@ -67,7 +67,7 @@ void HaploFile::readHaploData(HaploData &hd)
 		if (m_has_id) {
 			fgets(line, STR_LEN_FILE_LINE, fp);
 			if (sscanf(line, "%s", buf) > 0) {
-				hd.genotype(i).setID(buf);
+				hd[i].setID(buf);
 			}
 		}
 		fgets(line, STR_LEN_FILE_LINE, fp);
@@ -78,7 +78,7 @@ void HaploFile::readHaploData(HaploData &hd)
 			Logger::error("Incorrect haplotype data for individual %d!", i);
 			exit(1);
 		}
-		hd.genotype(i).setHaplotypes(h1, h2);
+		hd[i].setHaplotypes(h1, h2);
 	}
 	fclose(fp);
 	hd.checkAlleleNum();
@@ -108,10 +108,10 @@ void HaploFile::writeHaploData(HaploData &hd, const char *suffix)
 	for (i=0; i<hd.genotype_num(); i++) {
 		id = hd[i].id()[0];
 		if (id >= '0' && id <= '9') {
-			fprintf(fp, "#%s\n", hd[i].id());
+			fprintf(fp, "#%s\n", hd[i].id_str());
 		}
 		else {
-			fprintf(fp, "%s\n", hd[i].id());
+			fprintf(fp, "%s\n", hd[i].id_str());
 		}
 		for (j=0; j<2; j++) {
 			fprintf(fp, "%s\n", hd[i](j).write(hd.allele_types(), buf));
@@ -217,8 +217,8 @@ void HaploFileHPM::readHaploData(HaploData &hd)
 		haplos.moveNext();
 		h2 = haplos.getCurrent();
 		haplos.moveNext();
-		hd.genotype(i).setHaplotypes(*h1, *h2);
-		hd.genotype(i).setID(h1->id());
+		hd[i].setHaplotypes(*h1, *h2);
+		hd[i].setID(h1->id());
 	}
 	fclose(fp);
 	hd.checkAlleleNum();
@@ -299,7 +299,7 @@ char *HaploFileHPM::readHaplotype(Haplotype &h, char *buffer)
 char *HaploFileHPM::writeHaplotype(const Haplotype &h, char *buffer)
 {
 	char *s = buffer;
-	strcpy(s, h.id());
+	strcpy(s, h.id_str());
 	strcat(s, "\t");
 	s += strlen(s);
 	h.write(NULL, s);
@@ -411,8 +411,8 @@ void HaploFileBench::readHaploData(HaploData &hd)
 		haplos.moveNext();
 		h2 = haplos.getCurrent();
 		haplos.moveNext();
-		hd.genotype(i).setHaplotypes(*h1, *h2);
-		hd.genotype(i).setID(h1->id());
+		hd[i].setHaplotypes(*h1, *h2);
+		hd[i].setID(h1->id());
 	}
 	hd.checkAlleleNum();
 	hd.checkAlleleFrequency();
@@ -432,7 +432,7 @@ void HaploFileBench::writeHaploData(HaploData &hd, const char *suffix)
 	}
 	for (i=0; i<hd.genotype_num(); i++) {
 		for (j=0; j<2; j++) {
-			fprintf(fp, "%s   %d 0 %s\n", writeHaplotype(hd[i](j), buf), i+2*j, hd[i](j).id());
+			fprintf(fp, "%s   %d 0 %s\n", writeHaplotype(hd[i](j), buf), i+2*j, hd[i](j).id_str());
 		}
 	}
 	fclose(fp);

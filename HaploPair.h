@@ -22,8 +22,8 @@ public:
 	explicit PatternPair(const HaploPattern *hpa, const HaploPattern *hpb) : m_pattern_a(*hpa), m_pattern_b(*hpb) {};
 	explicit PatternPair(const HaploPattern *hpa, const HaploPattern *hpb, SP_PatternPair &pp) : m_pattern_a(*hpa), m_pattern_b(*hpb), m_prev(pp) {};
 
-	static void *operator new(std::size_t) throw(std::bad_alloc) { return m_pool.malloc(); }
-	static void operator delete(void *rawMemory) throw() { m_pool.free(rawMemory); }
+	static void *operator new(std::size_t) { return m_pool.malloc(); }
+	static void operator delete(void *rawMemory) { m_pool.free(rawMemory); }
 
 #ifdef _DEBUG
 	static void *operator new(unsigned int, int, const char *, int) { return m_pool.malloc(); }
@@ -60,8 +60,8 @@ public:
 
 	static void getID(int id[2], const HaploPattern *hpa, const HaploPattern *hpb);
 
-	static void *operator new(std::size_t) throw(std::bad_alloc) { return m_pool.malloc(); }
-	static void operator delete(void *rawMemory) throw() { m_pool.free(rawMemory); }
+	static void *operator new(std::size_t) { return m_pool.malloc(); }
+	static void operator delete(void *rawMemory) { m_pool.free(rawMemory); }
 
 #ifdef _DEBUG
 	static void *operator new(unsigned int, int, const char *, int) { return m_pool.malloc(); }

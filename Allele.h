@@ -45,7 +45,6 @@ public:
 	char *read(const char *types, char *buffer, int len = 0);
 	char *write(const char *types, char *buffer) const;
 
-	AlleleSequence &assign(const AlleleSequence &as);
 	AlleleSequence &assign(const AlleleSequence &as, const Allele &a);
 	AlleleSequence &assign(const Allele &a, const AlleleSequence &as);
 	AlleleSequence &assign(const AlleleSequence &as1, const AlleleSequence &as2);
@@ -93,16 +92,10 @@ inline int AlleleSequence::getDiffNum(const AlleleSequence &as) const
 	return getDiffNum(as, 0, 0, (length() < as.length() ? length() : as.length()));
 }
 
-inline AlleleSequence &AlleleSequence::assign(const AlleleSequence &as)
-{
-	m_alleles.assign(as.m_alleles.begin(), as.m_alleles.end());
-	return *this;
-}
-
 inline AlleleSequence &AlleleSequence::assign(const AlleleSequence &as, const Allele &a)
 {
-	assign(as);
-	m_alleles.push_back(a);
+	m_alleles = as.m_alleles;
+	(*this) += a;
 	return *this;
 }
 
@@ -116,7 +109,7 @@ inline AlleleSequence &AlleleSequence::assign(const Allele &a, const AlleleSeque
 
 inline AlleleSequence &AlleleSequence::assign(const AlleleSequence &as1, const AlleleSequence &as2)
 {
-	assign(as1);
+	m_alleles = as1.m_alleles;
 	(*this) += as2;
 	return *this;
 }

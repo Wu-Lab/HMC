@@ -286,9 +286,9 @@ void HaploBuilder::adjust(double min_freq)
 		hp = *i_hp;
 		new_frequency[hp->id()] = 0;
 		for (i=0; i<m_haplo_data->m_genotype_num; i++) {
-			if (hp->isMatch(m_haplo_data->genotype(i))) {
-				resolve(m_haplo_data->genotype(i), res, res_list, hp);
-				new_frequency[hp->id()] += res.likelihood() / m_haplo_data->genotype(i).likelihood();
+			if (hp->isMatch((*m_haplo_data)[i])) {
+				resolve((*m_haplo_data)[i], res, res_list, hp);
+				new_frequency[hp->id()] += res.likelihood() / (*m_haplo_data)[i].likelihood();
 			}
 		}
 		Logger::status("Adjust haplotype patterns: %d     ", hp->id());

@@ -3,6 +3,8 @@
 #define __GENOTYPE_H
 
 
+#include <string>
+
 #include "Utils.h"
 #include "Haplotype.h"
 
@@ -10,7 +12,7 @@
 class Genotype {
 protected:
 	Haplotype m_haplotypes[2];
-	char m_id[STR_LEN_GENOTYPE_ID];
+	string m_id;
 	int m_length;
 	int m_heterozygous_num;
 	int m_missing_num;
@@ -26,7 +28,8 @@ public:
 
 	Haplotype &operator ()(int i) { return m_haplotypes[i]; }
 	const Haplotype &operator ()(int i) const { return m_haplotypes[i]; }
-	char *id() const { return (char *) m_id; }
+	const string &id() const { return m_id; }
+	const char *id_str() const { return m_id.c_str(); }
 	int length() const { return m_length; }
 	int heterozygous_num() const { return m_heterozygous_num; }
 	int missing_num() const { return m_missing_num; }
@@ -35,7 +38,7 @@ public:
 	double weight() const { return m_weight; }
 	bool isPhased() const { return m_is_phased; }
 
-	void setID(const char *id) { strcpy(m_id, id); }
+	void setID(const string &id) { m_id = id; }
 	void setLength(int len) { m_length = len; }
 	void setLikelihood(double likelihood) { m_likelihood = likelihood; }
 	void setWeight(double weight) { m_weight = weight; }
@@ -62,9 +65,6 @@ public:
 	int getSwitchDistanceIgnoreMissing(const Genotype &g) const;
 
 public:
-	friend Genotype operator +(const Genotype &g1, const Genotype &g2);
-
-	Genotype &assign(const Genotype &g);
 	Genotype &assign(const Genotype &g1, const Genotype &g2);
 
 	Genotype &operator +=(const Genotype &g);

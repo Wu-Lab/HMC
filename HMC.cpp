@@ -262,13 +262,13 @@ void HMC::resolve()
 		double ll = 0;
 		for (i=0; i<m_genos.unphased_num(); i++) {
 //			if (!unphased_genos[i].isPhased()) {
-				Logger::status("Iteration %d: Resolving Genotype[%d] %s ...", iter, i, m_genos[i].id());
-				m_builder.resolve(unphased_genos[i], m_resolutions.genotype(i), res_list);
-				m_resolutions.genotype(i).setID(m_genos[i].id());
+				Logger::status("Iteration %d: Resolving Genotype[%d] %s ...", iter, i, m_genos[i].id_str());
+				m_builder.resolve(unphased_genos[i], m_resolutions[i], res_list);
+				m_resolutions[i].setID(m_genos[i].id());
 				if (res_list.size() == 0) {
-					Logger::warning("Unable to resolve Genotype[%d]: %s!", i, m_genos[i].id());
+					Logger::warning("Unable to resolve Genotype[%d]: %s!", i, m_genos[i].id_str());
 				}
-				unphased_genos.genotype(i).setLikelihood(m_resolutions[i].likelihood());
+				unphased_genos[i].setLikelihood(m_resolutions[i].likelihood());
 //			}
 			ll += log(m_resolutions[i].likelihood());
 		}

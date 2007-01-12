@@ -27,10 +27,3 @@ Haplotype::Haplotype(const AlleleSequence &as)
 	m_id[0] = 0;
 	m_weight = 1.0;
 }
-
-Haplotype::Haplotype(const Haplotype &h)
-	: AlleleSequence(h)
-{
-	strcpy(m_id, h.m_id);
-	m_weight = h.m_weight;
-}
