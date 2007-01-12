@@ -654,15 +654,14 @@ void HaploBuilder::searchHaploPattern(vector<HaploPattern*> &candidates, double 
 			if (hp->end() < m_genotype_len && hp->length() < max_len[hp->end()]) {
 				for (i=0; i<m_haplo_data->allele_num(hp->end()); i++) {
 					if (m_haplo_data->allele_frequency(hp->end(), i) > 0) {
-						hp_candidate = new HaploPattern(*hp);
-						(*hp_candidate) += m_haplo_data->allele_symbol(hp->end(), i);
+						hp_candidate = new HaploPattern(*m_haplo_data, hp->end());
+						hp_candidate->assign(*hp, m_haplo_data->allele_symbol(hp->end(), i));
 						if (hp_candidate->frequency() >= min_freq || hp->length() <= 1)
 						{
 							candidates.push_back(hp_candidate);
 						}
 						else if (hp_candidate->frequency() > 0)
 						{
-							if ((int)candidates.size() > Constant::ram_limit()) hp_candidate->releaseMatchGenotype();
 							new_candidates.push_back(hp_candidate);
 						}
 						else {

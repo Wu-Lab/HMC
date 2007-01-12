@@ -69,6 +69,8 @@ public:
 	char *read(char *buffer, int len = 0);
 	char *write(char *buffer, bool long_format = true) const;
 
+	HaploPattern &assign(const HaploPattern &hp, const Allele &a);
+
 	HaploPattern &operator +=(const AlleleSequence &as);
 	HaploPattern &operator +=(const Allele &a);
 
@@ -152,6 +154,18 @@ inline bool HaploPattern::isMatch(const Genotype &g, int start, int len) const
 inline bool HaploPattern::isMatch(const HaploPattern &hp, int start, int len) const
 {
 	return AlleleSequence::isMatch(hp, start-m_start, start-hp.m_start, len);
+}
+
+inline HaploPattern &HaploPattern::assign(const HaploPattern &hp, const Allele &a)
+{
+	m_start = hp.m_start;
+	m_end = hp.m_end;
+	m_frequency = hp.m_frequency;
+	m_match_frequency = hp.m_match_frequency;
+	AlleleSequence::assign(hp, a);
+	++m_end;
+	checkFrequencyWithExtension(m_end-1);
+	return *this;
 }
 
 inline HaploPattern &HaploPattern::operator +=(const AlleleSequence &as)
