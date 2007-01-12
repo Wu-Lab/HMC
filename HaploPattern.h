@@ -121,7 +121,7 @@ inline bool HaploPattern::isMatch(const HaploPattern &hp) const
 
 inline bool HaploPattern::isMatch(const Haplotype &h, int locus) const
 {
-	return h.isMatch(m_alleles[locus-m_start], locus);	
+	return m_alleles[locus-m_start].isMatch(h[locus]);	
 }
 
 inline bool HaploPattern::isMatch(const Genotype &g, int locus) const
@@ -135,7 +135,7 @@ inline bool HaploPattern::isMatch(const HaploPattern &hp, int locus) const
 		return true;
 	}
 	else {
-		return AlleleSequence::isMatch(hp.m_alleles[locus-hp.m_start], locus-m_start);
+		return m_alleles[locus-m_start].isMatch(hp[locus-hp.m_start]);
 	}
 }
 

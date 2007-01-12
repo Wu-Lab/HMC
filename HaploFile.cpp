@@ -522,11 +522,11 @@ char *HaploFileBench::writeHaplotype(const Haplotype &h, char *buffer)
 	int i;
 
 	for (i=0; i<h.length(); i++) {
-		if (h[i] < 0) {
+		if (h[i].isMissing()) {
 			buffer[i] = '0';
 		}
 		else {
-			buffer[i] = (char) h[i];
+			buffer[i] = h[i].asChar();
 		}
 	}
 	buffer[h.length()] = 0;

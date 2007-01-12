@@ -118,7 +118,7 @@ HaploPattern::~HaploPattern()
 int HaploPattern::getAlleleIndex(int local_locus) const
 {
 	int index;
-	if (isMissing(local_locus)) {
+	if (m_alleles[local_locus].isMissing()) {
 		index = -1;
 	}
 	else {
@@ -164,7 +164,7 @@ void HaploPattern::repack()
 	start = 0;
 	repacked = false;
 	for (i=0; i<length(); i++) {
-		if (isMissing(i)) {
+		if (m_alleles[i].isMissing()) {
 			m_start++;
 			start++;
 			repacked = true;
@@ -174,7 +174,7 @@ void HaploPattern::repack()
 		}
 	}
 	for (i=length()-1; i>=m_start; i--) {
-		if (isMissing(i)) {
+		if (m_alleles[i].isMissing()) {
 			m_end--;
 			repacked = true;
 		}
@@ -325,11 +325,11 @@ double HaploPattern::getMatchingFrequency(int g, const Allele *pa, int start, in
 	Allele b;
 	total_freq = 1.0;
 	for (i=0; i<len; i++) {
-		if (pa[i] >= 0) {			// pa[i] is not missing
+		if (!pa[i].isMissing()) {			// pa[i] is not missing
 			freq = 0;
 			for (j=0; j<2; j++) {
 				b = m_haplo_data->m_genotypes[g](j)[start+i];
-				if (b < 0) {			// b is missing
+				if (b.isMissing()) {		// b is missing
 					freq += m_haplo_data->allele_frequency(start+i, pa[i]) > 0 ? (1.0/m_haplo_data->allele_num(start+i)) : 0;
 				}
 				else if (b == pa[i]) {

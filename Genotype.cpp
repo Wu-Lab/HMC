@@ -6,41 +6,20 @@
 
 ////////////////////////////////
 //
-// class Haplotype
-
-Genotype::Genotype()
-{
-	m_id[0] = 0;
-	m_length = 0;
-	m_heterozygous_num = 0;
-	m_likelihood = 0;
-	m_weight = 1.0;
-	m_is_phased = false;
-}
-
-Genotype::Genotype(int len)
-{
-	m_haplotypes[0].setLength(len);
-	m_haplotypes[1].setLength(len);
-	m_id[0] = 0;
-	m_length = len;
-	m_heterozygous_num = 0;
-	m_likelihood = 0;
-	m_weight = 1.0;
-	m_is_phased = false;
-}
+// class Genotype
 
 Genotype::Genotype(const Haplotype &h1, const Haplotype &h2)
+: m_heterozygous_num(0),
+  m_missing_num(0),
+  m_missing_allele_num(0),
+  m_likelihood(0),
+  m_weight(1.0),
+  m_is_phased(false)
 {
 	if (h1.length() == h2.length()) {
 		m_haplotypes[0] = h1;
 		m_haplotypes[1] = h2;
-		m_id[0] = 0;
-		m_length = h1.length();
 		checkGenotype();
-		m_likelihood = 0;
-		m_weight = 1.0;
-		m_is_phased = false;
 	}
 	else {
 		Logger::error("Attempt to combine two inconsistent haplotypes!");
@@ -52,7 +31,6 @@ void Genotype::setHaplotypes(Haplotype &h1, Haplotype &h2)
 {
 	m_haplotypes[0] = h1;
 	m_haplotypes[1] = h2;
-	m_length = h1.length();
 	m_likelihood = 0;
 	m_weight = 1.0;
 	m_is_phased = false;
@@ -65,18 +43,18 @@ void Genotype::checkGenotype()
 	m_heterozygous_num = 0;
 	m_missing_num = 0;
 	m_missing_allele_num = 0;
-	for (i=0; i<m_length; i++) {
+	for (i=0; i<length(); i++) {
 		if (isHeterozygous(i)) m_heterozygous_num++;
 		if (hasMissing(i)) m_missing_num++;
-		if (m_haplotypes[0].isMissing(i)) m_missing_allele_num++;
-		if (m_haplotypes[1].isMissing(i)) m_missing_allele_num++;
+		if (m_haplotypes[0][i].isMissing()) m_missing_allele_num++;
+		if (m_haplotypes[1][i].isMissing()) m_missing_allele_num++;
 	}
 }
 
 void Genotype::randomizePhase()
 {
 	int i;
-	for (i=0; i<m_length; i++) {
+	for (i=0; i<length(); i++) {
 		if (2.0 * rand() < RAND_MAX ) swap(m_haplotypes[0][i], m_haplotypes[1][i]);
 	}
 	m_is_phased = false;
@@ -98,7 +76,6 @@ Genotype &Genotype::operator +=(const Genotype &g)
 {
 	m_haplotypes[0] += g.m_haplotypes[0];
 	m_haplotypes[1] += g.m_haplotypes[1];
-	m_length += g.m_length;
 	m_heterozygous_num += g.m_heterozygous_num;
 	return *this;
 }
@@ -108,7 +85,6 @@ Genotype &Genotype::assign(const Genotype &g1, const Genotype &g2)
 	m_haplotypes[0].assign(g1.m_haplotypes[0], g2.m_haplotypes[0]);
 	m_haplotypes[1].assign(g1.m_haplotypes[1], g2.m_haplotypes[1]);
 	m_id = g1.m_id;
-	m_length = g1.m_length + g2.m_length;
 	m_heterozygous_num = g1.m_heterozygous_num + g2.m_heterozygous_num;
 	m_likelihood = g1.m_likelihood;
 	m_weight = g1.m_weight;
@@ -120,7 +96,7 @@ bool Genotype::isMatch(const AlleleSequence &as, int start1, int start2, int len
 {
 	int i;
 	bool match;
-	if (start1+len > m_length || start2+len > as.length()) {
+	if (start1+len > length() || start2+len > as.length()) {
 		match = false;
 	}
 	else {
@@ -139,7 +115,7 @@ bool Genotype::isMatch(const Genotype &g, int i, bool reversed) const
 {
 	bool match;
 	if (reversed) {
-		if (m_haplotypes[0].isMatch(g.m_haplotypes[1][i], i) && m_haplotypes[1].isMatch(g.m_haplotypes[0][i], i)) {
+		if (m_haplotypes[0][i].isMatch(g.m_haplotypes[1][i]) && m_haplotypes[1][i].isMatch(g.m_haplotypes[0][i])) {
 			match = true;
 		}
 		else {
@@ -147,7 +123,7 @@ bool Genotype::isMatch(const Genotype &g, int i, bool reversed) const
 		}
 	}
 	else {
-		if (m_haplotypes[0].isMatch(g.m_haplotypes[0][i], i) && m_haplotypes[1].isMatch(g.m_haplotypes[1][i], i)) {
+		if (m_haplotypes[0][i].isMatch(g.m_haplotypes[0][i]) && m_haplotypes[1][i].isMatch(g.m_haplotypes[1][i])) {
 			match = true;
 		}
 		else {
@@ -173,7 +149,7 @@ bool Genotype::isMatchUnphased(const Genotype &g) const
 	int i;
 	bool match;
 	match = true;
-	for (i=0; i<m_length; i++) {
+	for (i=0; i<length(); i++) {
 		if (!isMatch(g, i, true) && !isMatch(g, i, false)) {
 			match = false;
 			break;
@@ -186,7 +162,7 @@ int Genotype::getDiffNum(const Genotype &g) const
 {
 	int i, diff1, diff2;
 	diff1 = diff2 = 0;
-	for (i=0; i<m_length; i++) {
+	for (i=0; i<length(); i++) {
 		if (!isMatch(g, i, true)) {
 			diff1++;
 		}
@@ -201,7 +177,7 @@ int Genotype::getDiffNumIgnoreMissing(const Genotype &g) const
 {
 	int i, diff1, diff2;
 	diff1 = diff2 = 0;
-	for (i=0; i<m_length; i++) {
+	for (i=0; i<length(); i++) {
 		if (!hasMissing(i)) {
 			if (!isMatch(g, i, true)) {
 				diff1++;
@@ -218,12 +194,12 @@ int Genotype::getSwitchDistance(const Genotype &g) const
 {
 	int switch_distance, start, i;
 	bool reversed;
- 	if (m_length != g.m_length) {
+ 	if (length() != g.length()) {
  		Logger::error("Inconsistent genotype length while calculate switch distance!");
  		exit(1);
  	}
-	start = m_length;
-	for (i=0; i<m_length; i++) {
+	start = length();
+	for (i=0; i<length(); i++) {
 		if (isMatch(g, i, true) && isMatch(g, i, false)) {
 			continue;
 		}
@@ -233,7 +209,7 @@ int Genotype::getSwitchDistance(const Genotype &g) const
 		}
 	}
 	switch_distance = 0;
-	if (start < m_length) {
+	if (start < length()) {
 		if (isMatch(g, start, true)) {
 			reversed = true;
 		}
@@ -244,7 +220,7 @@ int Genotype::getSwitchDistance(const Genotype &g) const
 			Logger::error("Inconsistent genotypes at locus %d!", start);
 			exit(1);
 		}
-		for (i=start+1; i<m_length; i++) {
+		for (i=start+1; i<length(); i++) {
 			if (isMatch(g, i, reversed)) {
 				continue;
 			}
@@ -265,12 +241,12 @@ int Genotype::getSwitchDistanceIgnoreMissing(const Genotype &g) const
 {
 	int switch_distance, start, i;
 	bool reversed;
- 	if (m_length != g.m_length) {
+ 	if (length() != g.length()) {
  		Logger::error("Inconsistent genotype length while calculate switch distance!");
  		exit(1);
  	}
-	start = m_length;
-	for (i=0; i<m_length; i++) {
+	start = length();
+	for (i=0; i<length(); i++) {
 		if (hasMissing(i) || (isMatch(g, i, true) && isMatch(g, i, false))) {
 			continue;
 		}
@@ -280,7 +256,7 @@ int Genotype::getSwitchDistanceIgnoreMissing(const Genotype &g) const
 		}
 	}
 	switch_distance = 0;
-	if (start < m_length) {
+	if (start < length()) {
 		if (isMatch(g, start, true)) {
 			reversed = true;
 		}
@@ -291,7 +267,7 @@ int Genotype::getSwitchDistanceIgnoreMissing(const Genotype &g) const
 			Logger::error("Inconsistent genotypes at locus %d!", start);
 			exit(1);
 		}
-		for (i=start+1; i<m_length; i++) {
+		for (i=start+1; i<length(); i++) {
 			if (hasMissing(i) || isMatch(g, i, reversed)) {
 				continue;
 			}

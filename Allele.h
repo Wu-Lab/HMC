@@ -13,10 +13,28 @@ class Allele {
 
 public:
 	Allele() { m_value = -1; }
-	Allele(int a) { m_value = a; }
+	explicit Allele(int a) { m_value = a; }
 	Allele &operator =(int a) { m_value = a; return *this; }
-	operator int() const { return m_value; }
+
+	bool isMissing() const { return m_value < 0; }
+	bool isMatch(Allele a) const { return (isMissing() || a.isMissing() || m_value == a.m_value); }
+
+	friend bool operator ==(const Allele &lhs, const Allele &rhs);
+	friend bool operator !=(const Allele &lhs, const Allele &rhs);
+
+	int asInt() const { return m_value; }
+	char asChar() const { return m_value; }
 };
+
+inline bool operator ==(const Allele &lhs, const Allele &rhs)
+{
+	return ((lhs.m_value == rhs.m_value) || (lhs.isMissing() && rhs.isMissing()));
+}
+
+inline bool operator !=(const Allele &lhs, const Allele &rhs)
+{
+	return !(lhs == rhs);
+}
 
 
 class AlleleSequence {
@@ -27,14 +45,11 @@ public:
 	AlleleSequence() { }
 	explicit AlleleSequence(int len);
 	explicit AlleleSequence(const Allele &a);
-	explicit AlleleSequence(const AlleleSequence &as1, const AlleleSequence &as2);
 
 	Allele &operator [](int i) { return m_alleles[i]; }
 	const Allele &operator [](int i) const { return m_alleles[i]; }
 	int length() const { return m_alleles.size(); }
 
-	bool isMissing(int i) const { return (m_alleles[i] < 0); }
-	bool isMatch(const Allele &a, int locus) const;
 	bool isMatch(const AlleleSequence &as, int start1, int start2, int len) const;
 	bool isMatch(const AlleleSequence &as) const;
 	int getDiffNum(const AlleleSequence &as, int start1, int start2, int len) const;
@@ -70,16 +85,6 @@ inline AlleleSequence::AlleleSequence(int len)
 inline AlleleSequence::AlleleSequence(const Allele &a)
 {
 	m_alleles.push_back(a);
-}
-
-inline AlleleSequence::AlleleSequence(const AlleleSequence &as1, const AlleleSequence &as2)
-{
-	assign(as1, as2);
-}
-
-inline bool AlleleSequence::isMatch(const Allele &a, int locus) const
-{
-	return (isMissing(locus) || a < 0 || m_alleles[locus] == a);
 }
 
 inline bool AlleleSequence::isMatch(const AlleleSequence &as) const

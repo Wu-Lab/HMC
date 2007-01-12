@@ -18,7 +18,7 @@ bool AlleleSequence::isMatch(const AlleleSequence &as, int start1, int start2, i
 	else {
 		match = true;
 		for (i=0; i<len; i++) {
-			if (!isMatch(as[start2+i], start1+i)) {
+			if (!m_alleles[start1+i].isMatch(as[start2+i])) {
 				match = false;
 				break;
 			}
@@ -33,7 +33,7 @@ int AlleleSequence::getDiffNum(const AlleleSequence &as, int start1, int start2,
 	match = 0;
 	if (start1+len <= length() && start2+len <= as.length()) {
 		for (i=0; i<len; i++) {
-			if (!isMatch(as[start2+i], start1+i)) {
+			if (!m_alleles[start1+i].isMatch(as[start2+i])) {
 				match++;
 			}
 		}
@@ -83,17 +83,17 @@ char *AlleleSequence::writeAllele(char type, char *buffer, const Allele &allele)
 	char buf[64];
 	buffer[0] = 0;
 	if (type == 'S') {							// SNP, bi-allelic
-		if (allele < 0) {						// missing allele
+		if (allele.isMissing()) {				// missing allele
 			buffer[0] = '?';
 		}
 		else {
-			buffer[0] = (char) allele;
+			buffer[0] = allele.asChar();
 		}
-		buffer[1] = ' ';							// put delimiter
+		buffer[1] = ' ';						// put delimiter
 		buffer[2] = 0;
 	}
 	else {										// microsatellite
-		sprintf(buf, "%d ", static_cast<int>(allele));
+		sprintf(buf, "%d ", allele.asInt());
 		strcat(buffer, buf);
 	}
 	return buffer;

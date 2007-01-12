@@ -35,6 +35,23 @@ public:
 	friend class HaploData;
 };
 
+Haplotype::Haplotype()
+: m_weight(1.0)
+{
+}
+
+Haplotype::Haplotype(int len)
+: AlleleSequence(len),
+  m_weight(1.0)
+{
+}
+
+inline Haplotype::Haplotype(const AlleleSequence &as)
+: AlleleSequence(as),
+  m_weight(1.0)
+{
+}
+
 inline Haplotype &Haplotype::assign(const Haplotype &h1, const Haplotype &h2)
 {
 	m_id = h1.m_id;

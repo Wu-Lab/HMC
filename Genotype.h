@@ -13,7 +13,6 @@ class Genotype {
 protected:
 	Haplotype m_haplotypes[2];
 	string m_id;
-	int m_length;
 	int m_heterozygous_num;
 	int m_missing_num;
 	int m_missing_allele_num;
@@ -30,7 +29,7 @@ public:
 	const Haplotype &operator ()(int i) const { return m_haplotypes[i]; }
 	const string &id() const { return m_id; }
 	const char *id_str() const { return m_id.c_str(); }
-	int length() const { return m_length; }
+	int length() const { return m_haplotypes[0].length(); }
 	int heterozygous_num() const { return m_heterozygous_num; }
 	int missing_num() const { return m_missing_num; }
 	int missing_allele_num() const { return m_missing_allele_num; }
@@ -39,7 +38,7 @@ public:
 	bool isPhased() const { return m_is_phased; }
 
 	void setID(const string &id) { m_id = id; }
-	void setLength(int len) { m_length = len; }
+	void setLength(int len) { m_haplotypes[0].setLength(len); m_haplotypes[1].setLength(len); }
 	void setLikelihood(double likelihood) { m_likelihood = likelihood; }
 	void setWeight(double weight) { m_weight = weight; }
 	void setIsPhased(bool state) { m_is_phased = state; }
@@ -47,7 +46,7 @@ public:
 	void checkGenotype();
 	void randomizePhase();
 
-	bool isHeterozygous(int i) const { return !m_haplotypes[0].isMatch(m_haplotypes[1][i], i); }
+	bool isHeterozygous(int i) const { return !m_haplotypes[0][i].isMatch(m_haplotypes[1][i]); }
 	int getHeterozygousNum(int start, int len) const;
 
 	bool isMissing(int locus) const;
@@ -73,14 +72,36 @@ public:
 	friend class HaploData;
 };
 
+inline Genotype::Genotype()
+: m_heterozygous_num(0),
+  m_missing_num(0),
+  m_missing_allele_num(0),
+  m_likelihood(0),
+  m_weight(1.0),
+  m_is_phased(false)
+{
+}
+
+inline Genotype::Genotype(int len)
+: m_heterozygous_num(0),
+  m_missing_num(0),
+  m_missing_allele_num(0),
+  m_likelihood(0),
+  m_weight(1.0),
+  m_is_phased(false)
+{
+  m_haplotypes[0].setLength(len);
+  m_haplotypes[1].setLength(len);
+}
+
 inline bool Genotype::isMissing(int locus) const
 {
-	return (m_haplotypes[0].isMissing(locus) && m_haplotypes[1].isMissing(locus));
+	return (m_haplotypes[0][locus].isMissing() && m_haplotypes[1][locus].isMissing());
 }
 
 inline bool Genotype::hasMissing(int locus) const
 {
-	return (m_haplotypes[0].isMissing(locus) || m_haplotypes[1].isMissing(locus));
+	return (m_haplotypes[0][locus].isMissing() || m_haplotypes[1][locus].isMissing());
 }
 
 inline bool Genotype::hasAllele(int locus, Allele a) const
@@ -90,7 +111,7 @@ inline bool Genotype::hasAllele(int locus, Allele a) const
 
 inline bool Genotype::isMatch(const Allele &a, int locus) const
 {
-	return (m_haplotypes[0].isMatch(a, locus) || m_haplotypes[1].isMatch(a, locus));
+	return (m_haplotypes[0][locus].isMatch(a) || m_haplotypes[1][locus].isMatch(a));
 }
 
 inline bool Genotype::isMatchIgnoreMissing(const Genotype &g) const

@@ -106,13 +106,13 @@ void HaploComp::getMissingError(const Genotype &real, const Genotype &infer, con
 	if (diff1 < diff2) {
 		for (i=0; i<m_genotype_len; i++) {
 			if (input.isMissing(i)) {
-				if (!real(0).isMissing(i)) {
+				if (!real(0)[i].isMissing()) {
 					m_missing_error_denominator++;
-					if (!real(0).isMatch(infer(0)[i], i)) m_missing_error_numerator++;			
+					if (!real(0)[i].isMatch(infer(0)[i])) m_missing_error_numerator++;			
 				};
-				if (!real(1).isMissing(i)) {
+				if (!real(1)[i].isMissing()) {
 					m_missing_error_denominator++;
-					if (!real(1).isMatch(infer(1)[i], i)) m_missing_error_numerator++;			
+					if (!real(1)[i].isMatch(infer(1)[i])) m_missing_error_numerator++;			
 				};
 			}
 			else if (input.hasMissing(i) && !real.hasMissing(i)) {
@@ -124,13 +124,13 @@ void HaploComp::getMissingError(const Genotype &real, const Genotype &infer, con
 	else {
 		for (i=0; i<m_genotype_len; i++) {
 			if (input.isMissing(i)) {
-				if (!real(0).isMissing(i)) {
+				if (!real(0)[i].isMissing()) {
 					m_missing_error_denominator++;
-					if (!real(0).isMatch(infer(1)[i], i)) m_missing_error_numerator++;			
+					if (!real(0)[i].isMatch(infer(1)[i])) m_missing_error_numerator++;			
 				};
-				if (!real(1).isMissing(i)) {
+				if (!real(1)[i].isMissing()) {
 					m_missing_error_denominator++;
-					if (!real(1).isMatch(infer(0)[i], i)) m_missing_error_numerator++;			
+					if (!real(1)[i].isMatch(infer(0)[i])) m_missing_error_numerator++;			
 				};
 			}
 			else if (input.hasMissing(i) && !real.hasMissing(i)) {

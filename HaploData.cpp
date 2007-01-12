@@ -158,7 +158,7 @@ void HaploData::checkAlleleNum()
 		for (j=0; j<2; j++) {
 			const Haplotype &h = m_genotypes[i](j);
 			for (k=0; k<m_genotype_len; k++) {
-				if (h[k] >= 0) {
+				if (!h[k].isMissing()) {
 					if (getAlleleIndex(k, h[k]) < 0) {			// not found
 						if (m_allele_num[k] < Constant::max_allele_num()) {
 							m_allele_symbol[k][m_allele_num[k]] = h[k];
@@ -190,7 +190,7 @@ void HaploData::checkAlleleFrequency()
 		for (j=0; j<2; j++) {
 			const Haplotype &h = m_genotypes[i](j);
 			for (k=0; k<m_genotype_len; k++) {
-				if (h[k] >= 0) {
+				if (!h[k].isMissing()) {
 					l = getAlleleIndex(k, h[k]);
 					m_allele_frequency[k][l] += h.weight();
 					total_weight[k] += h.weight();
@@ -221,7 +221,7 @@ void HaploData::simplify()
 		for (j=0; j<2; j++) {
 			Haplotype &h = m_genotypes[i](j);
 			for (k=0; k<m_genotype_len; k++) {
-				if (!h.isMissing(k))
+				if (!h[k].isMissing())
 				{
 					if (m_allele_type[k] == 'S') {
 						h[k] = getAlleleIndex(k, h[k]) + '1';

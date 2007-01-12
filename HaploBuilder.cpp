@@ -113,7 +113,7 @@ HaploPattern *PatternTree::findLongestMatchPattern(PatternNode *node, const Alle
 	int i, n;
 	HaploPattern *result, *temp;
 	result = node->object();
-	if (as->isMissing(offset+len-1)) {						// allele is missing
+	if ((*as)[offset+len-1].isMissing()) {						// allele is missing
 		n = m_haplo_data->allele_num(end-1);
 		for (i=0; i<n; i++) {
 			if (node->getChildNode(i) != NULL) {			// previous locus is matching
@@ -155,7 +155,7 @@ HaploPattern *PatternTree::findLikelyMatchPattern(PatternNode *node, const Allel
 	int i, n;
 	HaploPattern *result, *temp;
 	result = node->object();
-	if (as->isMissing(offset+len-1)) {						// allele is missing
+	if ((*as)[offset+len-1].isMissing()) {						// allele is missing
 		n = m_haplo_data->allele_num(end-1);
 		for (i=0; i<n; i++) {
 			if (node->getChildNode(i) != NULL) {			// previous locus is matching
@@ -262,7 +262,7 @@ void HaploBuilder::initialize()
 	for (i_hp = m_haplo_pattern.begin(); i_hp != m_haplo_pattern.end(); i_hp++) {
 		hp = *i_hp;
 		if (hp->m_end < m_genotype_len) {
-			temp.assign(*hp, -1);			// append empty allele
+			temp.assign(*hp, Allele());			// append empty allele
 			for (j=0; j<m_haplo_data->allele_num(hp->m_end); j++) {
 				temp[temp.length()-1] = m_haplo_data->allele_symbol(hp->m_end, j);
 				hp->m_successors[j] = m_pattern_tree->findLongestMatchPattern(hp->m_end+1, &temp);
@@ -345,7 +345,7 @@ void HaploBuilder::resolve(const Genotype &genotype, Genotype &resolution, vecto
 				}
 			}
 		}
-		else if (genotype(0).isMissing(i)) {
+		else if (genotype(0)[i].isMissing()) {
 			for (j=0; j<m_haplo_data->allele_num(i); j++) {
 				if (m_haplo_data->m_allele_frequency[i][j] > 0) {
 					a = m_haplo_data->allele_symbol(i, j);
@@ -353,7 +353,7 @@ void HaploBuilder::resolve(const Genotype &genotype, Genotype &resolution, vecto
 				}
 			}
 		}
-		else if (genotype(1).isMissing(i)) {
+		else if (genotype(1)[i].isMissing()) {
 			for (j=0; j<m_haplo_data->allele_num(i); j++) {
 				if (m_haplo_data->m_allele_frequency[i][j] > 0) {
 					a = m_haplo_data->allele_symbol(i, j);
