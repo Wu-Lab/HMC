@@ -17,7 +17,6 @@ HaploModel::HaploModel()
 
 double HaploModel::getMinFreq() const
 {
-	double min_freq;
 	if (m_min_freq_abs > 0) {
 		return m_min_freq_abs;
 	}

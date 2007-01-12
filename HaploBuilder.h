@@ -9,12 +9,12 @@
 #include "Utils.h"
 #include "Constant.h"
 #include "Allele.h"
+#include "HaploPattern.h"
 
 
 class AlleleSequence;
 class Haplotype;
 class Genotype;
-class HaploPattern;
 class HaploPair;
 class HaploData;
 typedef TreeNode<HaploPattern, double> PatternNode;

@@ -2,7 +2,6 @@
 #include <deque>
 
 #include "HaploBuilder.h"
-#include "HaploPattern.h"
 #include "HaploPair.h"
 #include "HaploData.h"
 
@@ -479,7 +478,7 @@ void HaploBuilder::initHeadList(const Genotype &genotype)
 			while (i_as != as_list.end()) {
 				hp = m_pattern_tree->findLongestMatchPattern(m_head_len, *i_as);
 				if (hp != NULL && hp->m_id >= (*head)->m_id) addHaploPair(m_last_list, new HaploPair(*head, hp, m_target_pattern));
-//				delete *i_as;
+				delete *i_as;
 				i_as = as_list.erase(i_as);
 			}
 		}
