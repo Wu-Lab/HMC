@@ -28,12 +28,12 @@ public:
 	void setWeight(double weight) { m_weight = weight; }
 };
 
-Haplotype::Haplotype()
+inline Haplotype::Haplotype()
 : m_weight(1.0)
 {
 }
 
-Haplotype::Haplotype(int len)
+inline Haplotype::Haplotype(int len)
 : AlleleSequence(len),
   m_weight(1.0)
 {

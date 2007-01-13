@@ -86,7 +86,7 @@ protected:
 	double getMatchingFrequency(const Genotype &g, const Allele *pa, int start, int len) const;
 };
 
-HaploPattern::HaploPattern(const HaploData &hd, int start)
+inline HaploPattern::HaploPattern(const HaploData &hd, int start)
 : m_haplodata(hd),
   m_start(start),
   m_end(start),
