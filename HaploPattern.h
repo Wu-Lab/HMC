@@ -54,7 +54,7 @@ public:
 
 	void releaseMatchGenotype() { m_match_frequency.clear(); }
 	double checkFrequency();
-	double checkFrequencyWithExtension(int ext, int len = 1);
+	double checkFrequencyWithExtension(const list<pair<int, double> > &mf, int ext, int len = 1);
 
 	bool isMatch(const Haplotype &h) const;
 	bool isMatch(const Genotype &g) const;
@@ -161,10 +161,9 @@ inline HaploPattern &HaploPattern::assign(const HaploPattern &hp, const Allele &
 	m_start = hp.m_start;
 	m_end = hp.m_end;
 	m_frequency = hp.m_frequency;
-	m_match_frequency = hp.m_match_frequency;
 	AlleleSequence::assign(hp, a);
 	++m_end;
-	checkFrequencyWithExtension(m_end-1);
+	checkFrequencyWithExtension(hp.m_match_frequency, m_end-1);
 	return *this;
 }
 
@@ -172,7 +171,9 @@ inline HaploPattern &HaploPattern::operator +=(const AlleleSequence &as)
 {
 	AlleleSequence::operator +=(as);
 	m_end += as.length();
-	checkFrequencyWithExtension(m_end-as.length(), as.length());
+	list<pair<int, double> > mf;
+	m_match_frequency.swap(mf);
+	checkFrequencyWithExtension(mf, m_end-as.length(), as.length());
 	return *this;
 }
 
@@ -180,7 +181,9 @@ inline HaploPattern &HaploPattern::operator +=(const Allele &a)
 {
 	AlleleSequence::operator +=(a);
 	++m_end;
-	checkFrequencyWithExtension(m_end-1);
+	list<pair<int, double> > mf;
+	m_match_frequency.swap(mf);
+	checkFrequencyWithExtension(mf, m_end-1);
 	return *this;
 }
 

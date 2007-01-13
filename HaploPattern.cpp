@@ -118,27 +118,29 @@ double HaploPattern::checkFrequency()
 	return m_frequency;
 }
 
-double HaploPattern::checkFrequencyWithExtension(int ext, int len)
+double HaploPattern::checkFrequencyWithExtension(const list<pair<int, double> > &mf, int ext, int len)
 {
-	double w;
-	list<pair<int, double> >::iterator i_mf;
+	double w, freq;
+	list<pair<int, double> >::const_iterator i_mf;
 	if (length() == 0) {
 		m_frequency = m_haplodata.genotype_num();
 	}
-	else if (m_match_frequency.empty()) {
+	else if (mf.empty()) {
 		checkFrequency();
 	}
 	else
 	{
+		m_match_frequency.clear();
 		m_frequency = 0;
-		i_mf = m_match_frequency.begin();
-		while (i_mf != m_match_frequency.end()) {
+		i_mf = mf.begin();
+		while (i_mf != mf.end()) {
 			const Genotype &g = m_haplodata[i_mf->first];
 			if (isMatch(g, ext, len)) {
+				freq = i_mf->second;
 				if (g.isPhased()) {
 					if (g.weight() < 1) {
-						i_mf->second *= getMatchingFrequency(g, &m_alleles[ext-m_start], ext, len);
-						m_frequency += i_mf->second * (1 - g.weight());
+						freq *= getMatchingFrequency(g, &m_alleles[ext-m_start], ext, len);
+						m_frequency += freq * (1 - g.weight());
 					}
 					w = 0;
 					if (isMatch(g(0))) {
@@ -150,14 +152,12 @@ double HaploPattern::checkFrequencyWithExtension(int ext, int len)
 					m_frequency += w * g.weight();
 				}
 				else {
-					i_mf->second *= getMatchingFrequency(g, &m_alleles[ext-m_start], ext, len);
-					m_frequency += i_mf->second;
+					freq *= getMatchingFrequency(g, &m_alleles[ext-m_start], ext, len);
+					m_frequency += freq;
 				}
-				++i_mf;
+				m_match_frequency.push_back(make_pair(i_mf->first, freq));
 			}
-			else {
-				i_mf = m_match_frequency.erase(i_mf);
-			}
+			++i_mf;
 		}
 	}
 	return m_frequency;
