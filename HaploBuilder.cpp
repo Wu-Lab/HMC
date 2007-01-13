@@ -15,7 +15,7 @@ PatternTree::PatternTree(const HaploData *haplo)
 	m_genotype_len = haplo->genotype_len();
 	m_trees = new Tree<HaploPattern, double> [m_genotype_len+1];
 	for (i=0; i<=m_genotype_len; i++) {
-		m_trees[i].setChildrenNum(Constant::max_allele_num());
+		m_trees[i].setChildrenNum(haplo->max_allele_num());
 	}
 }
 

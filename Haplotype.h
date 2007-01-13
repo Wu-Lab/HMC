@@ -21,7 +21,6 @@ public:
 	explicit Haplotype(const AlleleSequence &as);
 
 	const string &id() const { return m_id; }
-	const char *id_str() const { return m_id.c_str(); }
 	double weight() const { return m_weight; }
 
 	void setID(const string &id) { m_id = id; }

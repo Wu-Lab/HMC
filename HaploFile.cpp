@@ -71,9 +71,9 @@ void HaploFile::readHaploData(HaploData &hd)
 			}
 		}
 		fgets(line, STR_LEN_FILE_LINE, fp);
-		h1.read(hd.allele_types(), line, hd.genotype_len());
+		h1.read(hd.allele_type().c_str(), line, hd.genotype_len());
 		fgets(line, STR_LEN_FILE_LINE, fp);
-		h2.read(hd.allele_types(), line, hd.genotype_len());
+		h2.read(hd.allele_type().c_str(), line, hd.genotype_len());
 		if (h1.length() != hd.genotype_len() || h2.length() != hd.genotype_len()) {
 			Logger::error("Incorrect haplotype data for individual %d!", i);
 			exit(1);
@@ -81,8 +81,7 @@ void HaploFile::readHaploData(HaploData &hd)
 		hd[i].setHaplotypes(h1, h2);
 	}
 	fclose(fp);
-	hd.checkAlleleNum();
-	hd.checkAlleleFrequency();
+	hd.checkAlleleSymbol();
 }
 
 void HaploFile::writeHaploData(HaploData &hd, const char *suffix)
@@ -104,17 +103,17 @@ void HaploFile::writeHaploData(HaploData &hd, const char *suffix)
 		fprintf(fp, " %d", hd.allele_postition(i));
 	}
 	fprintf(fp, "\n");
-	fprintf(fp, "%s\n", hd.allele_types());
+	fprintf(fp, "%s\n", hd.allele_type().c_str());
 	for (i=0; i<hd.genotype_num(); i++) {
 		id = hd[i].id()[0];
 		if (id >= '0' && id <= '9') {
-			fprintf(fp, "#%s\n", hd[i].id_str());
+			fprintf(fp, "#%s\n", hd[i].id().c_str());
 		}
 		else {
-			fprintf(fp, "%s\n", hd[i].id_str());
+			fprintf(fp, "%s\n", hd[i].id().c_str());
 		}
 		for (j=0; j<2; j++) {
-			fprintf(fp, "%s\n", hd[i](j).write(hd.allele_types(), buf));
+			fprintf(fp, "%s\n", hd[i](j).write(hd.allele_type().c_str(), buf));
 		}
 	}
 	fclose(fp);
@@ -162,7 +161,7 @@ char *HaploFile::writeAlleleName(char *buffer)
 	int i;
 	buffer[0] = 0;
 	for (i=0; i<m_haplo_data->genotype_len(); i++) {
-		strcat(buffer, m_haplo_data->allele_name(i));
+		strcat(buffer, m_haplo_data->allele_name(i).c_str());
 		strcat(buffer, " ");
 	}
 	return buffer;
@@ -221,8 +220,7 @@ void HaploFileHPM::readHaploData(HaploData &hd)
 		hd[i].setID(h1->id());
 	}
 	fclose(fp);
-	hd.checkAlleleNum();
-	hd.checkAlleleFrequency();
+	hd.checkAlleleSymbol();
 }
 
 void HaploFileHPM::writeHaploData(HaploData &hd, const char *suffix)
@@ -299,7 +297,7 @@ char *HaploFileHPM::readHaplotype(Haplotype &h, char *buffer)
 char *HaploFileHPM::writeHaplotype(const Haplotype &h, char *buffer)
 {
 	char *s = buffer;
-	strcpy(s, h.id_str());
+	strcpy(s, h.id().c_str());
 	strcat(s, "\t");
 	s += strlen(s);
 	h.write(NULL, s);
@@ -414,8 +412,7 @@ void HaploFileBench::readHaploData(HaploData &hd)
 		hd[i].setHaplotypes(*h1, *h2);
 		hd[i].setID(h1->id());
 	}
-	hd.checkAlleleNum();
-	hd.checkAlleleFrequency();
+	hd.checkAlleleSymbol();
 }
 
 void HaploFileBench::writeHaploData(HaploData &hd, const char *suffix)
@@ -432,7 +429,7 @@ void HaploFileBench::writeHaploData(HaploData &hd, const char *suffix)
 	}
 	for (i=0; i<hd.genotype_num(); i++) {
 		for (j=0; j<2; j++) {
-			fprintf(fp, "%s   %d 0 %s\n", writeHaplotype(hd[i](j), buf), i+2*j, hd[i](j).id_str());
+			fprintf(fp, "%s   %d 0 %s\n", writeHaplotype(hd[i](j), buf), i+2*j, hd[i](j).id().c_str());
 		}
 	}
 	fclose(fp);

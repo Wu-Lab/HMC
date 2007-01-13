@@ -82,10 +82,6 @@ void HMC::defineOptions()
 	option = m_args.addOption("iteration_number", "i", true, "1");
 	option = m_args.addOption("output_patterns", "op", true);
 
-	// for poor machine
-	option = m_args.addOption("ram_limit", "ram", true, "10000000");
-	option->addHelpInfo("Set memory limitation, used when the memory of the machine is poor.");
-
 	// conflicts between options
 	m_args.addConflictOptions("mc_order", "min_freq_rel");
 	m_args.addConflictOptions("mc_order", "min_freq_abs");
@@ -110,7 +106,6 @@ void HMC::parseOptions(int argc, char *argv[])
 		usage();
 		exit(0);
 	}
-	Constant::setRAMLimit(m_args.getOption("ram_limit")->getValueAsInt());
 
 	//////////////////////////////////////////////////////////////////////////
 	// input file format
@@ -262,11 +257,11 @@ void HMC::resolve()
 		double ll = 0;
 		for (i=0; i<m_genos.unphased_num(); i++) {
 //			if (!unphased_genos[i].isPhased()) {
-				Logger::status("Iteration %d: Resolving Genotype[%d] %s ...", iter, i, m_genos[i].id_str());
+				Logger::status("Iteration %d: Resolving Genotype[%d] %s ...", iter, i, m_genos[i].id().c_str());
 				m_builder.resolve(unphased_genos[i], m_resolutions[i], res_list);
 				m_resolutions[i].setID(m_genos[i].id());
 				if (res_list.size() == 0) {
-					Logger::warning("Unable to resolve Genotype[%d]: %s!", i, m_genos[i].id_str());
+					Logger::warning("Unable to resolve Genotype[%d]: %s!", i, m_genos[i].id().c_str());
 				}
 				unphased_genos[i].setLikelihood(m_resolutions[i].likelihood());
 //			}

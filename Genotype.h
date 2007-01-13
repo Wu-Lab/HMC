@@ -28,7 +28,6 @@ public:
 	Haplotype &operator ()(int i) { return m_haplotypes[i]; }
 	const Haplotype &operator ()(int i) const { return m_haplotypes[i]; }
 	const string &id() const { return m_id; }
-	const char *id_str() const { return m_id.c_str(); }
 	int length() const { return m_haplotypes[0].length(); }
 	int heterozygous_num() const { return m_heterozygous_num; }
 	int missing_num() const { return m_missing_num; }

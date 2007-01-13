@@ -14,17 +14,11 @@
 
 class Constant {
 protected:
-	static int m_max_allele_num;
-	static int m_ram_limit;
 	static int m_average_marker_distance;
 
 public:
-	static int max_allele_num() { return m_max_allele_num; }
-	static int ram_limit() { return m_ram_limit; }
 	static int average_marker_distance() { return m_average_marker_distance; }
 
-	static void setRAMLimit(int i) { m_ram_limit = i; }
-	static void setMaxAlleleNum(int i) { m_max_allele_num = i; }
 	static void setAverageMarkerDistance(int i) { m_average_marker_distance = i; }
 };
 

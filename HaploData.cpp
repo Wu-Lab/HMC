@@ -9,64 +9,19 @@
 // class HaploData
 
 HaploData::HaploData()
+: m_genotype_num(0),
+  m_genotype_len(0),
+  m_unphased_num(0)
 {
-	m_genotypes = NULL;
-	m_genotype_num = 0;
-	m_genotype_len = 0;
-	m_unphased_num = 0;
-	m_allele_type = NULL;
-	m_allele_postition = NULL;
-	m_allele_num = NULL;
-	m_allele_name = NULL;
-	m_allele_symbol = NULL;
-	m_allele_frequency = NULL;
 }
 
 HaploData::HaploData(int num, int len)
+: m_genotype_num(0),
+  m_genotype_len(0),
+  m_unphased_num(0)
 {
-	m_genotypes = NULL;
-	m_genotype_num = 0;
-	m_genotype_len = 0;
-	m_unphased_num = 0;
-	m_allele_type = NULL;
-	m_allele_postition = NULL;
-	m_allele_num = NULL;
-	m_allele_name = NULL;
-	m_allele_symbol = NULL;
-	m_allele_frequency = NULL;
 	setGenotypeNum(num);
 	setGenotypeLen(len);
-}
-
-HaploData::HaploData(const HaploData &hd)
-{
-	m_genotypes = NULL;
-	m_genotype_num = 0;
-	m_genotype_len = 0;
-	m_unphased_num = 0;
-	m_allele_type = NULL;
-	m_allele_postition = NULL;
-	m_allele_num = NULL;
-	m_allele_name = NULL;
-	m_allele_symbol = NULL;
-	m_allele_frequency = NULL;
-	assign(hd);
-}
-
-HaploData::~HaploData()
-{
-	int i;
-	delete[] m_genotypes;
-	delete[] m_allele_type;
-	delete[] m_allele_postition;
-	delete[] m_allele_num;
-	delete[] m_allele_name;
-	for (i=0; i<m_genotype_len; i++) {
-		delete[] m_allele_symbol[i];
-		delete[] m_allele_frequency[i];
-	}
-	delete[] m_allele_symbol;
-	delete[] m_allele_frequency;
 }
 
 int HaploData::getAlleleIndex(int locus, Allele a) const
@@ -74,8 +29,8 @@ int HaploData::getAlleleIndex(int locus, Allele a) const
 	int i;
 	bool found;
 	found = false;
-	for (i=0; i<m_allele_num[locus]; i++) {
-		if (a == m_allele_symbol[locus][i]) {
+	for (i=0; i<allele_num(locus); i++) {
+		if (a == allele_symbol(locus, i)) {
 			found = true;
 			break;
 		}
@@ -92,67 +47,39 @@ void HaploData::setGenotypeNum(int num)
 {
 	int i;
 	if (m_genotype_num != num) {
-		delete[] m_genotypes;
-		m_genotype_num = num;
+		m_genotype_num = num > 0 ? num : 0;
 		m_unphased_num = m_genotype_num;
-		m_genotypes = new Genotype [m_genotype_num];
-	}
-	for (i=0; i<m_genotype_num; i++) {
-		m_genotypes[i].setLength(m_genotype_len);
+		m_genotypes.resize(m_genotype_num);
+		for (i=0; i<m_genotype_num; i++) {
+			m_genotypes[i].setLength(m_genotype_len);
+		}
 	}
 }
 
 void HaploData::setGenotypeLen(int len)
 {
-	int i, j;
+	int i;
 	if (m_genotype_len != len) {
-		if (m_genotype_len > 0) {
-			delete[] m_allele_type;
-			delete[] m_allele_postition;
-			delete[] m_allele_num;
-			delete[] m_allele_name;
-			for (i=0; i<m_genotype_len; i++) {
-				delete[] m_allele_symbol[i];
-				delete[] m_allele_frequency[i];
-			}
-			delete[] m_allele_symbol;
-			delete[] m_allele_frequency;
-		}
-		m_genotype_len = len;
+		m_genotype_len = len > 0 ? len : 0;
 		for (i=0; i<m_genotype_num; i++) {
 			m_genotypes[i].setLength(m_genotype_len);
 		}
-		if (m_genotype_len > 0) {
-			m_allele_type = new char [m_genotype_len+1];
-			m_allele_postition = new int [m_genotype_len];
-			m_allele_num = new int [m_genotype_len];
-			m_allele_name = new char [m_genotype_len][STR_LEN_ALLELE_NAME];
-			m_allele_symbol = new Allele * [m_genotype_len];
-			m_allele_frequency = new double * [m_genotype_len];
-			for (i=0; i<m_genotype_len; i++) {
-				m_allele_symbol[i] = new Allele [Constant::max_allele_num()];
-				m_allele_frequency[i] = new double [Constant::max_allele_num()];
-			}
+		m_allele_type.resize(m_genotype_len);
+		m_allele_postition.resize(m_genotype_len);
+		m_allele_name.resize(m_genotype_len);
+		m_allele_symbol.resize(m_genotype_len);
+		for (i=0; i<m_genotype_len; i++) {
+			m_allele_type[i] = 'M';
+			m_allele_postition[i] = i*Constant::average_marker_distance();
 		}
 	}
-	for (i=0; i<m_genotype_len; i++) {
-		m_allele_type[i] = 'M';
-		m_allele_postition[i] = i*Constant::average_marker_distance();
-		m_allele_num[i] = 2;
-		m_allele_name[i][0] = 0;
-		for (j=0; j<Constant::max_allele_num(); j++) {
-			m_allele_symbol[i][j] = -1;
-			m_allele_frequency[i][j] = 0;
-		}
-	}
-	m_allele_type[m_genotype_len] = 0;
 }
 
-void HaploData::checkAlleleNum()
+void HaploData::checkAlleleSymbol()
 {
-	int i, j, k;
+	int i, j, k, l;
 	for (i=0; i<m_genotype_len; i++) {
-		m_allele_num[i] = 0;
+		m_allele_symbol[i].clear();
 	}
 	for (i=0; i<m_genotype_num; i++) {
 		for (j=0; j<2; j++) {
@@ -160,50 +87,31 @@ void HaploData::checkAlleleNum()
 			for (k=0; k<m_genotype_len; k++) {
 				if (!h[k].isMissing()) {
 					if (getAlleleIndex(k, h[k]) < 0) {			// not found
-						if (m_allele_num[k] < Constant::max_allele_num()) {
-							m_allele_symbol[k][m_allele_num[k]] = h[k];
-							m_allele_num[k]++;
-						}
-						else {
-							Logger::error("The number of alleles at locus %d exceeds the capacity!", k);
-							exit(1);
-						}
+						m_allele_symbol[k].push_back(make_pair(h[k], 0));
 					}
 				}
 			}
 		}
 	}
-}
-
-void HaploData::checkAlleleFrequency()
-{
-	int i, j, k, l;
-	double *total_weight;
-	total_weight = new double [m_genotype_len];
-	for (i=0; i<m_genotype_len; i++) {
-		total_weight[i] = 0;
-		for (j=0; j<Constant::max_allele_num(); j++) {
-			m_allele_frequency[i][j] = 0;
-		}
-	}
+	vector<double> total_weight;
+	total_weight.resize(m_genotype_len, 0);
 	for (i=0; i<m_genotype_num; i++) {
 		for (j=0; j<2; j++) {
 			const Haplotype &h = m_genotypes[i](j);
 			for (k=0; k<m_genotype_len; k++) {
 				if (!h[k].isMissing()) {
 					l = getAlleleIndex(k, h[k]);
-					m_allele_frequency[k][l] += h.weight();
+					m_allele_symbol[k][l].second += h.weight();
 					total_weight[k] += h.weight();
 				}
 			}
 		}
 	}
 	for (i=0; i<m_genotype_len; i++) {
-		for (j=0; j<m_allele_num[i]; j++) {
-			m_allele_frequency[i][j] /= total_weight[i];
+		for (j=0; j<allele_num(i); j++) {
+			m_allele_symbol[i][j].second /= total_weight[i];
 		}
 	}
-	delete[] total_weight;
 }
 
 void HaploData::randomizePhase()
@@ -235,23 +143,12 @@ void HaploData::simplify()
 	}
 }
 
-HaploData &HaploData::assign(const HaploData &hd)
+int HaploData::max_allele_num() const
 {
-	int i, j;
-	setGenotypeNum(hd.m_genotype_num);
-	setGenotypeLen(hd.m_genotype_len);
-	for (i=0; i<m_genotype_num; i++) {
-		m_genotypes[i] = hd.m_genotypes[i];
+	int i, m;
+	m = 0;
+	for (i=0; i<m_genotype_len; ++i) {
+		if (allele_num(i) > m) m = allele_num(i);
 	}
-	for (i=0; i<m_genotype_len; i++) {
-		m_allele_type[i] = hd.m_allele_type[i];
-		m_allele_postition[i] = hd.m_allele_postition[i];
-		m_allele_num[i] = hd.m_allele_num[i];
-		strcpy(m_allele_name[i], hd.m_allele_name[i]);
-		for (j=0; j<Constant::max_allele_num(); j++) {
-			m_allele_symbol[i][j] = hd.m_allele_symbol[i][j];
-			m_allele_frequency[i][j] = hd.m_allele_frequency[i][j];
-		}
-	}
-	return *this;
+	return m;
 }
