@@ -48,7 +48,7 @@ public:
 	void setFrequency(double f) { m_frequency = f; }
 	void setTransitionProb(double p) { m_transition_prob = p; }
 	void setPrefix(const HaploPattern *p) { m_prefix = p; }
-	void setSuccessor(int i, const HaploPattern *pn) { m_successors.resize(i+1); m_successors[i] = pn; }
+	void setSuccessor(int i, const HaploPattern *pn);
 
 	void repack();
 
@@ -95,6 +95,12 @@ inline HaploPattern::HaploPattern(const HaploData &hd, int start)
   m_transition_prob(1.0),
   m_prefix(0)
 {
+}
+
+inline void HaploPattern::setSuccessor(int i, const HaploPattern *pn)
+{
+	if (i >= m_successors.size()) m_successors.resize(i+1);
+	m_successors[i] = pn;
 }
 
 inline bool HaploPattern::isMatch(const Haplotype &h) const
