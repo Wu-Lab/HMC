@@ -1,6 +1,6 @@
 
-#include <stdlib.h>
-#include <stdarg.h>
+#include <cstdlib>
+#include <cstdarg>
 
 #include "Utils.h"
 

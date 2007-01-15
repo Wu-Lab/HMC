@@ -3,7 +3,7 @@
 #define __UTILS_H
 
 
-#include <time.h>
+#include <ctime>
 #include <boost/shared_ptr.hpp>
 
 #include "List.h"

@@ -4,7 +4,7 @@
 #include "HaploComp.h"
 
 
-const char *HMC::m_version = "0.7.2";
+const char *HMC::m_version = "0.7.3";
 const char *HMC::m_year = "2007";
 
 
