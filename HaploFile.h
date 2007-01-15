@@ -3,6 +3,8 @@
 #define __HAPLOFILE_H
 
 
+#include <string>
+
 #include "Utils.h"
 #include "HaploData.h"
 #include "HaploPattern.h"
@@ -12,7 +14,7 @@
 class HaploFile {
 protected:
 	HaploData *m_haplo_data;
-	char m_filename[STR_LEN_FILE_NAME];
+	string m_filename;
 
 	bool m_has_id;
 
@@ -20,9 +22,9 @@ public:
 	HaploFile();
 	explicit HaploFile(const char *filename);
 
-	const char *filename() const { return m_filename; }
+	const string &filename() const { return m_filename; }
 
-	void setFileName(const char *filename) { strcpy(m_filename, filename); }
+	void setFileName(const char *filename) { m_filename = filename; }
 	void setHasID(bool enable) { m_has_id = enable; }
 
 	virtual void readHaploData(HaploData &hd);
@@ -33,9 +35,20 @@ public:
 protected:
 	char *readAlleleName(char *buffer);
 	char *writeAlleleName(char *buffer);
-
-	char *makeFileName(char *filename, const char *suffix = NULL);
 };
+
+inline HaploFile::HaploFile()
+: m_haplo_data(0),
+  m_has_id(true)
+{
+}
+
+inline HaploFile::HaploFile(const char *filename)
+: m_haplo_data(0),
+  m_has_id(true),
+  m_filename(filename)
+{
+}
 
 
 class HaploFileHPM : public HaploFile {
@@ -60,8 +73,8 @@ protected:
 
 class HaploFileBench : public HaploFile {
 protected:
-	char m_children_file[STR_LEN_FILE_NAME];
-	char m_posinfo_file[STR_LEN_FILE_NAME];
+	string m_children_file;
+	string m_posinfo_file;
 
 	int m_parents_num;
 	int m_children_num;
@@ -82,6 +95,21 @@ protected:
 	char *readHaplotype(Haplotype &h, char *buffer, int heterozygous);
 	char *writeHaplotype(const Haplotype &h, char *buffer);
 };
+
+inline HaploFileBench::HaploFileBench()
+: m_parents_num(0),
+  m_children_num(0)
+{
+}
+
+inline HaploFileBench::HaploFileBench(const char *filename, const char *posinfo, const char *children)
+: HaploFile(filename),
+  m_children_file(children),
+  m_posinfo_file(posinfo),
+  m_parents_num(0),
+  m_children_num(0)
+{
+}
 
 
 #endif // __HAPLOFILE_H
