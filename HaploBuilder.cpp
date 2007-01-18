@@ -13,7 +13,7 @@ PatternTree::PatternTree(const HaploData *haplo)
 	int i;
 	m_haplo_data = haplo;
 	m_genotype_len = haplo->genotype_len();
-	m_trees = new Tree<HaploPattern, double> [m_genotype_len+1];
+	m_trees.resize(m_genotype_len+1);
 	for (i=0; i<=m_genotype_len; i++) {
 		m_trees[i].setChildrenNum(haplo->max_allele_num());
 	}
@@ -25,7 +25,6 @@ PatternTree::~PatternTree()
 	for (i=0; i<=m_genotype_len; i++) {
 		m_trees[i].release();
 	}
-	delete[] m_trees;
 }
 
 void PatternTree::addPattern(int end, HaploPattern *hp)
@@ -52,7 +51,7 @@ void PatternTree::addPattern(PatternNode *node, HaploPattern *hp, int len)
 		}
 		if (len == 1) {
 			for (i=0; i<n; i++) {
-				node->getChildNode(i)->setObject(hp, hp->frequency());
+				node->getChildNode(i)->setObject(hp);
 			}
 		}
 		else {
@@ -66,7 +65,7 @@ void PatternTree::addPattern(PatternNode *node, HaploPattern *hp, int len)
 			node->addChild(i);
 		}
 		if (len == 1) {
-			node->getChildNode(i)->setObject(hp, hp->frequency());
+			node->getChildNode(i)->setObject(hp);
 		}
 		else {
 			addPattern(node->getChildNode(i), hp, len-1);

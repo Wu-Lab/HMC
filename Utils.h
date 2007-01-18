@@ -6,9 +6,6 @@
 #include <ctime>
 #include <boost/shared_ptr.hpp>
 
-#include "Tree.h"
-#include "Matrix.h"
-
 
 using namespace std;
 

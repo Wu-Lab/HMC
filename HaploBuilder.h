@@ -7,6 +7,7 @@
 #include <vector>
 
 #include "Utils.h"
+#include "Tree.h"
 #include "Constant.h"
 #include "Allele.h"
 #include "HaploPattern.h"
@@ -17,13 +18,13 @@ class Haplotype;
 class Genotype;
 class HaploPair;
 class HaploData;
-typedef TreeNode<HaploPattern, double> PatternNode;
+typedef TreeNode<HaploPattern> PatternNode;
 
 
 class PatternTree {
 	const HaploData *m_haplo_data;
 	int m_genotype_len;
-	Tree<HaploPattern, double> *m_trees;
+	vector<Tree<HaploPattern> > m_trees;
 
 public:
 	PatternTree(const HaploData *haplo);
