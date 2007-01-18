@@ -50,7 +50,7 @@ public:
 	void setUnphasedNum(int i) { m_unphased_num = i; }
 	void setAlleleType(int locus, char type) { m_allele_type[locus] = type; }
 	void setAllelePosition(int locus, int position) { m_allele_postition[locus] = position; }
-	void setAlleleName(int locus, const char *name) { m_allele_name[locus] = name; }
+	void setAlleleName(int locus, const string &name) { m_allele_name[locus] = name; }
 
 	void checkAlleleSymbol();
 	void randomizePhase();

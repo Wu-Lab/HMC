@@ -1,4 +1,7 @@
 
+#include <vector>
+#include <set>
+
 #include "HaploFile.h"
 
 #include "MemLeak.h"
@@ -112,7 +115,7 @@ void HaploFile::writePattern(HaploBuilder &hb, const char *suffix)
 	FILE *fp;
 	char buf[BUFFER_LENGTH];
 	HaploPattern *hp;
-	list<HaploPattern*>::iterator i_hp;
+	vector<HaploPattern*>::const_iterator i_hp;
 	m_haplo_data = hb.haplo_data();
 	string output_file = m_filename + suffix;
 	fp = fopen(output_file.c_str(), "w");
@@ -164,8 +167,8 @@ void HaploFileHPM::readHaploData(HaploData &hd)
 {
 	FILE *fp;
 	char line[BUFFER_LENGTH];
-	List<Haplotype> haplos;
-	Haplotype *h, *h1, *h2;
+	vector<Haplotype*> haplos;
+	Haplotype *h;
 	int i;
 	m_haplo_data = &hd;
 	fp = fopen(m_filename.c_str(), "r");
@@ -182,21 +185,16 @@ void HaploFileHPM::readHaploData(HaploData &hd)
 			Logger::error("Incorrect haplotype data in line %d!", haplos.size()+2);
 			exit(1);
 		}
-		haplos.addLast(h);
+		haplos.push_back(h);
 	}
 	if (haplos.size() % 2 != 0) {
 		Logger::error("Incorrect haplotype data in line %d!", haplos.size()+2);
 		exit(1);
 	}
 	hd.setGenotypeNum(haplos.size()/2);
-	haplos.moveFirst();
 	for (i=0; i<hd.genotype_num(); i++) {
-		h1 = haplos.getCurrent();
-		haplos.moveNext();
-		h2 = haplos.getCurrent();
-		haplos.moveNext();
-		hd[i].setHaplotypes(*h1, *h2);
-		hd[i].setID(h1->id());
+		hd[i].setHaplotypes(*haplos[2*i], *haplos[2*i+1]);
+		hd[i].setID(haplos[2*i]->id());
 	}
 	fclose(fp);
 	hd.checkAlleleSymbol();
@@ -282,30 +280,31 @@ char *HaploFileHPM::writeHaplotype(const Haplotype &h, char *buffer)
 void HaploFileHPM::checkHeader(char *buffer)
 {
 	int i, len;
-	ConstStringList fields, names;
+	set<string> fields;
+	vector<string> names;
 	const char *delim = " \t\r\n", *s;
 	char *buf;
-	fields.addLast("Id");
-	fields.addLast("Status");
-	fields.addLast("CONFIG_ID");
-	fields.addLast("CONFIDENCE");
+	fields.insert("Id");
+	fields.insert("Status");
+	fields.insert("CONFIG_ID");
+	fields.insert("CONFIDENCE");
 	buf = new char [strlen(buffer)+100];
 	strcpy(buf, buffer);
 	s = strtok(buf, delim);
 	if (s != NULL && strcmp(s, "Id") != 0) {
-		Logger::error("Invalid file type!");
+		Logger::error("Not a valid HPM file!");
 		exit(1);
 	}
 	m_line_start = 1;
 	s = strtok(NULL, delim);
-	while (s != NULL && fields.contain(s)) {
+	while (s != NULL && fields.count(s)) {
 		m_line_start++;
 		s = strtok(NULL, delim);
 	}
 	len = 0;
-	while (s != NULL && !fields.contain(s)) {
+	while (s != NULL && !fields.count(s)) {
 		len++;
-		names.addLast(s);
+		names.push_back(s);
 		s = strtok(NULL, delim);
 	}
 	if (s != NULL && strcmp(s, "CONFIDENCE") == 0) {
@@ -315,10 +314,8 @@ void HaploFileHPM::checkHeader(char *buffer)
 		m_weighted = false;
 	}
 	m_haplo_data->setGenotypeLen(len);
-	s = names.getFirst();
 	for (i=0; i<len; i++) {
-		m_haplo_data->setAlleleName(i, s);
-		s = names.getNext();
+		m_haplo_data->setAlleleName(i, names[i]);
 	}
 	delete[] buf;
 }
@@ -333,8 +330,7 @@ void HaploFileBench::readHaploData(HaploData &hd)
 	FILE *fp;
 	char line[BUFFER_LENGTH];
 	char *s, *delim = " \t\r\n";
-	List<Haplotype> haplos;
-	Haplotype *h1, *h2;
+	vector<Haplotype*> haplos;
 	int i;
 	m_haplo_data = &hd;
 	fp = fopen(m_filename.c_str(), "r");
@@ -353,20 +349,15 @@ void HaploFileBench::readHaploData(HaploData &hd)
 	fclose(fp);
 	readHaploFile(haplos, m_filename.c_str());
 	m_parents_num = haplos.size() / 2;
-	if (m_children_file[0] != 0) {
+	if (!m_children_file.empty()) {
 		readHaploFile(haplos, m_children_file.c_str());
 		m_children_num = haplos.size() / 2 - m_parents_num;
 	}
 	hd.setGenotypeNum(m_parents_num + m_children_num);
 	hd.setUnphasedNum(m_parents_num);
-	haplos.moveFirst();
 	for (i=0; i<hd.genotype_num(); i++) {
-		h1 = haplos.getCurrent();
-		haplos.moveNext();
-		h2 = haplos.getCurrent();
-		haplos.moveNext();
-		hd[i].setHaplotypes(*h1, *h2);
-		hd[i].setID(h1->id());
+		hd[i].setHaplotypes(*haplos[2*i], *haplos[2*i+1]);
+		hd[i].setID(haplos[2*i]->id());
 	}
 	hd.checkAlleleSymbol();
 }
@@ -411,7 +402,7 @@ void HaploFileBench::writeHaploDataWithFreq(HaploData &hd, const char *suffix)
 	fclose(fp);
 }
 
-void HaploFileBench::readHaploFile(List<Haplotype> &haplos, const char *filename)
+void HaploFileBench::readHaploFile(vector<Haplotype*> &haplos, const char *filename)
 {
 	FILE *fp;
 	char line[BUFFER_LENGTH];
@@ -439,7 +430,7 @@ void HaploFileBench::readHaploFile(List<Haplotype> &haplos, const char *filename
 			Logger::error("Incorrect haplotype data in line %d of %s!", haplos.size()+2, filename);
 			exit(1);
 		}
-		haplos.addLast(h);
+		haplos.push_back(h);
 		heterozygous = 3 - heterozygous;
 	}
 	if (haplos.size() % 2 != 0) {

@@ -82,6 +82,13 @@ public:
 	static void operator delete(void *rawMemory, int, const char *, int) { m_pool.free(rawMemory); }
 #endif // _DEBUG
 
+	struct greater_frequency {
+		bool operator()(const HaploPattern *hp1, const HaploPattern *hp2) const
+		{
+			return hp1->frequency() > hp2->frequency();
+		}
+	};
+
 protected:
 	double getMatchingFrequency(const Genotype &g, const Allele *pa, int start, int len) const;
 };

@@ -68,15 +68,15 @@ public:
 	static void operator delete(void *rawMemory, int, const char *, int) { m_pool.free(rawMemory); }
 #endif // _DEBUG
 
+	struct greater_likelihood {
+		bool operator()(const HaploPair *hp1, const HaploPair *hp2) const
+		{
+			return hp1->likelihood() > hp2->likelihood();
+		}
+	};
+
 	friend class HaploBuilder;
-	friend bool greater_likelihood(const HaploPair *hp1, const HaploPair *hp2);
 };
-
-
-inline bool greater_likelihood(const HaploPair *hp1, const HaploPair *hp2)
-{
-	return hp1->m_likelihood > hp2->m_likelihood;
-}
 
 
 #endif // __HAPLOPAIR_H

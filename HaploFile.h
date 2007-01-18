@@ -4,6 +4,7 @@
 
 
 #include <string>
+#include <vector>
 
 #include "Utils.h"
 #include "HaploData.h"
@@ -91,7 +92,7 @@ public:
 	virtual void writeHaploDataWithFreq(HaploData &hd, const char *suffix = NULL);
 
 protected:
-	void readHaploFile(List<Haplotype> &haplos, const char *filename);
+	void readHaploFile(vector<Haplotype*> &haplos, const char *filename);
 	char *readHaplotype(Haplotype &h, char *buffer, int heterozygous);
 	char *writeHaplotype(const Haplotype &h, char *buffer);
 };

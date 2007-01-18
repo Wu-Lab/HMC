@@ -201,10 +201,6 @@ SOURCE=.\HMC.h
 # End Source File
 # Begin Source File
 
-SOURCE=.\List.h
-# End Source File
-# Begin Source File
-
 SOURCE=.\Matrix.h
 # End Source File
 # Begin Source File

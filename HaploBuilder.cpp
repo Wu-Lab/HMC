@@ -190,24 +190,18 @@ HaploPattern *PatternTree::findLikelyMatchPattern(PatternNode *node, const Allel
 
 HaploBuilder::HaploBuilder()
 {
-	m_pattern_tree = NULL;
-	m_best_pair = NULL;
 	m_target_pattern = NULL;
 }
 
 HaploBuilder::~HaploBuilder()
 {
-	delete m_pattern_tree;
-	delete[] m_best_pair;
 	DeleteAllObjects(m_haplo_pattern);
 }
 
 void HaploBuilder::clear()
 {
-	delete m_pattern_tree;
-	delete[] m_best_pair;
-	m_pattern_tree = NULL;
-	m_best_pair = NULL;
+	m_pattern_tree.reset();
+	m_best_pair.clear();
 	m_target_pattern = NULL;
 }
 
@@ -222,11 +216,11 @@ void HaploBuilder::initialize()
 	int i, j;
 	HaploPattern *hp;
 	AlleleSequence temp;
-	list<HaploPattern*>::iterator i_hp;
+	vector<HaploPattern*>::iterator i_hp;
 	list<HaploPattern*>::iterator head;
 	clear();
 	m_pattern_num = m_haplo_pattern.size();
-	m_pattern_tree = new PatternTree(m_haplo_data);
+	m_pattern_tree.reset(new PatternTree(m_haplo_data));
 	m_head_len = m_genotype_len;
 	m_head_list.clear();
 	i = 0;
@@ -274,7 +268,7 @@ void HaploBuilder::initialize()
 			}
 		}
 	}
-	m_best_pair = new vector<pair<int, int> > [m_pattern_num];
+	m_best_pair.resize(m_pattern_num);
 }
 
 void HaploBuilder::adjust(double min_freq)
@@ -282,7 +276,7 @@ void HaploBuilder::adjust(double min_freq)
 	int i;
 	vector<double> freq;
 	HaploPattern *hp;
-	list<HaploPattern*>::iterator i_hp;
+	vector<HaploPattern*>::iterator i_hp;
 	Genotype res;
 	vector<HaploPair*> res_list;
 	freq.resize(m_pattern_num, 0);
@@ -382,7 +376,7 @@ void HaploBuilder::resolve(const Genotype &genotype, Genotype &resolution, vecto
 			total_likelihood += (*i_hp)->m_total_likelihood;
 			res_list.push_back(*i_hp);
 		}
-		sort(res_list.begin(), res_list.end(), greater_likelihood);
+		sort(res_list.begin(), res_list.end(), HaploPair::greater_likelihood());
 		best_hp = res_list.front();
 		resolution = best_hp->getGenotype();
 		resolution.setLikelihood(total_likelihood);
@@ -536,18 +530,13 @@ void HaploBuilder::addHaploPair(vector<HaploPair*> &hp_list, HaploPair *hp)
 
 void HaploBuilder::findHaploPatternByFreq(double min_freq, int min_len, int max_len)
 {
-	int i;
-	int *min_len_vector, *max_len_vector;
+	vector<int> min_len_vector, max_len_vector;
 	vector<HaploPattern*> candidates;
 	list<HaploPattern*>::iterator i_hp;
 	if (min_len < 0) min_len = 1;
 	if (max_len < 0) max_len = m_genotype_len;
-	min_len_vector = new int [m_genotype_len];
-	max_len_vector = new int [m_genotype_len];
-	for (i=0; i<m_genotype_len; i++) {
-		min_len_vector[i] = min_len;
-		max_len_vector[i] = max_len;
-	}
+	min_len_vector.resize(m_genotype_len, min_len);
+	max_len_vector.resize(m_genotype_len, max_len);
 	DeleteAllObjects(m_haplo_pattern);
 	m_haplo_pattern.clear();
 	generateHaploPatternCandidate(candidates);
@@ -555,25 +544,19 @@ void HaploBuilder::findHaploPatternByFreq(double min_freq, int min_len, int max_
 	DeleteAllObjects(candidates);
 	candidates.clear();
 	Logger::verbose("Found haplotype patterns: %d     ", m_haplo_pattern.size());
-	delete[] min_len_vector;
-	delete[] max_len_vector;
 }
 
 void HaploBuilder::findHaploPatternByNum(int max_num, int min_len, int max_len)
 {
-	int i, size, last_size;
-	int *min_len_vector, *max_len_vector, *list_ind;
-	double min_freq = 10, *list_freq;
+	int last_size;
+	vector<int> min_len_vector, max_len_vector;
+	double min_freq = 10;
 	vector<HaploPattern*> candidates;
-	list<HaploPattern*>::iterator i_hp;
+	vector<HaploPattern*>::iterator i_hp;
 	if (min_len < 0) min_len = 1;
 	if (max_len < 0) max_len = m_genotype_len;
-	min_len_vector = new int [m_genotype_len];
-	max_len_vector = new int [m_genotype_len];
-	for (i=0; i<m_genotype_len; i++) {
-		min_len_vector[i] = min_len;
-		max_len_vector[i] = max_len;
-	}
+	min_len_vector.resize(m_genotype_len, min_len);
+	max_len_vector.resize(m_genotype_len, max_len);
 	DeleteAllObjects(m_haplo_pattern);
 	m_haplo_pattern.clear();
 	generateHaploPatternCandidate(candidates);
@@ -581,41 +564,16 @@ void HaploBuilder::findHaploPatternByNum(int max_num, int min_len, int max_len)
 		last_size = m_haplo_pattern.size();
 		min_freq *= 0.9;
 		searchHaploPattern(candidates, min_freq, max_num, min_len_vector, max_len_vector);
-	} while ((int)m_haplo_pattern.size() < max_num && min_freq > 1e-38);
-	if ((int)m_haplo_pattern.size() > max_num) {
-		size = m_haplo_pattern.size() - last_size;
-		list_ind = new int [size];
-		list_freq = new double [size];
+	} while (m_haplo_pattern.size() < max_num && min_freq > 1e-38);
+	if (m_haplo_pattern.size() > max_num) {
 		i_hp = m_haplo_pattern.begin();
 		advance(i_hp, last_size);
-		i = 0;
-		while (i_hp != m_haplo_pattern.end()) {
-			list_ind[i] = last_size+i;
-			list_freq[i] = (*i_hp)->frequency();
-			i_hp++;
-			i++;
-		}
-		Utils::quick_sort_max(list_ind, list_freq, size);
-		min_freq = list_freq[max_num-last_size];
-		i_hp = m_haplo_pattern.begin();
-		advance(i_hp, last_size);
-		while (i_hp != m_haplo_pattern.end()) {
-			if ((*i_hp)->frequency() <= min_freq && (*i_hp)->length() > 1) {
-				delete *i_hp;
-				i_hp = m_haplo_pattern.erase(i_hp);
-			}
-			else {
-				i_hp++;
-			}
-		}
-		delete[] list_ind;
-		delete[] list_freq;
+		sort(i_hp, m_haplo_pattern.end(), HaploPattern::greater_frequency());
+		m_haplo_pattern.resize(max_num);
 	}
 	DeleteAllObjects(candidates);
 	candidates.clear();
 	Logger::verbose("Found haplotype patterns: %d     ", m_haplo_pattern.size());
-	delete[] min_len_vector;
-	delete[] max_len_vector;
 }
 
 void HaploBuilder::findHaploPatternBlockByFreq(double min_freq, int min_len, int max_len)
@@ -644,7 +602,7 @@ void HaploBuilder::generateHaploPatternCandidate(vector<HaploPattern*> &candidat
 	}
 }
 
-void HaploBuilder::searchHaploPattern(vector<HaploPattern*> &candidates, double min_freq, int min_num, int *min_len, int *max_len)
+void HaploBuilder::searchHaploPattern(vector<HaploPattern*> &candidates, double min_freq, int min_num, vector<int> min_len, vector<int> max_len)
 {
 	int i;
 	vector<HaploPattern*> new_candidates;
@@ -693,20 +651,18 @@ void HaploBuilder::searchHaploPattern(vector<HaploPattern*> &candidates, double 
 void HaploBuilder::searchHaploPatternBlock(int min_len, int max_len)
 {
 	int i;
-	int *min_len_vector, *max_len_vector;
+	vector<int> min_len_vector, max_len_vector;
 	HaploPattern *hp;
 	vector<HaploPattern*> candidates;
-	list<HaploPattern*>::iterator i_hp;
+	vector<HaploPattern*>::iterator i_hp;
 	if (min_len < 0) min_len = 1;
 	if (max_len < 0) max_len = m_genotype_len;
-	min_len_vector = new int [m_genotype_len];
-	max_len_vector = new int [m_genotype_len];
-	for (i=0; i<m_genotype_len; i++) {
-		max_len_vector[i] = min_len+1;
-	}
+	min_len_vector.resize(m_genotype_len, min_len);
+	max_len_vector.resize(m_genotype_len, min_len+1);
 	for (i_hp = m_haplo_pattern.begin(); i_hp != m_haplo_pattern.end(); i_hp++) {
 		hp = *i_hp;
-		if (hp->length() >= min_len && hp->length() <= max_len && hp->length() > max_len_vector[hp->end()-1]) max_len_vector[hp->end()-1] = hp->length();
+		if (hp->length() >= min_len && hp->length() <= max_len 
+			&& hp->length() > max_len_vector[hp->end()-1]) max_len_vector[hp->end()-1] = hp->length();
 		delete hp;
 	}
 	m_haplo_pattern.clear();
@@ -718,6 +674,4 @@ void HaploBuilder::searchHaploPatternBlock(int min_len, int max_len)
 	searchHaploPattern(candidates, 0, -1, min_len_vector, max_len_vector);
 	DeleteAllObjects(candidates);
 	candidates.clear();
-	delete[] min_len_vector;
-	delete[] max_len_vector;
 }
