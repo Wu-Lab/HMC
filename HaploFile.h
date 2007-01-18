@@ -20,11 +20,11 @@ protected:
 
 public:
 	HaploFile();
-	explicit HaploFile(const char *filename);
+	explicit HaploFile(const string &filename);
 
 	const string &filename() const { return m_filename; }
 
-	void setFileName(const char *filename) { m_filename = filename; }
+	void setFileName(const string &filename) { m_filename = filename; }
 	void setHasID(bool enable) { m_has_id = enable; }
 
 	virtual void readHaploData(HaploData &hd);
@@ -43,7 +43,7 @@ inline HaploFile::HaploFile()
 {
 }
 
-inline HaploFile::HaploFile(const char *filename)
+inline HaploFile::HaploFile(const string &filename)
 : m_haplo_data(0),
   m_has_id(true),
   m_filename(filename)
@@ -58,7 +58,7 @@ protected:
 
 public:
 	HaploFileHPM() {};
-	HaploFileHPM(const char *filename) : HaploFile(filename) {};
+	HaploFileHPM(const string &filename) : HaploFile(filename) {};
 
 	virtual void readHaploData(HaploData &hd);
 	virtual void writeHaploData(HaploData &hd, const char *suffix = NULL);
@@ -81,7 +81,7 @@ protected:
 
 public:
 	HaploFileBench();
-	HaploFileBench(const char *filename, const char *posinfo, const char *children = NULL);
+	HaploFileBench(const string &filename, const string &posinfo, const string &children = string());
 
 	int parents_num() const { return m_parents_num; }
 	int children_num() const { return m_children_num; }
@@ -102,7 +102,7 @@ inline HaploFileBench::HaploFileBench()
 {
 }
 
-inline HaploFileBench::HaploFileBench(const char *filename, const char *posinfo, const char *children)
+inline HaploFileBench::HaploFileBench(const string &filename, const string &posinfo, const string &children)
 : HaploFile(filename),
   m_children_file(children),
   m_posinfo_file(posinfo),

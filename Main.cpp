@@ -11,7 +11,14 @@ int main(int argc, char *argv[])
 
 	srand(time(NULL));
 
-	HMC hmc(argc, argv);
-	hmc.run();
+	try {
+		HMC hmc(argc, argv);
+		hmc.run();
+	}
+    catch (exception &e)
+    {
+        cout << e.what() << "\n";
+        return 1;
+	}
 	return 0;
 }
