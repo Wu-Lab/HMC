@@ -3,7 +3,6 @@
 #define __HMC_H
 
 
-#include <iostream>
 #include <boost/program_options.hpp>
 
 #include "Utils.h"

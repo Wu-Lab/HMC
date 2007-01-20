@@ -565,9 +565,10 @@ void HaploBuilder::findHaploPatternByNum(int max_num, int min_len, int max_len)
 		searchHaploPattern(candidates, min_freq, max_num, min_len_vector, max_len_vector);
 	} while (m_haplo_pattern.size() < max_num && min_freq > 1e-38);
 	if (m_haplo_pattern.size() > max_num) {
-		i_hp = m_haplo_pattern.begin();
-		advance(i_hp, last_size);
+		i_hp = m_haplo_pattern.begin() + last_size;
 		sort(i_hp, m_haplo_pattern.end(), HaploPattern::greater_frequency());
+		i_hp = m_haplo_pattern.begin() + max_num;
+		for_each(i_hp, m_haplo_pattern.end(), DeletePtr());
 		m_haplo_pattern.resize(max_num);
 	}
 	DeleteAllObjects(candidates);
