@@ -144,6 +144,10 @@ SOURCE=.\Main.cpp
 # End Source File
 # Begin Source File
 
+SOURCE=.\Options.cpp
+# End Source File
+# Begin Source File
+
 SOURCE=.\Utils.cpp
 # End Source File
 # End Group
@@ -205,6 +209,10 @@ SOURCE=.\Matrix.h
 # Begin Source File
 
 SOURCE=.\MemLeak.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\Options.h
 # End Source File
 # Begin Source File
 

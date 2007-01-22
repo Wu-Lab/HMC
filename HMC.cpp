@@ -1,38 +1,17 @@
 
 #include <iostream>
 #include <fstream>
+#include <iterator>
 #include <stdexcept>
 
 #include "HMC.h"
 #include "HaploFile.h"
 #include "HaploComp.h"
+#include "Options.h"
 
 
 const char *HMC::m_version = "0.7.3";
 const char *HMC::m_year = "2007";
-
-
-/* Function used to check that 'opt1' and 'opt2' are not specified
-   at the same time. */
-void conflicting_options(const po::variables_map& vm, 
-                         const char* opt1, const char* opt2)
-{
-    if (vm.count(opt1) && !vm[opt1].defaulted() 
-        && vm.count(opt2) && !vm[opt2].defaulted())
-        throw logic_error(string("Conflicting options '") 
-                          + opt1 + "' and '" + opt2 + "'.");
-}
-
-/* Function used to check that of 'for_what' is specified, then
-   'required_option' is specified too. */
-void option_dependency(const po::variables_map& vm,
-                        const char* for_what, const char* required_option)
-{
-    if (vm.count(for_what) && !vm[for_what].defaulted())
-        if (vm.count(required_option) == 0 || vm[required_option].defaulted())
-            throw logic_error(string("Option '") + for_what 
-                              + "' requires option '" + required_option + "'.");
-}
 
 
 HMC::HMC(int argc, char *argv[])
@@ -77,6 +56,9 @@ HMC::HMC(int argc, char *argv[])
 		("input-file", po::value<vector<string> >(&m_input_files), "input file")
 		;
 
+	m_options.add(generics).add(configs).add(parameters).add(utilities).add(hidden);
+	m_visible_options.add(generics).add(configs).add(parameters).add(utilities);
+
 	po::positional_options_description p;
 	p.add("input-file", -1);
 
@@ -95,9 +77,7 @@ HMC::HMC(int argc, char *argv[])
 	conflicting_options(m_args, "min-freq-rel", "num-patterns");
 	conflicting_options(m_args, "min-freq-abs", "num-patterns");
 
-	m_visible_options.add(generics).add(configs).add(parameters).add(utilities);
-
-	parseOptions(argc, argv);
+	parseOptions();
 }
 
 HMC::~HMC()
@@ -119,65 +99,15 @@ void HMC::copyright()
 	Logger::info("Copyright (C) ZHANGroup@BIOINFOAMSS.ORG 2004-%s. All rights reserved.\n", m_year);
 }
 
-void HMC::defineOptions()
+void HMC::printOptions()
 {
-	// debug settings
-// 	option = m_args.addOption("debug_level", "d", true, "4", 5, "1", "2", "3", "4", "5");
-// 	option->addHelpInfo("Set debug level, larger level for more debug information.");
-// 	option = m_args.addOption("no_logo", "n");
-// 	option->addHelpInfo("Suppress the logo and copyright information.");
-// 	option = m_args.addOption("help", "h");
-// 	option->addHelpInfo("Print the help message.");
-
-	// comparison
-// 	option = m_args.addOption("compare_with", "w", true);
-// 	option->addHelpInfo("Compare the input data with the target data.");
-
-	// convert data file format
-// 	option = m_args.addOption("convert_to", "t", true);
-// 	option->addHelpInfo("Convert data file format to default format.");
-// 	option = m_args.addOption("randomize", "tr");
-// 	option->addHelpInfo("Used with option -t, randomize the phase.");
-// 	option = m_args.addOption("simplify", "ts");
-// 	option->addHelpInfo("Used with option -t, simplify the allele symbols.");
-
-	// input data file format
-// 	option = m_args.addOption("file_format_0", "f0");	// PHASE like format (default)
-// 	option->addHelpInfo("Read input file as PHASE like format (default).");
-// 	option = m_args.addOption("file_format_1", "f1");	// HPM format
-// 	option->addHelpInfo("Read input file as HaploRec like format.");
-// 	option = m_args.addOption("file_format_2", "f2");	// Benchmark format (unrelated individuals)
-// 	option->addHelpInfo("Read input file as Benchmark format (unrelated individuals).");
-// 	option = m_args.addOption("file_format_3", "f3");	// Benchmark format (trios)
-// 	option->addHelpInfo("Read input file as Benchmark format (trios).");
-
-	// engine models
-// 	option = m_args.addOption("model", "m", true, "MC-v", 3, "MC-v", "MC-d", "MC-b");
-// 	option->addHelpInfo("Set the inference model.");
-
-	// model options
-// 	option = m_args.addOption("mc_order", "mo", true);
-// 	option = m_args.addOption("min_freq_rel", "mfr", true);
-// 	option = m_args.addOption("min_freq_abs", "mfa", true, "2.0");
-// 	option = m_args.addOption("min_pattern_len", "minpl", true);
-// 	option = m_args.addOption("max_pattern_len", "maxpl", true, "30");
-// 	option = m_args.addOption("num_patterns", "np", true);
-// 
-// 	option = m_args.addOption("iteration_number", "i", true, "1");
-// 	option = m_args.addOption("output_patterns", "op", true);
-
-	// conflicts between options
-// 	m_args.addConflictOptions("mc_order", "min_freq_rel");
-// 	m_args.addConflictOptions("mc_order", "min_freq_abs");
-// 	m_args.addConflictOptions("mc_order", "min_pattern_len");
-// 	m_args.addConflictOptions("mc_order", "max_pattern_len");
-// 	m_args.addConflictOptions("mc_order", "num_patterns");
-// 	m_args.addConflictOptions("min_freq_rel", "min_freq_abs");
-// 	m_args.addConflictOptions("min_freq_rel", "num_patterns");
-// 	m_args.addConflictOptions("min_freq_abs", "num_patterns");
+	cout << "Used options:" << endl;
+	print_options(m_args, cout, DisplayOption::defaulted);
+	print_options(m_args, cout, DisplayOption::specified);
+	cout << endl;
 }
 
-void HMC::parseOptions(int argc, char *argv[])
+void HMC::parseOptions()
 {
 	Logger::setLogLevel(m_args["debug"].as<int>());
 	if (!m_args.count("nologo")) {
@@ -186,6 +116,10 @@ void HMC::parseOptions(int argc, char *argv[])
 	if (m_args.count("help") || !m_input_files.size()) {
 		usage();
 		exit(0);
+	}
+
+	if (Logger::isDebug()) {
+		printOptions();
 	}
 
 	//////////////////////////////////////////////////////////////////////////

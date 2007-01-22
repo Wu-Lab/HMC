@@ -10,18 +10,20 @@
 #include "HaploModel.h"
 
 
-namespace po = boost::program_options;
+namespace po = ::boost::program_options;
 
 
 class HaploFile;
 
 
 class HMC {
+	po::options_description m_options;
 	po::options_description m_visible_options;
 	po::variables_map m_args;
 	string m_input_format;
 	vector<string> m_input_files;
 	HaploFile *m_haplo_file;
+
 	HaploModel m_builder;
 	HaploData m_genos;
 	HaploData m_resolutions;
@@ -35,15 +37,14 @@ public:
 
 	void usage();
 	void copyright();
-	void defineOptions();
-	void parseOptions(int argc = 0, char *argv[] = NULL);
+
+	void printOptions();
+	void parseOptions();
 
 	void run();
 
 	void resolve();
 	void compareWith(const string &filename);
-
-	const char *version() { return m_version; }
 };
 
 

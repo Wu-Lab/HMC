@@ -4,6 +4,9 @@
 
 
 #include <ctime>
+#include <vector>
+#include <iosfwd>
+#include <iterator>
 #include <boost/shared_ptr.hpp>
 
 
@@ -83,14 +86,24 @@ private:
 
 // something for using with STL
 
+
 struct DeletePtr {
 	template<typename T>
 	void operator()(const T* ptr) const { delete ptr; }
 };
 
+
 template<typename T>
 void DeleteAllObjects(const T& container) {
 	for_each(container.begin(), container.end(), DeletePtr());
+};
+
+
+template<typename T>
+ostream &operator<<(ostream &os, const vector<T> &v)
+{
+    copy(v.begin(), v.end(), ostream_iterator<T>(os, " ")); 
+    return os;
 };
 
 
