@@ -52,10 +52,10 @@ void HaploModel::findPatterns_mc_v()
 		findHaploPatternByNum(m_num_patterns, m_min_pattern_len, m_max_pattern_len);
 	}
 	else if (m_min_freq_abs > 0) {
-		findHaploPatternByFreq(m_min_freq_abs, m_min_pattern_len, m_max_pattern_len);
+		findHaploPatternByFreq(m_min_freq_abs / m_haplo_data->genotype_num(), m_min_pattern_len, m_max_pattern_len);
 	}
 	else {
-		findHaploPatternByFreq(m_min_freq_rel * m_haplo_data->genotype_num(), m_min_pattern_len, m_max_pattern_len);
+		findHaploPatternByFreq(m_min_freq_rel, m_min_pattern_len, m_max_pattern_len);
 	}
 	Logger::endTimer(1);
 }
@@ -80,10 +80,10 @@ void HaploModel::findPatterns_mc_b()
 		findHaploPatternBlockByNum(m_num_patterns, m_min_pattern_len, m_max_pattern_len);
 	}
 	else if (m_min_freq_abs > 0) {
-		findHaploPatternBlockByFreq(m_min_freq_abs, m_min_pattern_len, m_max_pattern_len);
+		findHaploPatternBlockByFreq(m_min_freq_abs / m_haplo_data->genotype_num(), m_min_pattern_len, m_max_pattern_len);
 	}
 	else {
-		findHaploPatternBlockByFreq(m_min_freq_rel * m_haplo_data->genotype_num(), m_min_pattern_len, m_max_pattern_len);
+		findHaploPatternBlockByFreq(m_min_freq_rel, m_min_pattern_len, m_max_pattern_len);
 	}
 	Logger::endTimer(1);
 }

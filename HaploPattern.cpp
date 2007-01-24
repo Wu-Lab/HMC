@@ -114,6 +114,7 @@ double HaploPattern::checkFrequency()
 				m_match_frequency.push_back(make_pair(i, freq));
 			}
 		}
+		m_frequency /= m_haplodata.genotype_num();
 	}
 	return m_frequency;
 }
@@ -123,7 +124,7 @@ double HaploPattern::checkFrequencyWithExtension(const list<pair<int, double> > 
 	double w, freq;
 	list<pair<int, double> >::const_iterator i_mf;
 	if (length() == 0) {
-		m_frequency = m_haplodata.genotype_num();
+		m_frequency = 1;
 	}
 	else if (mf.empty()) {
 		checkFrequency();
@@ -159,6 +160,7 @@ double HaploPattern::checkFrequencyWithExtension(const list<pair<int, double> > 
 			}
 			++i_mf;
 		}
+		m_frequency /= m_haplodata.genotype_num();
 	}
 	return m_frequency;
 }

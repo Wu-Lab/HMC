@@ -17,6 +17,10 @@ HaploPair::HaploPair(const HaploPattern *hpa, const HaploPattern *hpb)
 		Logger::error("Construct HaplPair from inconsistent HaploPatterns!");
 		exit(1);
 	}
+	if (hpa->start() != 0 || hpb->start() != 0) {
+		Logger::error("Construct HaplPair from middle!");
+		exit(1);
+	}
 	m_forward_likelihood = m_best_likelihood
 		= m_transition_prob = hpa->frequency() * hpb->frequency();
 }
@@ -27,7 +31,7 @@ HaploPair::HaploPair(HaploPair *hp, const HaploPattern *hpa, const HaploPattern 
 {
 	m_transition_prob = hpa->transition_prob() * hpb->transition_prob();
 	m_best_likelihood = hp->m_best_likelihood * m_transition_prob;
-	m_forward_likelihood = hp->m_forward_likelihood * m_transition_prob,
+	m_forward_likelihood = hp->m_forward_likelihood * m_transition_prob;
 	hp->m_forward_links.push_back(make_pair(this, m_transition_prob));
 }
 
@@ -38,7 +42,7 @@ void HaploPair::add(HaploPair *hp, const HaploPattern *hpa, const HaploPattern *
 		m_best_likelihood = likelihood;
 		m_backward_link = hp;
 	}
-	m_forward_likelihood += hp->m_forward_likelihood * m_transition_prob,
+	m_forward_likelihood += hp->m_forward_likelihood * m_transition_prob;
 	hp->m_forward_links.push_back(make_pair(this, m_transition_prob));
 }
 
@@ -64,4 +68,14 @@ Genotype HaploPair::getGenotype()
 	}
 	g.checkGenotype();
 	return g;
+}
+
+double HaploPair::evaluatePattern(const HaploPattern *hp, vector<HaploPair*> &hp_list)
+{
+	double freq;
+
+	// TODO
+	freq = 0;
+
+	return freq;
 }

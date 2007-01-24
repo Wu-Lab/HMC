@@ -40,6 +40,8 @@ public:
 	const HaploPattern *successor_a(int i) const { return m_pattern_a.successors(i); }
 	const HaploPattern *successor_b(int i) const { return m_pattern_b.successors(i); }
 
+	static double evaluatePattern(const HaploPattern *hp, vector<HaploPair*> &hp_list);
+
 	static void *operator new(std::size_t) { return m_pool.malloc(); }
 	static void operator delete(void *rawMemory) { m_pool.free(rawMemory); }
 
