@@ -471,7 +471,11 @@ void HaploBuilder::initHeadList(const Genotype &genotype)
 			i_as = as_list.begin();
 			while (i_as != as_list.end()) {
 				hp = m_pattern_tree->findLongestMatchPattern(m_head_len, *i_as);
-				if (hp != NULL && hp->id() >= (*head)->id()) addHaploPair(m_last_list, new HaploPair(*head, hp, m_target_pattern));
+				if (hp != NULL && hp->start() == 0) addHaploPair(m_last_list, new HaploPair(*head, hp, m_target_pattern));
+				else {
+					Logger::error("Can not find matching pattern!");
+					exit(1);
+				}
 				delete *i_as;
 				i_as = as_list.erase(i_as);
 			}

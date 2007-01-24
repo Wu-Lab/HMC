@@ -40,7 +40,6 @@ class HaploPair {
 	int m_end, m_id[2];
 	double m_likelihood;
 	double m_total_likelihood;
-	bool m_homogenous;
 	bool m_half, m_match_a, m_match_b, m_match_next_a, m_match_next_b;
 
 public:
@@ -57,8 +56,6 @@ public:
 
 	const HaploPattern *successor_a(int i) const { return m_pair->m_pattern_a.successors(i); }
 	const HaploPattern *successor_b(int i) const { return m_pair->m_pattern_b.successors(i); }
-
-	static void getID(int id[2], const HaploPattern *hpa, const HaploPattern *hpb);
 
 	static void *operator new(std::size_t) { return m_pool.malloc(); }
 	static void operator delete(void *rawMemory) { m_pool.free(rawMemory); }
