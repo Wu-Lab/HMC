@@ -11,6 +11,7 @@
 
 class HaploPair {
 	static boost::pool<> m_pool;
+
 	const HaploPattern &m_pattern_a, m_pattern_b;
 	vector<pair<HaploPair*, double> > m_forward_links;
 	HaploPair *m_backward_link;
@@ -26,7 +27,10 @@ public:
 
 	const HaploPattern &pattern_a() const { return m_pattern_a; }
 	const HaploPattern &pattern_b() const { return m_pattern_b; }
+	int id_a() const { return m_pattern_a.id(); }
+	int id_b() const { return m_pattern_b.id(); }
 	int end() const { return m_pattern_a.end(); }
+
 	double best_likelihood() const { return m_best_likelihood; }
 	double forward_likelihood() const { return m_forward_likelihood; }
 	double backward_likelihood() const { return m_backward_likelihood; }
@@ -52,6 +56,10 @@ public:
 	};
 
 	friend class HaploBuilder;
+
+private:
+	HaploPair(const HaploPair &);
+	HaploPair &operator=(const HaploPair &);
 };
 
 

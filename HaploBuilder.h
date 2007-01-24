@@ -11,12 +11,12 @@
 #include "Constant.h"
 #include "Allele.h"
 #include "HaploPattern.h"
+#include "HaploPair.h"
 
 
 class AlleleSequence;
 class Haplotype;
 class Genotype;
-class HaploPair;
 class HaploData;
 typedef TreeNode<HaploPattern> PatternNode;
 
@@ -90,7 +90,7 @@ protected:
 	void initHeadList(const Genotype &genotype);
 
 	void extendAll(int i, Allele a1, Allele a2);
-	void extend(int i, HaploPair *hp, Allele a1, Allele a2);
+	void extend(HaploPair *hp, Allele a1, Allele a2);
 	void addHaploPair(vector<HaploPair*> &hp_list, HaploPair *hp);
 
 	void findHaploPatternByFreq(double min_freq, int min_len = 1, int max_len = -1);
@@ -104,6 +104,12 @@ protected:
 
 	friend class HaploData;
 };
+
+inline void HaploBuilder::addHaploPair(vector<HaploPair*> &hp_list, HaploPair *hp)
+{
+	hp_list.push_back(hp);
+ 	m_best_pair[hp->id_a()].push_back(make_pair(hp->id_b(), hp_list.size()-1));
+}
 
 
 #endif // __HAPLOBUILDER_H

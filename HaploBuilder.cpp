@@ -475,12 +475,12 @@ void HaploBuilder::extendAll(int i, Allele a1, Allele a2)
 {
 	vector<HaploPair*>::iterator i_hp;
 	for (i_hp = m_haplopairs[i].begin(); i_hp != m_haplopairs[i].end(); ++i_hp) {
-		extend(i, *i_hp, a1, a2);
-		if (a1 != a2) extend(i, *i_hp, a2, a1);
+		extend(*i_hp, a1, a2);
+		if (a1 != a2) extend(*i_hp, a2, a1);
 	}
 }
 
-void HaploBuilder::extend(int i, HaploPair *hp, Allele a1, Allele a2)
+void HaploBuilder::extend(HaploPair *hp, Allele a1, Allele a2)
 {
 	HaploPair *new_hp;
 	const HaploPattern *hpa, *hpb;
@@ -497,19 +497,12 @@ void HaploBuilder::extend(int i, HaploPair *hp, Allele a1, Allele a2)
 			}
 		}
 		if (hp_index < 0) {
-			new_hp = new HaploPair(hp, hpa, hpb);
-			addHaploPair(m_haplopairs[i+1], new_hp);
+			addHaploPair(m_haplopairs[hp->end()+1], new HaploPair(hp, hpa, hpb));
 		}
 		else {
-			m_haplopairs[i+1][hp_index]->add(hp, hpa, hpb);
+			m_haplopairs[hp->end()+1][hp_index]->add(hp, hpa, hpb);
 		}
 	}
-}
-
-void HaploBuilder::addHaploPair(vector<HaploPair*> &hp_list, HaploPair *hp)
-{
-	hp_list.push_back(hp);
-	m_best_pair[hp->pattern_a().id()].push_back(make_pair(hp->pattern_b().id(), hp_list.size()-1));
 }
 
 void HaploBuilder::findHaploPatternByFreq(double min_freq, int min_len, int max_len)
