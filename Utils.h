@@ -93,9 +93,20 @@ struct DeletePtr {
 };
 
 
-template<typename T>
-void DeleteAllObjects(const T& container) {
-	for_each(container.begin(), container.end(), DeletePtr());
+struct DeleteAll {
+	template<typename T>
+	void operator()(const T& container) {
+		for_each(container.begin(), container.end(), DeletePtr());
+	}
+};
+
+
+struct DeleteAll_Clear {
+	template<typename T>
+	void operator()(T& container) {
+		for_each(container.begin(), container.end(), DeletePtr());
+		container.clear();
+	}
 };
 
 

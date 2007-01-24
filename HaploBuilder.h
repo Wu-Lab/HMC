@@ -64,10 +64,8 @@ protected:
 	int m_head_len;
 
 	Haplotype *m_genotype;
+	vector<vector<HaploPair*> > m_haplopairs;
 	vector<vector<pair<int, int> > > m_best_pair;
-	vector<HaploPair*> m_last_list;
-	vector<HaploPair*> m_new_list;
-	HaploPattern *m_target_pattern;
 
 public:
 	HaploBuilder();
@@ -88,10 +86,11 @@ public:
 
 protected:
 	void clear();
+	void clearHaploPairs();
 	void initHeadList(const Genotype &genotype);
 
-	void extendAll(Allele a1, Allele a2);
-	void extend(HaploPair *hp, Allele a1, Allele a2);
+	void extendAll(int i, Allele a1, Allele a2);
+	void extend(int i, HaploPair *hp, Allele a1, Allele a2);
 	void addHaploPair(vector<HaploPair*> &hp_list, HaploPair *hp);
 
 	void findHaploPatternByFreq(double min_freq, int min_len = 1, int max_len = -1);

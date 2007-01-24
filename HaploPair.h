@@ -3,59 +3,38 @@
 #define __HAPLOPAIR_H
 
 
-#include <boost/shared_ptr.hpp>
 #include <boost/pool/pool.hpp>
 
 #include "Utils.h"
 #include "HaploPattern.h"
 
 
-class PatternPair;
-typedef tr1::shared_ptr<PatternPair> SP_PatternPair;
-
-class PatternPair {
-	static boost::pool<> m_pool;
-	const HaploPattern &m_pattern_a, &m_pattern_b;
-	SP_PatternPair m_prev;
-
-public:
-	explicit PatternPair(const HaploPattern *hpa, const HaploPattern *hpb) : m_pattern_a(*hpa), m_pattern_b(*hpb) {};
-	explicit PatternPair(const HaploPattern *hpa, const HaploPattern *hpb, SP_PatternPair &pp) : m_pattern_a(*hpa), m_pattern_b(*hpb), m_prev(pp) {};
-
-	static void *operator new(std::size_t) { return m_pool.malloc(); }
-	static void operator delete(void *rawMemory) { m_pool.free(rawMemory); }
-
-#ifdef _DEBUG
-	static void *operator new(unsigned int, int, const char *, int) { return m_pool.malloc(); }
-	static void operator delete(void *rawMemory, int, const char *, int) { m_pool.free(rawMemory); }
-#endif // _DEBUG
-
-	friend class HaploPair;
-};
-
-
 class HaploPair {
 	static boost::pool<> m_pool;
-	SP_PatternPair m_pair;
-	int m_end, m_id[2];
-	double m_likelihood;
-	double m_total_likelihood;
-	bool m_half, m_match_a, m_match_b, m_match_next_a, m_match_next_b;
+	const HaploPattern &m_pattern_a, m_pattern_b;
+	vector<pair<HaploPair*, double> > m_forward_links;
+	HaploPair *m_backward_link;
+	double m_transition_prob;
+	double m_forward_likelihood;
+	double m_backward_likelihood;
+	double m_best_likelihood;
 
 public:
-	explicit HaploPair(const HaploPattern *hpa, const HaploPattern *hpb, HaploPattern *target_pattern = NULL);
+	explicit HaploPair(const HaploPattern *hpa, const HaploPattern *hpb);
 	explicit HaploPair(HaploPair *hp, const HaploPattern *hpa, const HaploPattern *hpb);
+	void add(HaploPair *hp, const HaploPattern *hpa, const HaploPattern *hpb);
 
-	int end() const { return m_end; }
-	double likelihood() const { return m_likelihood; }
+	const HaploPattern &pattern_a() const { return m_pattern_a; }
+	const HaploPattern &pattern_b() const { return m_pattern_b; }
+	int end() const { return m_pattern_a.end(); }
+	double best_likelihood() const { return m_best_likelihood; }
+	double forward_likelihood() const { return m_forward_likelihood; }
+	double backward_likelihood() const { return m_backward_likelihood; }
 
 	Genotype getGenotype();
 
-	bool extendable(int a, int b, HaploPattern *target_pattern = NULL);
-	void extend_trial(int a, int b, int id[2], double &likelihood, double &total_likelihood);
-
-	const HaploPattern *successor_a(int i) const { return m_pair->m_pattern_a.successors(i); }
-	const HaploPattern *successor_b(int i) const { return m_pair->m_pattern_b.successors(i); }
+	const HaploPattern *successor_a(int i) const { return m_pattern_a.successors(i); }
+	const HaploPattern *successor_b(int i) const { return m_pattern_b.successors(i); }
 
 	static void *operator new(std::size_t) { return m_pool.malloc(); }
 	static void operator delete(void *rawMemory) { m_pool.free(rawMemory); }
@@ -68,7 +47,7 @@ public:
 	struct greater_likelihood {
 		bool operator()(const HaploPair *hp1, const HaploPair *hp2) const
 		{
-			return hp1->likelihood() > hp2->likelihood();
+			return hp1->best_likelihood() > hp2->best_likelihood();
 		}
 	};
 
