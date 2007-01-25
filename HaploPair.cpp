@@ -70,14 +70,16 @@ Genotype HaploPair::getGenotype()
 	return g;
 }
 
+#include <map>
+
 double HaploPair::evaluatePattern(const HaploPattern *pattern, vector<HaploPair*> &hp_list)
 {
 	int i;
 	char match;
 	HaploPair *hp, *last_hp;
-	vector<pair<HaploPair*, double> > last_list[3], new_list[3];
+	map<HaploPair*, double> last_list[3], new_list[3];
 	vector<HaploPair*>::iterator i_hp;
-	vector<pair<HaploPair*, double> >::iterator i_mp;
+	map<HaploPair*, double>::iterator i_mp;
 	vector<pair<HaploPair*, double> >::const_iterator i_link;
 
 	for (i_hp=hp_list.begin(); i_hp!=hp_list.end(); ++i_hp) {
@@ -91,13 +93,13 @@ double HaploPair::evaluatePattern(const HaploPattern *pattern, vector<HaploPair*
 		}
 		switch (match) {
 		case 1:
-			last_list[1].push_back(make_pair(hp, hp->forward_likelihood() / 2.0));
+			last_list[1][hp] += hp->forward_likelihood() / 2.0;
 			break;
 		case 2:
-			last_list[2].push_back(make_pair(hp, hp->forward_likelihood() / 2.0));
+			last_list[2][hp] += hp->forward_likelihood() / 2.0;
 			break;
 		case 3:
-			last_list[0].push_back(make_pair(hp, hp->forward_likelihood()));
+			last_list[0][hp] += hp->forward_likelihood();
 			break;
 		}
 	}
@@ -117,13 +119,13 @@ double HaploPair::evaluatePattern(const HaploPattern *pattern, vector<HaploPair*
 				}
 				switch (match) {
 				case 1:
-					new_list[1].push_back(make_pair(hp, (*i_mp).second * (*i_link).second / 2.0));
+					new_list[1][hp] += (*i_mp).second * (*i_link).second / 2.0;
 					break;
 				case 2:
-					new_list[2].push_back(make_pair(hp, (*i_mp).second * (*i_link).second / 2.0));
+					new_list[2][hp] += (*i_mp).second * (*i_link).second / 2.0;
 					break;
 				case 3:
-					new_list[0].push_back(make_pair(hp, (*i_mp).second * (*i_link).second));
+					new_list[0][hp] += (*i_mp).second * (*i_link).second;
 					break;
 				}
 			}
@@ -134,7 +136,7 @@ double HaploPair::evaluatePattern(const HaploPattern *pattern, vector<HaploPair*
 			for (i_link=last_hp->m_forward_links.begin(); i_link!=last_hp->m_forward_links.end(); ++i_link) {
 				hp = (*i_link).first;
 				if (hp->allele_a() == (*pattern)[i]) {
-					new_list[1].push_back(make_pair(hp, (*i_mp).second * (*i_link).second));
+					new_list[1][hp] += (*i_mp).second * (*i_link).second;
 				}
 			}
 		}
@@ -144,7 +146,7 @@ double HaploPair::evaluatePattern(const HaploPattern *pattern, vector<HaploPair*
 			for (i_link=last_hp->m_forward_links.begin(); i_link!=last_hp->m_forward_links.end(); ++i_link) {
 				hp = (*i_link).first;
 				if (hp->allele_b() == (*pattern)[i]) {
-					new_list[2].push_back(make_pair(hp, (*i_mp).second * (*i_link).second));
+					new_list[2][hp] += (*i_mp).second * (*i_link).second;
 				}
 			}
 		}

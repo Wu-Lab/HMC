@@ -455,8 +455,11 @@ void HaploBuilder::initHeadList(const Genotype &genotype)
 			i_as = as_list.begin();
 			while (i_as != as_list.end()) {
 				hp = m_pattern_tree->findLongestMatchPattern(m_head_len, *i_as);
-				if (hp != NULL && hp->start() == 0)
-					addHaploPair(m_haplopairs[m_head_len], new HaploPair(*head, hp));
+				if (hp != NULL && hp->start() == 0) {
+					HaploPair *new_hp = new HaploPair(*head, hp);
+					m_haplopairs[m_head_len].push_back(new_hp);
+				 	m_best_pair[new_hp->id_a()].insert(make_pair(new_hp->id_b(), m_haplopairs[m_head_len].size()));
+				}
 				else {
 					Logger::error("Can not find matching pattern!");
 					exit(1);
@@ -480,23 +483,16 @@ void HaploBuilder::extendAll(int i, Allele a1, Allele a2)
 void HaploBuilder::extend(HaploPair *hp, Allele a1, Allele a2)
 {
 	const HaploPattern *hpa, *hpb;
-	int hp_index;
-	vector<pair<int, int> >::iterator i_p;
 	hpa = hp->successor_a(m_haplo_data->getAlleleIndex(hp->end(), a1));
 	hpb = hp->successor_b(m_haplo_data->getAlleleIndex(hp->end(), a2));
 	if (hpa && hpb) {
-		hp_index = -1;
-		for (i_p = m_best_pair[hpa->id()].begin(); i_p != m_best_pair[hpa->id()].end(); i_p++) {
-			if (i_p->first == hpb->id()) {
-				hp_index = i_p->second;
-				break;
-			}
-		}
-		if (hp_index < 0) {
-			addHaploPair(m_haplopairs[hp->end()+1], new HaploPair(hp, hpa, hpb));
+		map<int, int>::iterator i = m_best_pair[hpa->id()].lower_bound(hpb->id());
+		if ((*i).first != hpb->id()) {
+			m_haplopairs[hp->end()+1].push_back(new HaploPair(hp, hpa, hpb));
+		 	m_best_pair[hpa->id()].insert(i, make_pair(hpb->id(), m_haplopairs[hp->end()+1].size()));
 		}
 		else {
-			m_haplopairs[hp->end()+1][hp_index]->add(hp, hpa, hpb);
+			m_haplopairs[hp->end()+1][(*i).second-1]->add(hp, hpa, hpb);
 		}
 	}
 }

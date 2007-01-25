@@ -5,6 +5,7 @@
 
 #include <list>
 #include <vector>
+#include <map>
 
 #include "Utils.h"
 #include "Tree.h"
@@ -65,7 +66,7 @@ protected:
 
 	Haplotype *m_genotype;
 	vector<vector<HaploPair*> > m_haplopairs;
-	vector<vector<pair<int, int> > > m_best_pair;
+	vector<map<int, int> > m_best_pair;
 
 public:
 	HaploBuilder();
@@ -91,7 +92,6 @@ protected:
 
 	void extendAll(int i, Allele a1, Allele a2);
 	void extend(HaploPair *hp, Allele a1, Allele a2);
-	void addHaploPair(vector<HaploPair*> &hp_list, HaploPair *hp);
 	void calcBackwardLikelihood();
 
 	void findHaploPatternByFreq(double min_freq, int min_len = 1, int max_len = -1);
@@ -105,12 +105,6 @@ protected:
 
 	friend class HaploData;
 };
-
-inline void HaploBuilder::addHaploPair(vector<HaploPair*> &hp_list, HaploPair *hp)
-{
-	hp_list.push_back(hp);
- 	m_best_pair[hp->id_a()].push_back(make_pair(hp->id_b(), hp_list.size()-1));
-}
 
 
 #endif // __HAPLOBUILDER_H
