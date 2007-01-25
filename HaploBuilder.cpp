@@ -235,7 +235,6 @@ void HaploBuilder::initialize()
 	}
 	for (i_hp = m_haplo_pattern.begin(); i_hp != m_haplo_pattern.end(); i_hp++) {
 		hp = *i_hp;
-		hp->setPrefix(m_pattern_tree->findLongestMatchPattern(hp->end()-1, hp));
 		if (hp->prefix() != NULL) {
 			if (hp->prefix()->start() != hp->start()) {
 				Logger::warning("HaploPattern with length %d (start = %d) has incorrect prefix!", hp->length(), hp->start());
@@ -479,7 +478,6 @@ void HaploBuilder::extendAll(int i, Allele a1, Allele a2)
 
 void HaploBuilder::extend(HaploPair *hp, Allele a1, Allele a2)
 {
-	HaploPair *new_hp;
 	const HaploPattern *hpa, *hpb;
 	int hp_index;
 	vector<pair<int, int> >::iterator i_p;
@@ -600,7 +598,7 @@ void HaploBuilder::searchHaploPattern(vector<HaploPattern*> &candidates, double 
 					}
 				}
 			}
-			if (hp->length() > 0 && (hp->length() >= min_len[hp->end()-1] || (min_freq > 0 && hp->length() <= 2))) {
+			if (hp->length() > 0 && (hp->length() >= min_len[hp->end()-1] || (min_freq >= 0 && hp->length() <= 2))) {
 				hp->releaseMatchGenotype();
 				m_haplo_pattern.push_back(hp);
 			}

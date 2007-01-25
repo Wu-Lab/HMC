@@ -177,6 +177,7 @@ inline HaploPattern &HaploPattern::assign(const HaploPattern &hp, const Allele &
 	AlleleSequence::assign(hp, a);
 	++m_end;
 	checkFrequencyWithExtension(hp.m_match_frequency, m_end-1);
+	if (hp.length() > 0) m_prefix = &hp;
 	return *this;
 }
 
