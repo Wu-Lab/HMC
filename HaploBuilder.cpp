@@ -274,17 +274,18 @@ void HaploBuilder::adjust(double min_freq)
 	freq.resize(m_pattern_num, 0);
 	for (i=0; i<m_haplo_data->genotype_num(); ++i) {
 		resolve((*m_haplo_data)[i], res, res_list);
+		calcBackwardLikelihood();
 		for (i_hp = m_haplo_pattern.begin(); i_hp != m_haplo_pattern.end(); i_hp++) {
 			hp = *i_hp;
 			if (hp->isMatch((*m_haplo_data)[i])) {
 				freq[hp->id()] += HaploPair::evaluatePattern(hp, m_haplopairs[hp->start()+1]) / (*m_haplo_data)[i].likelihood();
 			}
 		}
-		Logger::status("Adjust haplotype patterns: %d     ", hp->id());
+		Logger::status("Adjust haplotype patterns: %d     ", i);
 	}
 	for (i_hp = m_haplo_pattern.begin(); i_hp != m_haplo_pattern.end(); i_hp++) {
 		hp = *i_hp;
-		hp->setFrequency(freq[hp->id()]);
+		hp->setFrequency(freq[hp->id()] / m_haplo_data->genotype_num());
 	}
 	i_hp = m_haplo_pattern.begin();
 	while (i_hp != m_haplo_pattern.end()) {
@@ -496,6 +497,25 @@ void HaploBuilder::extend(HaploPair *hp, Allele a1, Allele a2)
 		}
 		else {
 			m_haplopairs[hp->end()+1][hp_index]->add(hp, hpa, hpb);
+		}
+	}
+}
+
+void HaploBuilder::calcBackwardLikelihood()
+{
+	int i;
+	HaploPair *hp, *next_hp;
+	vector<HaploPair*>::iterator i_hp;
+	vector<pair<HaploPair*, double> >::const_iterator i_link;
+
+	for (i=m_genotype_len-1; i>=m_head_len; --i) {
+		for (i_hp=m_haplopairs[i].begin(); i_hp!=m_haplopairs[i].end(); ++i_hp) {
+			hp = *i_hp;
+			hp->m_backward_likelihood = 0;
+			for (i_link=hp->m_forward_links.begin(); i_link!=hp->m_forward_links.end(); ++i_link) {
+				next_hp = (*i_link).first;
+				hp->m_backward_likelihood += next_hp->backward_likelihood() * (*i_link).second;
+			}
 		}
 	}
 }

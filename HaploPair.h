@@ -29,6 +29,8 @@ public:
 	const HaploPattern &pattern_b() const { return m_pattern_b; }
 	int id_a() const { return m_pattern_a.id(); }
 	int id_b() const { return m_pattern_b.id(); }
+	Allele allele_a() const { return m_pattern_a[m_pattern_a.length()-1]; }
+	Allele allele_b() const { return m_pattern_b[m_pattern_b.length()-1]; }
 	int end() const { return m_pattern_a.end(); }
 
 	double best_likelihood() const { return m_best_likelihood; }

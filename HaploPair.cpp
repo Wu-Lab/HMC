@@ -70,12 +70,76 @@ Genotype HaploPair::getGenotype()
 	return g;
 }
 
-double HaploPair::evaluatePattern(const HaploPattern *hp, vector<HaploPair*> &hp_list)
-{
-	double freq;
+struct MatchPair {
+	const HaploPair *hp;
+	char match;
+	double likelihood;
+	MatchPair(const HaploPair *h, char m, double l) : hp(h), match(m), likelihood(l) { }
+};
 
-	// TODO
-	freq = 0;
+double HaploPair::evaluatePattern(const HaploPattern *pattern, vector<HaploPair*> &hp_list)
+{
+	int i;
+	char match;
+	double weight;
+	const HaploPair *hp, *last_hp;
+	vector<MatchPair> last_list, new_list;
+	vector<HaploPair*>::iterator i_hp;
+	vector<MatchPair>::iterator i_mp;
+	vector<pair<HaploPair*, double> >::const_iterator i_link;
+
+	for (i_hp=hp_list.begin(); i_hp!=hp_list.end(); ++i_hp) {
+		hp = *i_hp;
+		match = 0;
+		if (hp->allele_a() == (*pattern)[0]) {
+			match += 1;
+		}
+		if (hp->allele_b() == (*pattern)[0]) {
+			match += 2;
+		}
+		if (match > 0) {
+			if (match == 3) {
+				weight = hp->forward_likelihood();
+			}
+			else {
+				weight = hp->forward_likelihood() / 2;
+			}
+			last_list.push_back(MatchPair(hp, match, weight));
+		}
+	}
+
+	Logger::resumeTimer(3);
+	for (i=1; i<pattern->length(); ++i) {
+		for (i_mp=last_list.begin(); i_mp!=last_list.end(); ++i_mp) {
+			last_hp = (*i_mp).hp;
+			for (i_link=last_hp->m_forward_links.begin(); i_link!=last_hp->m_forward_links.end(); ++i_link) {
+				hp = (*i_link).first;
+				match = (*i_mp).match;
+				weight = 1.0;
+				if ((match & 1) && hp->allele_a() != (*pattern)[i]) {
+					match -= 1;
+					weight = 0.5;
+				}
+				if ((match & 2) && hp->allele_b() != (*pattern)[i]) {
+					match -= 2;
+					weight = 0.5;
+				}
+				if (match > 0) {
+					weight *= (*i_mp).likelihood * (*i_link).second;
+					new_list.push_back(MatchPair(hp, match, weight));
+				}
+			}
+		}
+		new_list.swap(last_list);
+		new_list.clear();
+	}
+	Logger::pauseTimer(3);
+
+	double freq = 0;
+	for (i_mp=last_list.begin(); i_mp!=last_list.end(); ++i_mp) {
+		hp = (*i_mp).hp;
+		freq += (*i_mp).likelihood * hp->backward_likelihood();
+	}
 
 	return freq;
 }

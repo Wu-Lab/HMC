@@ -92,6 +92,7 @@ protected:
 	void extendAll(int i, Allele a1, Allele a2);
 	void extend(HaploPair *hp, Allele a1, Allele a2);
 	void addHaploPair(vector<HaploPair*> &hp_list, HaploPair *hp);
+	void calcBackwardLikelihood();
 
 	void findHaploPatternByFreq(double min_freq, int min_len = 1, int max_len = -1);
 	void findHaploPatternByNum(int max_num, int min_len = 1, int max_len = -1);
