@@ -10,9 +10,7 @@
 #include "Allele.h"
 #include "Haplotype.h"
 #include "Genotype.h"
-
-
-class HaploData;
+#include "HaploData.h"
 
 
 class HaploPattern : public AlleleSequence {
@@ -38,6 +36,7 @@ public:
 	double transition_prob() const { return m_transition_prob; }
 	const HaploPattern *prefix() const { return m_prefix; }
 	const HaploPattern *successors(int i) const { return m_successors[i]; }
+	const HaploPattern *successors(Allele &a) const { return m_successors[m_haplodata.getAlleleIndex(m_end, a)]; }
 
 	int getAlleleIndex(int local_locus) const;
 	int getGlobalLocus(int local_locus) const { return m_start+local_locus; }

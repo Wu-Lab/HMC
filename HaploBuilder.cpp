@@ -483,8 +483,8 @@ void HaploBuilder::extendAll(int i, Allele a1, Allele a2)
 void HaploBuilder::extend(HaploPair *hp, Allele a1, Allele a2)
 {
 	const HaploPattern *hpa, *hpb;
-	hpa = hp->successor_a(m_haplo_data->getAlleleIndex(hp->end(), a1));
-	hpb = hp->successor_b(m_haplo_data->getAlleleIndex(hp->end(), a2));
+	hpa = hp->successor_a(a1);
+	hpb = hp->successor_b(a2);
 	if (hpa && hpb) {
 		map<int, int>::iterator i = m_best_pair[hpa->id()].lower_bound(hpb->id());
 		if ((*i).first != hpb->id()) {
