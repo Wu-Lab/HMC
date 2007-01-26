@@ -12,7 +12,7 @@
 class HaploPair {
 	static boost::pool<> m_pool;
 
-	const HaploPattern &m_pattern_a, m_pattern_b;
+	const HaploPattern &m_pattern_a, &m_pattern_b;
 	vector<pair<HaploPair*, double> > m_forward_links;
 	HaploPair *m_backward_link;
 	double m_transition_prob;
