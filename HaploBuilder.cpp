@@ -500,18 +500,11 @@ void HaploBuilder::extend(HaploPair *hp, Allele a1, Allele a2)
 void HaploBuilder::calcBackwardLikelihood()
 {
 	int i;
-	HaploPair *hp, *next_hp;
 	vector<HaploPair*>::iterator i_hp;
-	vector<pair<HaploPair*, double> >::const_iterator i_link;
 
 	for (i=m_genotype_len-1; i>=m_head_len; --i) {
 		for (i_hp=m_haplopairs[i].begin(); i_hp!=m_haplopairs[i].end(); ++i_hp) {
-			hp = *i_hp;
-			hp->m_backward_likelihood = 0;
-			for (i_link=hp->m_forward_links.begin(); i_link!=hp->m_forward_links.end(); ++i_link) {
-				next_hp = (*i_link).first;
-				hp->m_backward_likelihood += next_hp->backward_likelihood() * (*i_link).second;
-			}
+			(*i_hp)->calcBackwardLikelihood();
 		}
 	}
 }

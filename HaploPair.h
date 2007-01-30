@@ -13,7 +13,8 @@ class HaploPair {
 	static boost::pool<> m_pool;
 
 	const HaploPattern &m_pattern_a, &m_pattern_b;
-	vector<pair<HaploPair*, double> > m_forward_links;
+	const Allele &m_allele_a, &m_allele_b;
+	vector<HaploPair*> m_forward_links;
 	HaploPair *m_backward_link;
 	double m_transition_prob;
 	double m_forward_likelihood;
@@ -27,17 +28,16 @@ public:
 
 	const HaploPattern &pattern_a() const { return m_pattern_a; }
 	const HaploPattern &pattern_b() const { return m_pattern_b; }
+	const Allele &allele_a() const { return m_allele_a; }
+	const Allele &allele_b() const { return m_allele_b; }
 	int id_a() const { return m_pattern_a.id(); }
 	int id_b() const { return m_pattern_b.id(); }
-	Allele allele_a() const { return m_pattern_a[m_pattern_a.length()-1]; }
-	Allele allele_b() const { return m_pattern_b[m_pattern_b.length()-1]; }
-	int allele_index_a() const { return m_pattern_a.getAlleleIndex(m_pattern_a.length()-1); }
-	int allele_index_b() const { return m_pattern_b.getAlleleIndex(m_pattern_b.length()-1); }
 	int end() const { return m_pattern_a.end(); }
 
-	double best_likelihood() const { return m_best_likelihood; }
+	double transition_prob() const { return m_transition_prob; }
 	double forward_likelihood() const { return m_forward_likelihood; }
 	double backward_likelihood() const { return m_backward_likelihood; }
+	double best_likelihood() const { return m_best_likelihood; }
 
 	Genotype getGenotype();
 
@@ -46,6 +46,7 @@ public:
 	template <typename T>
 	const HaploPattern *successor_b(T &i) const { return m_pattern_b.successors(i); }
 
+	void calcBackwardLikelihood();
 	static double evaluatePattern(const HaploPattern *hp, vector<HaploPair*> &hp_list);
 
 	static void *operator new(std::size_t) { return m_pool.malloc(); }
