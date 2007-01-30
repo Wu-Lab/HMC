@@ -8,49 +8,11 @@
 #include <map>
 
 #include "Utils.h"
-#include "Tree.h"
 #include "Constant.h"
 #include "Allele.h"
 #include "HaploPattern.h"
 #include "HaploPair.h"
-
-
-class AlleleSequence;
-class Haplotype;
-class Genotype;
-class HaploData;
-typedef TreeNode<HaploPattern> PatternNode;
-
-
-class PatternTree {
-	const HaploData *m_haplo_data;
-	int m_genotype_len;
-	vector<Tree<HaploPattern> > m_trees;
-
-public:
-	PatternTree(const HaploData *haplo);
-	~PatternTree();
-
-	void addPattern(int end, HaploPattern *hp);
-	HaploPattern *findLongestMatchPattern(int end, const HaploPattern *hp, int len = 0);
-	HaploPattern *findLongestMatchPattern(int end, const AlleleSequence *as, int len = 0, int offset = 0);
-	HaploPattern *findLikelyMatchPattern(int end, const HaploPattern *hp, int len = 0);
-	HaploPattern *findLikelyMatchPattern(int end, const AlleleSequence *as, int len = 0, int offset = 0);
-
-	HaploPattern *getSingleAllelePattern(int end, int index);
-
-protected:
-	void addPattern(PatternNode *node, HaploPattern *hp, int len);
-	HaploPattern *findLongestMatchPattern(PatternNode *node, const AlleleSequence *as, int end, int len, int offset = 0);
-	HaploPattern *findLikelyMatchPattern(PatternNode *node, const AlleleSequence *as, int end, int len, int offset = 0);
-
-	friend class HaploBuilder;
-};
-
-inline HaploPattern *PatternTree::getSingleAllelePattern(int end, int index)
-{
-	return m_trees[end].root().getChild(index);
-}
+#include "PatternTree.h"
 
 
 class HaploBuilder {

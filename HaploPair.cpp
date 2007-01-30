@@ -17,7 +17,7 @@ HaploPair::HaploPair(const HaploPattern *hpa, const HaploPattern *hpb)
   m_backward_link(0), m_backward_likelihood(1.0)
 {
 	if (hpa->end() != hpb->end()) {
-		Logger::error("Construct HaplPair from inconsistent HaploPatterns!");
+		Logger::error("Construct HaplPair from inconsistent HaploPatterns (end %d, %d) !", hpa->end(), hpb->end());
 		exit(1);
 	}
 	if (hpa->start() != 0 || hpb->start() != 0) {

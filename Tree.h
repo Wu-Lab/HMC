@@ -3,237 +3,88 @@
 #define __TREE_H
 
 
-template <class TObject, class TKey = int>
-class Tree;
+#include <vector>
 
 
-template <class TObject, class TKey = int>
+template <class T>
 class TreeNode {
-	TObject *m_object;
-	TKey m_key;
 	TreeNode *m_parent;
-	TreeNode **m_children;
-	int m_children_num;
+	vector<TreeNode*> m_children;
+	T m_data;
 
 public:
-	TreeNode(int child_num = 2);
-	TreeNode(TObject *obj, TKey key = 0, int child_num = 2);
+	explicit TreeNode(int n = 0, T d = T()) : m_parent(0), m_children(n), m_data(d) { }
 	TreeNode(const TreeNode &node);
-	virtual ~TreeNode();
+	~TreeNode();
 
-	TObject *object() const { return m_object; }
-	int children_num() const { return m_children_num; }
+	T data() const { return m_data; }
+	int size() const { return m_children.size(); }
+	void resize(int n);
 
-	void setObject(TObject *obj, TKey key = 0) { m_object = obj; m_key = key; }
-	void setKey(TKey key = 0) { m_key = key; }
-
-	void setChildrenNum(int child_num);
-
-	void addChildNode(int i, TreeNode *node) { m_children[i] = node; }
-	TreeNode *getChildNode(int i) const { return m_children[i]; }
-	void removeChildNode(int i) { delete m_children[i]; m_children[i] = NULL; }
-
-	virtual void addChild(int i, TObject *obj = NULL, TKey key = 0);
-	virtual TObject *getChild(int i) const;
-
-	int getSize() const;
-	void release();
-
-	friend class Tree<TObject, TKey>;
+	TreeNode *addChild(int i, T d = T());
+	TreeNode *setChild(int i, T d);
+	TreeNode *getChild(int i) const { return m_children[i]; }
 };
 
 
-template <class TObject, class TKey>
-class Tree {
-protected:
-	TreeNode<TObject, TKey> m_root;
-	int m_children_num;
-
-public:
-	Tree(int child_num = 2);
-	Tree(const Tree &tree);
-	~Tree();
-
-	TreeNode<TObject, TKey> &root() { return m_root; }
-	int children_num() const { return m_children_num; }
-
-	void setChildrenNum(int child_num);
-
-	int getSize() const { return (m_root.getSize()-1); }
-	void release() { m_root.release(); }
-
-	TreeNode<TObject, TKey> *newTreeNode(TObject *obj, TKey key = 0);
-};
-
-
-////////////////////////////////
-//
-// implementation of TreeNode
-
-template <class TObject, class TKey>
-inline TreeNode<TObject, TKey>::TreeNode(int child_num)
+template <class T>
+inline TreeNode<T>::TreeNode(const TreeNode &node)
+: m_parent(node.m_parent),
+  m_children(node.m_children.size()),
+  m_data(node.m_data)
 {
-	int i;
-	m_children_num = child_num;
-	m_children = new TreeNode * [m_children_num];
-	for (i=0; i<m_children_num; i++) {
-		m_children[i] = NULL;
-	}
-	m_parent = NULL;
-	m_object = NULL;
-	m_key = 0;
-}
-
-template <class TObject, class TKey>
-inline TreeNode<TObject, TKey>::TreeNode(TObject *obj, TKey key, int child_num)
-{
-	int i;
-	m_children_num = child_num;
-	m_children = new TreeNode * [m_children_num];
-	for (i=0; i<m_children_num; i++) {
-		m_children[i] = NULL;
-	}
-	m_parent = NULL;
-	m_object = obj;
-	m_key = key;
-}
-
-template <class TObject, class TKey>
-inline TreeNode<TObject, TKey>::TreeNode(const TreeNode &node)
-{
-	int i;
-	m_children_num = node.m_children_num;
-	m_children = new TreeNode * [m_children_num];
-	for (i=0; i<m_children_num; i++) {
-		if (node.m_children[i] != NULL) {
+	for (int i=0; i<size(); ++i) {
+		if (node.m_children[i]) {
 			m_children[i] = new TreeNode (*node.m_children[i]);
 			m_children[i]->m_parent = this;
 		}
-		else {
-			m_children[i] = NULL;
-		}
 	}
-	m_parent = node.m_parent;
-	if (node.m_object != NULL) {
-		m_object = new TObject (*node.m_object);
-	}
-	else {
-		m_object = NULL;
-	}
-	m_key = node.m_key;
 }
 
-template <class TObject, class TKey>
-inline TreeNode<TObject, TKey>::~TreeNode()
+template <class T>
+inline TreeNode<T>::~TreeNode()
 {
-	int i;
-	delete m_object;
-	m_key = 0;
-	m_parent = NULL;
-	for (i=0; i<m_children_num; i++) {
+	for (int i=0; i<size(); ++i) {
 		delete m_children[i];
 	}
-	delete[] m_children;
-	m_children = NULL;
-	m_children_num = 0;
 }
 
-template <class TObject, class TKey>
-inline void TreeNode<TObject, TKey>::setChildrenNum(int child_num)
+template <class T>
+inline void TreeNode<T>::resize(int n)
 {
 	int i;
-	if (m_children_num != child_num) {
-		for (i=0; i<m_children_num; i++) {
-			delete m_children[i];
-		}
-		delete[] m_children;
-		m_children_num = child_num;
-		m_children = new TreeNode * [m_children_num];
-		for (i=0; i<m_children_num; i++) {
-			m_children[i] = NULL;
+	for (i=n; i<size(); ++i) {
+		delete m_children[i];
+	}
+	m_children.resize(n);
+	for (i=0; i<size(); ++i) {
+		if (m_children[i]) {
+			m_children[i]->resize(n);
 		}
 	}
 }
 
-template <class TObject, class TKey>
-inline void TreeNode<TObject, TKey>::addChild(int i, TObject *obj, TKey key)
+template <class T>
+inline TreeNode<T> *TreeNode<T>::addChild(int i, T d)
 {
-	m_children[i] = new TreeNode (obj, key, m_children_num);
+	if (!m_children[i]) {
+		m_children[i] = new TreeNode(size(), d);
+		m_children[i]->m_parent = this;
+	}
+	return m_children[i];
 }
 
-template <class TObject, class TKey>
-inline TObject *TreeNode<TObject, TKey>::getChild(int i) const
+template <class T>
+inline TreeNode<T> *TreeNode<T>::setChild(int i, T d)
 {
-	if (m_children[i] != NULL) {
-		return m_children[i]->m_object;
+	if (m_children[i]) {
+		m_children[i]->m_data = d;
 	}
 	else {
-		return NULL;
+		m_children[i] = new TreeNode(size(), d);
+		m_children[i]->m_parent = this;
 	}
-}
-
-template <class TObject, class TKey>
-inline int TreeNode<TObject, TKey>::getSize() const
-{
-	int i, s;
-	s = 1;
-	for (i=0; i<m_children_num; i++) {
-		if (m_children[i] != NULL) {
-			s += m_children[i]->getSize();
-		}
-	}
-	return s;
-}
-
-template <class TObject, class TKey>
-inline void TreeNode<TObject, TKey>::release()
-{
-	int i;
-	m_object = NULL;
-	for (i=0; i<m_children_num; i++) {
-		if (m_children[i] != NULL) {
-			m_children[i]->release();
-		}
-	}
-}
-
-
-////////////////////////////////
-//
-// implementation of Tree
-
-template <class TObject, class TKey>
-inline Tree<TObject, TKey>::Tree(int child_num)
-	: m_root(child_num)
-{
-	m_children_num = child_num;
-}
-
-template <class TObject, class TKey>
-inline Tree<TObject, TKey>::Tree(const Tree &tree)
-	: m_root(tree.m_root)
-{
-	m_children_num = tree.m_children_num;
-}
-
-template <class TObject, class TKey>
-inline Tree<TObject, TKey>::~Tree()
-{
-}
-
-template <class TObject, class TKey>
-inline void Tree<TObject, TKey>::setChildrenNum(int child_num)
-{
-	if (m_children_num != child_num) {
-		m_children_num = child_num;
-		m_root.setChildrenNum(m_children_num);
-	}
-}
-
-template <class TObject, class TKey>
-inline TreeNode<TObject, TKey> *Tree<TObject, TKey>::newTreeNode(TObject *obj, TKey key)
-{
-	return (new TreeNode<TObject, TKey> (obj, key, m_children_num));
+	return m_children[i];
 }
 
 
