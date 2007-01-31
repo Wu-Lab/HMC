@@ -21,7 +21,6 @@ protected:
 	unsigned int m_id;
 	double m_frequency;
 	double m_transition_prob;
-	const HaploPattern *m_prefix;
 	vector<const HaploPattern*> m_successors;
 	list<pair<int, double> > m_match_frequency;
 
@@ -34,7 +33,6 @@ public:
 	int end() const { return m_end; }
 	double frequency() const { return m_frequency; }
 	double transition_prob() const { return m_transition_prob; }
-	const HaploPattern *prefix() const { return m_prefix; }
 	const HaploPattern *successors(int i) const { return m_successors[i]; }
 	const HaploPattern *successors(Allele &a) const { return m_successors[m_haplodata.getAlleleIndex(m_end, a)]; }
 
@@ -46,7 +44,6 @@ public:
 	void setID(int i) { m_id = i; }
 	void setFrequency(double f) { m_frequency = f; }
 	void setTransitionProb(double p) { m_transition_prob = p; }
-	void setPrefix(const HaploPattern *p) { m_prefix = p; }
 	void setSuccessor(size_t i, const HaploPattern *pn);
 
 	void repack();
@@ -70,7 +67,6 @@ public:
 
 	HaploPattern &assign(const HaploPattern &hp, const Allele &a);
 
-	HaploPattern &operator +=(const AlleleSequence &as);
 	HaploPattern &operator +=(const Allele &a);
 
 	using NoThrowNewDelete::operator new;
@@ -96,8 +92,7 @@ inline HaploPattern::HaploPattern(const HaploData &hd, int start)
   m_end(start),
   m_id(0),
   m_frequency(0),
-  m_transition_prob(1.0),
-  m_prefix(0)
+  m_transition_prob(1.0)
 {
 }
 
@@ -174,27 +169,21 @@ inline HaploPattern &HaploPattern::assign(const HaploPattern &hp, const Allele &
 	AlleleSequence::assign(hp, a);
 	++m_end;
 	checkFrequencyWithExtension(hp.m_match_frequency, m_end-1);
-	if (hp.length() > 0) m_prefix = &hp;
-	return *this;
-}
-
-inline HaploPattern &HaploPattern::operator +=(const AlleleSequence &as)
-{
-	AlleleSequence::operator +=(as);
-	m_end += as.length();
-	list<pair<int, double> > mf;
-	m_match_frequency.swap(mf);
-	checkFrequencyWithExtension(mf, m_end-as.length(), as.length());
+	if (length() > 1) m_transition_prob = m_frequency / hp.m_frequency;
+	else m_transition_prob = 0;
 	return *this;
 }
 
 inline HaploPattern &HaploPattern::operator +=(const Allele &a)
 {
+	double old_freq = m_frequency;
 	AlleleSequence::operator +=(a);
 	++m_end;
 	list<pair<int, double> > mf;
 	m_match_frequency.swap(mf);
 	checkFrequencyWithExtension(mf, m_end-1);
+	if (length() > 1) m_transition_prob = m_frequency / old_freq;
+	else m_transition_prob = 0;
 	return *this;
 }
 

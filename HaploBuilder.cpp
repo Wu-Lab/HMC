@@ -56,21 +56,6 @@ void HaploBuilder::initialize()
 	}
 	for (i_hp = m_haplo_pattern.begin(); i_hp != m_haplo_pattern.end(); i_hp++) {
 		hp = *i_hp;
-		if (hp->prefix() != NULL) {
-			if (hp->prefix()->start() != hp->start()) {
-				Logger::warning("HaploPattern with length %d (start = %d) has incorrect prefix!", hp->length(), hp->start());
-			}
-			hp->setTransitionProb(hp->frequency() / hp->prefix()->frequency());
-		}
-		else {
-			if (hp->length() != 1 && hp->length() != m_head_len) {
-				Logger::warning("HaploPattern with length %d (start = %d) has no prefix!", hp->length(), hp->start());
-			}
-			hp->setTransitionProb(0);
-		}
-	}
-	for (i_hp = m_haplo_pattern.begin(); i_hp != m_haplo_pattern.end(); i_hp++) {
-		hp = *i_hp;
 		if (hp->end() < m_genotype_len) {
 			temp.assign(*hp, Allele());			// append empty allele
 			for (j=0; j<m_haplo_data->allele_num(hp->end()); j++) {
@@ -107,22 +92,6 @@ void HaploBuilder::adjust(double min_freq)
 	for (i_hp = m_haplo_pattern.begin(); i_hp != m_haplo_pattern.end(); i_hp++) {
 		hp = *i_hp;
 		hp->setFrequency(freq[hp->id()] / m_haplo_data->genotype_num());
-	}
-	i_hp = m_haplo_pattern.begin();
-	while (i_hp != m_haplo_pattern.end()) {
-		hp = *i_hp;
-		if (hp->prefix() != NULL) {
-			if (hp->prefix()->frequency() == 0) {
-				hp->setTransitionProb(0);
-			}
-			else {
-				hp->setTransitionProb(hp->frequency() / hp->prefix()->frequency());
-			}
-		}
-		else {
-			hp->setTransitionProb(0);
-		}
-		i_hp++;
 	}
 }
 
