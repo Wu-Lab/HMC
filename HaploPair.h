@@ -9,7 +9,7 @@
 #include "HaploPattern.h"
 
 
-class HaploPair {
+class HaploPair : public NoThrowNewDelete {
 	static boost::pool<> m_pool;
 
 	const HaploPattern &m_pattern_a, &m_pattern_b;
@@ -49,13 +49,11 @@ public:
 	void calcBackwardLikelihood();
 	static double evaluatePattern(const HaploPattern *hp, vector<HaploPair*> &hp_list);
 
-	static void *operator new(std::size_t) { return m_pool.malloc(); }
-	static void operator delete(void *rawMemory) { m_pool.free(rawMemory); }
+	using NoThrowNewDelete::operator new;
+	using NoThrowNewDelete::operator delete;
 
-#ifdef _DEBUG
-	static void *operator new(unsigned int, int, const char *, int) { return m_pool.malloc(); }
-	static void operator delete(void *rawMemory, int, const char *, int) { m_pool.free(rawMemory); }
-#endif // _DEBUG
+	static void *operator new(std::size_t) { return m_pool.malloc(); }
+	static void operator delete(void *pMemory) { m_pool.free(pMemory); }
 
 	struct greater_likelihood {
 		bool operator()(const HaploPair *hp1, const HaploPair *hp2) const

@@ -4,10 +4,15 @@
 
 
 #include <vector>
+#include <boost/pool/pool.hpp>
+
+#include "Utils.h"
 
 
 template <class T>
-class TreeNode {
+class TreeNode : public NoThrowNewDelete {
+	static boost::pool<> m_pool;
+
 	TreeNode *m_parent;
 	vector<TreeNode*> m_children;
 	T m_data;
@@ -24,6 +29,12 @@ public:
 	TreeNode *addChild(int i, T d = T());
 	TreeNode *setChild(int i, T d);
 	TreeNode *getChild(int i) const { return m_children[i]; }
+
+	using NoThrowNewDelete::operator new;
+	using NoThrowNewDelete::operator delete;
+
+	static void *operator new(std::size_t) { return m_pool.malloc(); }
+	static void operator delete(void *pMemory) { m_pool.free(pMemory); }
 };
 
 

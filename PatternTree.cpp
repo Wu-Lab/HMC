@@ -6,6 +6,8 @@
 #include "MemLeak.h"
 
 
+boost::pool<> PatternNode::m_pool(sizeof(PatternNode));
+
 PatternTree::PatternTree(const HaploData *haplo)
 : m_haplo_data(haplo),
   m_genotype_len(haplo->genotype_len()),

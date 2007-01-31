@@ -13,7 +13,7 @@
 #include "HaploData.h"
 
 
-class HaploPattern : public AlleleSequence {
+class HaploPattern : public AlleleSequence, public NoThrowNewDelete {
 protected:
 	static boost::pool<> m_pool;
 	const HaploData &m_haplodata;
@@ -73,13 +73,11 @@ public:
 	HaploPattern &operator +=(const AlleleSequence &as);
 	HaploPattern &operator +=(const Allele &a);
 
-	static void *operator new(std::size_t) { return m_pool.malloc(); }
-	static void operator delete(void *rawMemory) { m_pool.free(rawMemory); }
+	using NoThrowNewDelete::operator new;
+	using NoThrowNewDelete::operator delete;
 
-#ifdef _DEBUG
-	static void *operator new(unsigned int, int, const char *, int) { return m_pool.malloc(); }
-	static void operator delete(void *rawMemory, int, const char *, int) { m_pool.free(rawMemory); }
-#endif // _DEBUG
+	static void *operator new(std::size_t) { return m_pool.malloc(); }
+	static void operator delete(void *pMemory) { m_pool.free(pMemory); }
 
 	struct greater_frequency {
 		bool operator()(const HaploPattern *hp1, const HaploPattern *hp2) const

@@ -3,6 +3,7 @@
 #define __UTILS_H
 
 
+#include <new>
 #include <ctime>
 #include <vector>
 #include <iosfwd>
@@ -85,6 +86,49 @@ private:
 
 
 // something for using with STL
+
+
+class StandardNewDelete {
+public:
+	// normal new/delete
+	static void *operator new(std::size_t size) throw(std::bad_alloc)
+	{ return ::operator new(size); }
+	static void operator delete(void *pMemory) throw()
+	{ ::operator delete(pMemory); }
+
+	// placement new/delete
+	static void *operator new(std::size_t size, void *ptr) throw()
+	{ return ::operator new(size, ptr); }
+	static void operator delete(void *pMemory, void *ptr) throw()
+	{ ::operator delete(pMemory, ptr); }
+
+	// nothrow new/delete
+	static void *operator new(std::size_t size, const std::nothrow_t &nt) throw()
+	{ return ::operator new(size, nt); }
+	static void operator delete(void *pMemory, const std::nothrow_t &) throw()
+	{ ::operator delete(pMemory); }
+
+	// debug new/delete
+#ifdef _DEBUG
+	static void *operator new(std::size_t size, int, const char *, int) throw(std::bad_alloc)
+	{ return operator new(size); }
+	static void operator delete(void *pMemory, int, const char *, int) throw()
+	{ operator delete(pMemory); }
+#endif // _DEBUG
+};
+
+
+class NoThrowNewDelete : public StandardNewDelete {
+public:
+	using StandardNewDelete::operator new;
+	using StandardNewDelete::operator delete;
+
+	// nothrow new/delete
+	static void *operator new(std::size_t size, const std::nothrow_t &) throw()
+	{ return operator new(size); }
+	static void operator delete(void *pMemory, const std::nothrow_t &) throw()
+	{ operator delete(pMemory); }
+};
 
 
 struct DeletePtr {
