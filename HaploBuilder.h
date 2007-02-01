@@ -13,12 +13,13 @@
 #include "HaploPattern.h"
 #include "HaploPair.h"
 #include "PatternTree.h"
+#include "PatternManager.h"
 
 
 class HaploBuilder {
 protected:
 	HaploData *m_haplo_data;
-	vector<HaploPattern*> m_haplo_pattern;
+	PatternManager m_patterns;
 	int m_genotype_len;
 	int m_pattern_num;
 
@@ -35,7 +36,9 @@ public:
 	~HaploBuilder();
 
 	HaploData *haplo_data() { return m_haplo_data; }
-	const vector<HaploPattern*> &haplo_pattern() { return m_haplo_pattern; }
+	const HaploPattern *patterns(int i) const { return m_patterns[i]; }
+
+	int pattern_num() const { return m_pattern_num; }
 
 	void setHaploData(HaploData &hd);
 
@@ -55,15 +58,6 @@ protected:
 	void extendAll(int i, Allele a1, Allele a2);
 	void extend(HaploPair *hp, Allele a1, Allele a2);
 	void calcBackwardLikelihood();
-
-	void findHaploPatternByFreq(double min_freq, int min_len = 1, int max_len = -1);
-	void findHaploPatternByNum(int max_num, int min_len = 1, int max_len = -1);
-	void findHaploPatternBlockByFreq(double min_freq, int min_len = 1, int max_len = -1);
-	void findHaploPatternBlockByNum(int max_num, int min_len = 1, int max_len = -1);
-
-	void generateHaploPatternCandidate(vector<HaploPattern*> &candidates);
-	void searchHaploPattern(vector<HaploPattern*> &candidates, double min_freq, int min_num, vector<int> min_len, vector<int> max_len);
-	void searchHaploPatternBlock(int min_len, int max_len);
 
 	friend class HaploData;
 };

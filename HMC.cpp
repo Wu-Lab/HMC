@@ -213,8 +213,7 @@ void HMC::parseOptions()
 	}
 
 	if (m_args.count("mc-order")) {
-		m_builder.setMinPatternLen(m_args["mc-order"].as<int>());
-		m_builder.setMaxPatternLen(m_args["mc-order"].as<int>()+1);
+		m_builder.setOrder(m_args["mc-order"].as<int>());
 	}
 }
 

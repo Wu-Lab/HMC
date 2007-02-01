@@ -22,10 +22,9 @@ protected:
 	double m_frequency;
 	double m_transition_prob;
 	vector<const HaploPattern*> m_successors;
-	list<pair<int, double> > m_match_frequency;
 
 public:
-	explicit HaploPattern(const HaploData &hd, int start);
+	explicit HaploPattern(const HaploData &hd, int start = 0);
 
 	const HaploData &haplodata() const { return m_haplodata; }
 	unsigned int id() const { return m_id; }
@@ -47,10 +46,6 @@ public:
 	void setSuccessor(size_t i, const HaploPattern *pn);
 
 	void repack();
-
-	void releaseMatchGenotype() { m_match_frequency.clear(); }
-	double checkFrequency();
-	double checkFrequencyWithExtension(const list<pair<int, double> > &mf, int ext, int len = 1);
 
 	bool isMatch(const Haplotype &h) const;
 	bool isMatch(const Genotype &g) const;
@@ -81,9 +76,6 @@ public:
 			return hp1->frequency() > hp2->frequency();
 		}
 	};
-
-protected:
-	double getMatchingFrequency(const Genotype &g, const Allele *pa, int start, int len) const;
 };
 
 inline HaploPattern::HaploPattern(const HaploData &hd, int start)
@@ -168,9 +160,9 @@ inline HaploPattern &HaploPattern::assign(const HaploPattern &hp, const Allele &
 	m_frequency = hp.m_frequency;
 	AlleleSequence::assign(hp, a);
 	++m_end;
-	checkFrequencyWithExtension(hp.m_match_frequency, m_end-1);
-	if (length() > 1) m_transition_prob = m_frequency / hp.m_frequency;
-	else m_transition_prob = 0;
+// 	checkFrequencyWithExtension(hp.m_match_frequency, m_end-1);
+// 	if (length() > 1) m_transition_prob = m_frequency / hp.m_frequency;
+// 	else m_transition_prob = 0;
 	return *this;
 }
 
@@ -179,11 +171,11 @@ inline HaploPattern &HaploPattern::operator +=(const Allele &a)
 	double old_freq = m_frequency;
 	AlleleSequence::operator +=(a);
 	++m_end;
-	list<pair<int, double> > mf;
-	m_match_frequency.swap(mf);
-	checkFrequencyWithExtension(mf, m_end-1);
-	if (length() > 1) m_transition_prob = m_frequency / old_freq;
-	else m_transition_prob = 0;
+// 	list<pair<int, double> > mf;
+// 	m_match_frequency.swap(mf);
+// 	checkFrequencyWithExtension(mf, m_end-1);
+// 	if (length() > 1) m_transition_prob = m_frequency / old_freq;
+// 	else m_transition_prob = 0;
 	return *this;
 }
 

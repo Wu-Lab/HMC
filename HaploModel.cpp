@@ -13,6 +13,7 @@ HaploModel::HaploModel()
 	m_num_patterns = -1;
 	m_min_freq_abs = -1;
 	m_min_freq_rel = -1;
+	m_order = 1;
 }
 
 double HaploModel::getMinFreq() const
@@ -49,13 +50,13 @@ void HaploModel::findPatterns_mc_v()
 	Logger::verbose("");
 	Logger::beginTimer(1, "Search Haplotype pattern");
 	if (m_num_patterns > 0) {
-		findHaploPatternByNum(m_num_patterns, m_min_pattern_len, m_max_pattern_len);
+		m_patterns.findPatternByNum(m_num_patterns, m_min_pattern_len, m_max_pattern_len);
 	}
 	else if (m_min_freq_abs > 0) {
-		findHaploPatternByFreq(m_min_freq_abs / m_haplo_data->genotype_num(), m_min_pattern_len, m_max_pattern_len);
+		m_patterns.findPatternByFreq(m_min_freq_abs / m_haplo_data->genotype_num(), m_min_pattern_len, m_max_pattern_len);
 	}
 	else {
-		findHaploPatternByFreq(m_min_freq_rel, m_min_pattern_len, m_max_pattern_len);
+		m_patterns.findPatternByFreq(m_min_freq_rel, m_min_pattern_len, m_max_pattern_len);
 	}
 	Logger::endTimer(1);
 }
@@ -66,7 +67,7 @@ void HaploModel::findPatterns_mc_d()
 	Logger::info("Run HMC engine MC-d ...");
 	Logger::verbose("");
 	Logger::beginTimer(1, "Search Haplotype pattern");
-	findHaploPatternByFreq(0, m_min_pattern_len, m_max_pattern_len);
+	m_patterns.findPatternBlock(m_order+1);
 	Logger::endTimer(1);
 }
 
@@ -77,13 +78,13 @@ void HaploModel::findPatterns_mc_b()
 	Logger::verbose("");
 	Logger::beginTimer(1, "Search Haplotype pattern");
 	if (m_num_patterns > 0) {
-		findHaploPatternBlockByNum(m_num_patterns, m_min_pattern_len, m_max_pattern_len);
+		m_patterns.findPatternByNum(m_num_patterns, m_min_pattern_len, m_max_pattern_len);
 	}
 	else if (m_min_freq_abs > 0) {
-		findHaploPatternBlockByFreq(m_min_freq_abs / m_haplo_data->genotype_num(), m_min_pattern_len, m_max_pattern_len);
+		m_patterns.findPatternByFreq(m_min_freq_abs / m_haplo_data->genotype_num(), m_min_pattern_len, m_max_pattern_len);
 	}
 	else {
-		findHaploPatternBlockByFreq(m_min_freq_rel, m_min_pattern_len, m_max_pattern_len);
+		m_patterns.findPatternByFreq(m_min_freq_rel, m_min_pattern_len, m_max_pattern_len);
 	}
 	Logger::endTimer(1);
 }

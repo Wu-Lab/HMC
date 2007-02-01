@@ -52,11 +52,9 @@ void HaploPair::add(HaploPair *hp, const HaploPattern *hpa, const HaploPattern *
 
 Genotype HaploPair::getGenotype()
 {
-	int i;
+	int i = end() - 1;
 	Genotype g(m_pattern_a.haplodata().genotype_len());
-	HaploPair *hp;
-	i = end() - 1;
-	hp = this;
+	HaploPair *hp = this;
 	while (hp) {
 		if (hp->m_backward_link) {
 			g(0)[i] = hp->m_pattern_a[i-hp->m_pattern_a.start()];
@@ -65,8 +63,10 @@ Genotype HaploPair::getGenotype()
 			--i;
 		}
 		else {
-			copy(&hp->m_pattern_a[0], &hp->m_pattern_a[i+1-hp->m_pattern_b.start()], &g(0)[hp->m_pattern_a.start()]);
-			copy(&hp->m_pattern_b[0], &hp->m_pattern_b[i+1-hp->m_pattern_b.start()], &g(1)[hp->m_pattern_b.start()]);
+			const Allele *first = &hp->m_pattern_a[0];
+			copy(first, first+i+1-hp->m_pattern_a.start(), &g(0)[hp->m_pattern_a.start()]);
+			first = &hp->m_pattern_b[0];
+			copy(first, first+i+1-hp->m_pattern_b.start(), &g(1)[hp->m_pattern_b.start()]);
 			break;
 		}
 	}

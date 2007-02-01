@@ -148,6 +148,10 @@ SOURCE=.\Options.cpp
 # End Source File
 # Begin Source File
 
+SOURCE=.\PatternManager.cpp
+# End Source File
+# Begin Source File
+
 SOURCE=.\PatternTree.cpp
 # End Source File
 # Begin Source File
@@ -217,6 +221,10 @@ SOURCE=.\MemLeak.h
 # Begin Source File
 
 SOURCE=.\Options.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\PatternManager.h
 # End Source File
 # Begin Source File
 

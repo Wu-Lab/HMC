@@ -13,6 +13,7 @@ typedef enum { MC_v, MC_d, MC_b } HaploModelTypes;
 class HaploModel : public HaploBuilder {
 protected:
 	HaploModelTypes m_model;
+	int m_order;
 	int m_min_pattern_len;
 	int m_max_pattern_len;
 	int m_num_patterns;
@@ -34,6 +35,7 @@ public:
 	void setNumPatterns(int num) { m_num_patterns = num; }
 	void setMinFreqAbs(double freq) { m_min_freq_abs = freq; }
 	void setMinFreqRel(double freq) { m_min_freq_rel = freq; }
+	void setOrder(int i) { m_order = i; }
 
 	double getMinFreq() const;
 
