@@ -8,7 +8,11 @@
 
 boost::pool<> PatternNode::m_pool(sizeof(PatternNode));
 
-PatternTree::PatternTree(const HaploData *haplo)
+////////////////////////////////
+//
+// class BackwardPatternTree
+
+BackwardPatternTree::BackwardPatternTree(const HaploData *haplo)
 : m_haplo_data(haplo),
   m_genotype_len(haplo->genotype_len()),
   m_trees(haplo->genotype_len()+1)
@@ -18,18 +22,7 @@ PatternTree::PatternTree(const HaploData *haplo)
 	}
 }
 
-void PatternTree::addPattern(int end, HaploPattern *hp)
-{
-	if (hp->end() != end) {
-		Logger::error("Attempt to add HaploPattern to incorrect PatternTree!");
-		exit(1);
-	}
-	else {
-		addPattern(&m_trees[end], hp, hp->length());
-	}
-}
-
-void PatternTree::addPattern(PatternNode *node, HaploPattern *hp, int len)
+void BackwardPatternTree::addPattern(PatternNode *node, HaploPattern *hp, int len)
 {
 	int i = hp->getAlleleIndex(len-1);
 	if (i < 0) {										// allele is missing
@@ -55,75 +48,85 @@ void PatternTree::addPattern(PatternNode *node, HaploPattern *hp, int len)
 	}
 }
 
-HaploPattern *PatternTree::findLongestMatchPattern(int end, const HaploPattern *hp, int len)
+HaploPattern *BackwardPatternTree::findLongestMatchPattern(int end, const HaploPattern *hp, int len)
 {
-	if (hp->end() < end || hp->start() >= end) {
-		return NULL;
+	if (end <= hp->start() || end > hp->end()) {
+		return 0;
 	}
 	else {
-		if (len <= 0) len = end - hp->start();
-		return findLongestMatchPattern(&m_trees[end], hp, end, len, end-hp->start()-len);
+		int max_len = end - hp->start();
+		if (len <= 0 || len > max_len) len = max_len;
+		return findLongestMatchPattern(&m_trees[end], hp, end-1, max_len-1, len);
 	}
 }
 
-HaploPattern *PatternTree::findLongestMatchPattern(int end, const AlleleSequence *as, int len, int offset)
+HaploPattern *BackwardPatternTree::findLongestMatchPattern(int end, const AlleleSequence *as, int as_start, int len)
 {
-	if (len <= 0) len = as->length();
-	return findLongestMatchPattern(&m_trees[end], as, end, len, offset);
-}
-
-HaploPattern *PatternTree::findLikelyMatchPattern(int end, const HaploPattern *hp, int len)
-{
-	if (hp->end() < end || hp->start() >= end) {
-		return NULL;
+	if (end <= as_start || end > (as_start+as->length())) {
+		return 0;
 	}
 	else {
-		if (len <= 0) len = end - hp->start();
-		return findLikelyMatchPattern(&m_trees[end], hp, end, len, end-hp->start()-len);
+		int max_len = end - as_start;
+		if (len <= 0 || len > max_len) len = max_len;
+		return findLongestMatchPattern(&m_trees[end], as, end-1, max_len-1, len);
 	}
 }
 
-HaploPattern *PatternTree::findLikelyMatchPattern(int end, const AlleleSequence *as, int len, int offset)
+HaploPattern *BackwardPatternTree::findLikelyMatchPattern(int end, const HaploPattern *hp, int len)
 {
-	if (len <= 0) len = as->length();
-	return findLikelyMatchPattern(&m_trees[end], as, end, len, offset);
+	if (end <= hp->start() || end > hp->end()) {
+		return 0;
+	}
+	else {
+		int max_len = end - hp->start();
+		if (len <= 0 || len > max_len) len = max_len;
+		return findLikelyMatchPattern(&m_trees[end], hp, end-1, max_len-1, len);
+	}
 }
 
-HaploPattern *PatternTree::findLongestMatchPattern(PatternNode *node, const AlleleSequence *as, int end, int len, int offset)
+HaploPattern *BackwardPatternTree::findLikelyMatchPattern(int end, const AlleleSequence *as, int as_start, int len)
+{
+	if (end <= as_start || end > (as_start+as->length())) {
+		return 0;
+	}
+	else {
+		int max_len = end - as_start;
+		if (len <= 0 || len > max_len) len = max_len;
+		return findLikelyMatchPattern(&m_trees[end], as, end-1, max_len-1, len);
+	}
+}
+
+HaploPattern *BackwardPatternTree::findLongestMatchPattern(PatternNode *node, const AlleleSequence *as, int lg, int ll, int len)
 {
 	int i, n;
 	HaploPattern *result, *temp;
 	result = node->data();
-	if ((*as)[offset+len-1].isMissing()) {						// allele is missing
-		n = m_haplo_data->allele_num(end-1);
+	if ((*as)[ll].isMissing()) {						// allele is missing
+		n = m_haplo_data->allele_num(lg);
 		for (i=0; i<n; i++) {
-			if (node->getChild(i)) {							// previous locus is matching
+			if (node->getChild(i)) {					// previous locus is matching
 				if (len > 1) {
-					temp = findLongestMatchPattern(node->getChild(i), as, end-1, len-1, offset);
+					temp = findLongestMatchPattern(node->getChild(i), as, lg-1, ll-1, len-1);
 				}
 				else {
 					temp = node->getChild(i)->data();
 				}
-				if (result == NULL || (temp != NULL && temp->length() > result->length())
-					|| (temp != NULL && temp->length() >= result->length() 
-					&& temp->transition_prob() > result->transition_prob())) {
+				if (result == 0 || (temp && temp->length() > result->length())) {
 					result = temp;
 				}
 			}
 		}
 	}
 	else {
-		i = m_haplo_data->getAlleleIndex(end-1, (*as)[offset+len-1]);
+		i = m_haplo_data->getAlleleIndex(lg, (*as)[ll]);
 		if (node->getChild(i)) {								// previous locus is matching
 			if (len > 1) {
-				temp = findLongestMatchPattern(node->getChild(i), as, end-1, len-1, offset);
+				temp = findLongestMatchPattern(node->getChild(i), as, lg-1, ll-1, len-1);
 			}
 			else {
 				temp = node->getChild(i)->data();
 			}
-			if (result == NULL || (temp != NULL && temp->length() > result->length())
-				|| (temp != NULL && temp->length() >= result->length() 
-				&& temp->transition_prob() > result->transition_prob())) {
+			if (result == 0 || (temp && temp->length() > result->length())) {
 				result = temp;
 			}
 		}
@@ -131,37 +134,37 @@ HaploPattern *PatternTree::findLongestMatchPattern(PatternNode *node, const Alle
 	return result;
 }
 
-HaploPattern *PatternTree::findLikelyMatchPattern(PatternNode *node, const AlleleSequence *as, int end, int len, int offset)
+HaploPattern *BackwardPatternTree::findLikelyMatchPattern(PatternNode *node, const AlleleSequence *as, int lg, int ll, int len)
 {
 	int i, n;
 	HaploPattern *result, *temp;
 	result = node->data();
-	if ((*as)[offset+len-1].isMissing()) {						// allele is missing
-		n = m_haplo_data->allele_num(end-1);
+	if ((*as)[ll].isMissing()) {						// allele is missing
+		n = m_haplo_data->allele_num(lg);
 		for (i=0; i<n; i++) {
-			if (node->getChild(i)) {							// previous locus is matching
+			if (node->getChild(i)) {					// previous locus is matching
 				if (len > 1) {
-					temp = findLikelyMatchPattern(node->getChild(i), as, end-1, len-1, offset);
+					temp = findLikelyMatchPattern(node->getChild(i), as, lg-1, ll-1, len-1);
 				}
 				else {
 					temp = node->getChild(i)->data();
 				}
-				if (result == NULL || (temp != NULL && temp->transition_prob() >= result->transition_prob())) {
+				if (result == 0 || (temp && temp->transition_prob() >= result->transition_prob())) {
 					result = temp;
 				}
 			}
 		}
 	}
 	else {
-		i = m_haplo_data->getAlleleIndex(end-1, (*as)[offset+len-1]);
-		if (node->getChild(i)) {								// previous locus is matching
+		i = m_haplo_data->getAlleleIndex(lg, (*as)[ll]);
+		if (node->getChild(i)) {						// previous locus is matching
 			if (len > 1) {
-				temp = findLikelyMatchPattern(node->getChild(i), as, end-1, len-1, offset);
+				temp = findLikelyMatchPattern(node->getChild(i), as, lg-1, ll-1, len-1);
 			}
 			else {
 				temp = node->getChild(i)->data();
 			}
-			if (result == NULL || (temp != NULL && temp->transition_prob() >= result->transition_prob())) {
+			if (result == 0 || (temp && temp->transition_prob() >= result->transition_prob())) {
 				result = temp;
 			}
 		}

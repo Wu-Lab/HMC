@@ -22,7 +22,7 @@ protected:
 	int m_genotype_len;
 	int m_pattern_num;
 
-	tr1::shared_ptr<PatternTree> m_pattern_tree;
+	tr1::shared_ptr<BackwardPatternTree> m_pattern_tree;
 	list<HaploPattern*> m_head_list;
 	int m_head_len;
 
@@ -42,7 +42,7 @@ public:
 	void initialize();
 	void adjust(double min_freq = 0);
 
-	void resolve(const Genotype &genotype, Genotype &resolution, vector<HaploPair*> &res_list, HaploPattern *target_pattern = NULL);
+	void resolve(const Genotype &genotype, Genotype &resolution, vector<HaploPair*> &res_list, HaploPattern *target_pattern = 0);
 
 	double getLikelihood(const Haplotype &haplotype);
 	double getLikelihood(const Genotype &genotype);

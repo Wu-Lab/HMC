@@ -32,14 +32,14 @@ void HaploBuilder::initialize()
 	vector<HaploPattern*>::iterator i_hp;
 	list<HaploPattern*>::iterator head;
 	m_pattern_num = m_haplo_pattern.size();
-	m_pattern_tree.reset(new PatternTree(m_haplo_data));
+	m_pattern_tree.reset(new BackwardPatternTree(m_haplo_data));
 	m_head_len = m_genotype_len;
 	m_head_list.clear();
 	i = 0;
 	for (i_hp = m_haplo_pattern.begin(); i_hp != m_haplo_pattern.end(); i_hp++) {
 		hp = *i_hp;
 		hp->setID(i++);
-		m_pattern_tree->addPattern(hp->end(), hp);
+		m_pattern_tree->addPattern(hp);
 		if (hp->start() == 0) {
 			m_head_list.push_back(hp);
 			if (hp->length() < m_head_len) m_head_len = hp->length();
@@ -60,7 +60,7 @@ void HaploBuilder::initialize()
 			temp.assign(*hp, Allele());			// append empty allele
 			for (j=0; j<m_haplo_data->allele_num(hp->end()); j++) {
 				temp[temp.length()-1] = m_haplo_data->allele_symbol(hp->end(), j);
-				hp->setSuccessor(j, m_pattern_tree->findLongestMatchPattern(hp->end()+1, &temp));
+				hp->setSuccessor(j, m_pattern_tree->findLongestMatchPattern(hp->end()+1, &temp, hp->start()));
 			}
 		}
 	}
@@ -171,8 +171,8 @@ double HaploBuilder::getLikelihood(const Haplotype &haplotype)
 	HaploPattern *hp;
 	double likelihood = 1.0;
 	for (i=m_head_len; i<=m_genotype_len; i++) {
-		hp = m_pattern_tree->findLongestMatchPattern(i, &haplotype, i);
-		if (hp != NULL) {
+		hp = m_pattern_tree->findLongestMatchPattern(i, &haplotype);
+		if (hp) {
 			likelihood *= hp->transition_prob();
 		}
 		else {
@@ -245,7 +245,7 @@ void HaploBuilder::initHeadList(const Genotype &genotype)
 			i_as = as_list.begin();
 			while (i_as != as_list.end()) {
 				hp = m_pattern_tree->findLongestMatchPattern(m_head_len, *i_as);
-				if (hp != NULL && hp->start() == 0) {
+				if (hp && hp->start() == 0) {
 					HaploPair *new_hp = new HaploPair(*head, hp);
 					m_haplopairs[m_head_len].push_back(new_hp);
 				 	m_best_pair[new_hp->id_a()].insert(make_pair(new_hp->id_b(), m_haplopairs[m_head_len].size()));
