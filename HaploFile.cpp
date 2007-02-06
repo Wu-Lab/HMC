@@ -113,7 +113,7 @@ void HaploFile::writeHaploData(HaploData &hd, const char *suffix)
 void HaploFile::writePattern(HaploBuilder &hb, const char *suffix)
 {
 	char buf[BUFFER_LENGTH];
-	m_haplo_data = hb.haplo_data();
+	m_haplo_data = hb.haplodata();
 	string output_file = m_filename + suffix;
 	FILE *fp = fopen(output_file.c_str(), "w");
 	if (fp == NULL) {

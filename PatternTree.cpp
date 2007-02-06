@@ -171,3 +171,44 @@ HaploPattern *BackwardPatternTree::findLikelyMatchPattern(PatternNode *node, con
 	}
 	return result;
 }
+
+
+////////////////////////////////
+//
+// class ForwardPatternTree
+
+ForwardPatternTree::ForwardPatternTree(const HaploData *haplo)
+: m_haplo_data(haplo),
+  m_genotype_len(haplo->genotype_len()),
+  m_trees(haplo->genotype_len()+1)
+{
+	for (int i=0; i<=m_genotype_len; ++i) {
+		m_trees[i].resize(haplo->max_allele_num());
+	}
+}
+
+void ForwardPatternTree::addPattern(PatternNode *node, HaploPattern *hp, int len)
+{
+	int i = hp->getAlleleIndex(hp->length()-len);
+	if (i < 0) {										// allele is missing
+		int n = m_haplo_data->allele_num(hp->getGlobalLocus(hp->length()-len));
+		if (len == 1) {
+			for (int j=0; j<n; ++j) {
+				node->setChild(j, hp);
+			}
+		}
+		else {
+			for (int j=0; j<n; ++j) {
+				addPattern(node->addChild(j), hp, len-1);
+			}
+		}
+	}
+	else {
+		if (len == 1) {
+			node->setChild(i, hp);
+		}
+		else {
+			addPattern(node->addChild(i), hp, len-1);
+		}
+	}
+}

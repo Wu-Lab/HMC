@@ -18,9 +18,8 @@
 
 class HaploBuilder {
 protected:
-	HaploData *m_haplo_data;
+	HaploData *m_haplodata;
 	PatternManager m_patterns;
-	int m_genotype_len;
 	int m_pattern_num;
 
 	tr1::shared_ptr<BackwardPatternTree> m_pattern_tree;
@@ -35,10 +34,13 @@ public:
 	HaploBuilder();
 	~HaploBuilder();
 
-	HaploData *haplo_data() { return m_haplo_data; }
+	HaploData *haplodata() { return m_haplodata; }
+	const HaploData *haplodata() const { return m_haplodata; }
 	const HaploPattern *patterns(int i) const { return m_patterns[i]; }
 
 	int pattern_num() const { return m_pattern_num; }
+	int genotype_num() const { return m_haplodata->genotype_num(); }
+	int genotype_len() const { return m_haplodata->genotype_len(); }
 
 	void setHaploData(HaploData &hd);
 

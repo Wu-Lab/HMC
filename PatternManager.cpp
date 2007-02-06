@@ -3,6 +3,7 @@
 #include "Allele.h"
 #include "Genotype.h"
 #include "HaploPattern.h"
+#include "HaploBuilder.h"
 
 
 PatternManager::~PatternManager()
@@ -13,8 +14,9 @@ PatternManager::~PatternManager()
 
 void PatternManager::findPatternByFreq(double min_freq, int min_len, int max_len)
 {
-	m_min_len.resize(genotype_len(), min_len <= 0 ? 2 : min_len);
-	m_max_len.resize(genotype_len(), max_len <= 0 ? genotype_len() : max_len);
+	int geno_len = m_builder.genotype_len();
+	m_min_len.resize(geno_len, min_len <= 0 ? 2 : min_len);
+	m_max_len.resize(geno_len, max_len <= 0 ? geno_len : max_len);
 	DeleteAll_Clear()(m_patterns);
 	generateCandidates();
 	searchPattern(min_freq);
@@ -25,8 +27,9 @@ void PatternManager::findPatternByFreq(double min_freq, int min_len, int max_len
 void PatternManager::findPatternByNum(int max_num, int min_len, int max_len)
 {
 	int last_size;
-	m_min_len.resize(genotype_len(), min_len <= 0 ? 2 : min_len);
-	m_max_len.resize(genotype_len(), max_len <= 0 ? genotype_len() : max_len);
+	int geno_len = m_builder.genotype_len();
+	m_min_len.resize(geno_len, min_len <= 0 ? 2 : min_len);
+	m_max_len.resize(geno_len, max_len <= 0 ? geno_len : max_len);
 	DeleteAll_Clear()(m_patterns);
 	generateCandidates();
 	double min_freq = 1.0;
@@ -50,8 +53,9 @@ void PatternManager::findPatternByNum(int max_num, int min_len, int max_len)
 
 void PatternManager::findPatternBlock(int len)
 {
-	m_min_len.resize(genotype_len(), len);
-	m_max_len.resize(genotype_len(), len);
+	int geno_len = m_builder.genotype_len();
+	m_min_len.resize(geno_len, len);
+	m_max_len.resize(geno_len, len);
 	DeleteAll_Clear()(m_patterns);
 	generateCandidates();
 	searchPattern(-1);
@@ -61,27 +65,30 @@ void PatternManager::findPatternBlock(int len)
 
 void PatternManager::generateCandidates()
 {
+	int geno_len = m_builder.genotype_len();
 	DeleteAll_Clear()(m_candidates);
-	for (int i=0; i<genotype_len(); ++i) {
-		PatternCandidate *pc = new PatternCandidate(m_haplodata, i);
+	for (int i=0; i<geno_len; ++i) {
+		PatternCandidate *pc = new PatternCandidate(m_builder.haplodata(), i);
 		m_candidates.push_back(pc);
 	}
 }
 
 void PatternManager::searchPattern(double min_freq, bool reserve_candidates)
 {
-	PatternCandidate *pc_new = new PatternCandidate(m_haplodata);
+	int geno_len = m_builder.genotype_len();
+	const HaploData *haplodata = m_builder.haplodata();
+	PatternCandidate *pc_new = new PatternCandidate(m_builder.haplodata());
 	vector<PatternCandidate*> new_candidates;
 	while (!m_candidates.empty()) {
 		PatternCandidate *pc = m_candidates.back();
 		m_candidates.pop_back();
 		const HaploPattern *hp = pc->pattern;
 		if (hp->frequency() >= min_freq || hp->length() <= m_min_len[hp->start()]) {
-			if (hp->end() < genotype_len() && hp->length() < m_max_len[hp->start()]) {
-				for (int i=0; i<m_haplodata->allele_num(hp->end()); ++i) {
-					if (m_haplodata->allele_frequency(hp->end(), i) > 0) {
+			if (hp->end() < geno_len && hp->length() < m_max_len[hp->start()]) {
+				for (int i=0; i<haplodata->allele_num(hp->end()); ++i) {
+					if (haplodata->allele_frequency(hp->end(), i) > 0) {
 						HaploPattern *hp_new = pc_new->pattern;
-						hp_new->assign(*hp, m_haplodata->allele_symbol(hp->end(), i));
+						hp_new->assign(*hp, haplodata->allele_symbol(hp->end(), i));
 						checkFrequencyWithExtension(hp_new, pc_new->state, pc->state, hp->end());
 						if (hp->length() > 0) {
 							hp_new->setTransitionProb(hp_new->frequency() / hp->frequency());
@@ -91,11 +98,11 @@ void PatternManager::searchPattern(double min_freq, bool reserve_candidates)
 						}
 						if (hp_new->frequency() >= min_freq || hp_new->length() <= m_min_len[hp_new->start()]) {
 							m_candidates.push_back(pc_new);
-							pc_new = new PatternCandidate(m_haplodata);
+							pc_new = new PatternCandidate(haplodata);
 						}
 						else if (reserve_candidates && hp_new->frequency() > 0) {
 							new_candidates.push_back(pc_new);
-							pc_new = new PatternCandidate(m_haplodata);
+							pc_new = new PatternCandidate(haplodata);
 						}
 					}
 				}
@@ -124,8 +131,10 @@ void PatternManager::checkFrequency(HaploPattern *hp, MatchingState &ms) const
 	else
 	{
 		double total_freq = 0;
-		for (int i=0; i<genotype_num(); ++i) {
-			const Genotype &g = (*m_haplodata)[i];
+		int geno_num = m_builder.genotype_num();
+		const HaploData &haplodata = *m_builder.haplodata();
+		for (int i=0; i<geno_num; ++i) {
+			const Genotype &g = haplodata[i];
 			if (hp->isMatch(g)) {
 				double freq = 1.0;
 				if (g.isPhased()) {
@@ -149,7 +158,7 @@ void PatternManager::checkFrequency(HaploPattern *hp, MatchingState &ms) const
 				ms.push_back(make_pair(i, freq));
 			}
 		}
-		hp->setFrequency(total_freq / genotype_num());
+		hp->setFrequency(total_freq / geno_num);
 	}
 }
 
@@ -163,8 +172,9 @@ void PatternManager::checkFrequencyWithExtension(HaploPattern *hp, MatchingState
 		ms.clear();
 		double total_freq = 0;
 		MatchingState::const_iterator i_ms = oms.begin();
+		const HaploData &haplodata = *m_builder.haplodata();
 		while (i_ms != oms.end()) {
-			const Genotype &g = (*m_haplodata)[i_ms->first];
+			const Genotype &g = haplodata[i_ms->first];
 			if (hp->isMatch(g, start, len)) {
 				double freq = i_ms->second;
 				if (g.isPhased()) {
@@ -189,7 +199,7 @@ void PatternManager::checkFrequencyWithExtension(HaploPattern *hp, MatchingState
 			}
 			++i_ms;
 		}
-		hp->setFrequency(total_freq / genotype_num());
+		hp->setFrequency(total_freq / m_builder.genotype_num());
 	}
 }
 
@@ -205,8 +215,8 @@ double PatternManager::getMatchingFrequency(const Genotype &g, const Allele *pa,
 			for (j=0; j<2; ++j) {
 				b = g(j)[start+i];
 				if (b.isMissing()) {		// b is missing
-					freq += m_haplodata->allele_frequency(start+i, pa[i]) > 0 ?
-						(1.0/m_haplodata->allele_num(start+i)) : 0;
+					freq += m_builder.haplodata()->allele_frequency(start+i, pa[i]) > 0 ?
+						(1.0/m_builder.haplodata()->allele_num(start+i)) : 0;
 				}
 				else if (b == pa[i]) {
 					freq += 1;

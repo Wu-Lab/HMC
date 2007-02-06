@@ -47,4 +47,21 @@ inline HaploPattern *BackwardPatternTree::getSingleAllelePattern(int end, int in
 }
 
 
+class ForwardPatternTree {
+	const HaploData *m_haplo_data;
+	int m_genotype_len;
+	vector<PatternNode> m_trees;
+
+public:
+	explicit ForwardPatternTree(const HaploData *haplo);
+
+	void addPattern(HaploPattern *hp) {	addPattern(&m_trees[hp->start()], hp, hp->length()); }
+
+protected:
+	void addPattern(PatternNode *node, HaploPattern *hp, int len);
+
+	friend class HaploBuilder;
+};
+
+
 #endif // __PATTERNTREE_H
