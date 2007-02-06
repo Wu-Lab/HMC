@@ -60,8 +60,6 @@ protected:
 	void extendAll(int i, Allele a1, Allele a2);
 	void extend(HaploPair *hp, Allele a1, Allele a2);
 	void calcBackwardLikelihood();
-
-	friend class HaploData;
 };
 
 

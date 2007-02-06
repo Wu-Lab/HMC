@@ -17,12 +17,11 @@ typedef TreeNode<HaploPattern*> PatternNode;
 
 
 class BackwardPatternTree {
-	const HaploData *m_haplo_data;
-	int m_genotype_len;
+	const HaploData &m_haplodata;
 	vector<PatternNode> m_trees;
 
 public:
-	explicit BackwardPatternTree(const HaploData *haplo);
+	explicit BackwardPatternTree(const HaploData &hd);
 
 	void addPattern(HaploPattern *hp) {	addPattern(&m_trees[hp->end()], hp, hp->length()); }
 
@@ -37,8 +36,6 @@ protected:
 	void addPattern(PatternNode *node, HaploPattern *hp, int len);
 	HaploPattern *findLongestMatchPattern(PatternNode *node, const AlleleSequence *as, int lg, int ll, int len);
 	HaploPattern *findLikelyMatchPattern(PatternNode *node, const AlleleSequence *as, int lg, int ll, int len);
-
-	friend class HaploBuilder;
 };
 
 inline HaploPattern *BackwardPatternTree::getSingleAllelePattern(int end, int index)
@@ -48,19 +45,16 @@ inline HaploPattern *BackwardPatternTree::getSingleAllelePattern(int end, int in
 
 
 class ForwardPatternTree {
-	const HaploData *m_haplo_data;
-	int m_genotype_len;
+	const HaploData &m_haplodata;
 	vector<PatternNode> m_trees;
 
 public:
-	explicit ForwardPatternTree(const HaploData *haplo);
+	explicit ForwardPatternTree(const HaploData &hd);
 
 	void addPattern(HaploPattern *hp) {	addPattern(&m_trees[hp->start()], hp, hp->length()); }
 
 protected:
 	void addPattern(PatternNode *node, HaploPattern *hp, int len);
-
-	friend class HaploBuilder;
 };
 
 

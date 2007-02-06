@@ -62,8 +62,6 @@ public:
 		}
 	};
 
-	friend class HaploBuilder;
-
 private:
 	HaploPair(const HaploPair &);
 	HaploPair &operator=(const HaploPair &);

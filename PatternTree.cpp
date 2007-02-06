@@ -12,13 +12,12 @@ boost::pool<> PatternNode::m_pool(sizeof(PatternNode));
 //
 // class BackwardPatternTree
 
-BackwardPatternTree::BackwardPatternTree(const HaploData *haplo)
-: m_haplo_data(haplo),
-  m_genotype_len(haplo->genotype_len()),
-  m_trees(haplo->genotype_len()+1)
+BackwardPatternTree::BackwardPatternTree(const HaploData &hd)
+: m_haplodata(hd),
+  m_trees(hd.genotype_len()+1)
 {
-	for (int i=0; i<=m_genotype_len; ++i) {
-		m_trees[i].resize(haplo->max_allele_num());
+	for (int i=0; i<=hd.genotype_len(); ++i) {
+		m_trees[i].resize(hd.max_allele_num());
 	}
 }
 
@@ -26,7 +25,7 @@ void BackwardPatternTree::addPattern(PatternNode *node, HaploPattern *hp, int le
 {
 	int i = hp->getAlleleIndex(len-1);
 	if (i < 0) {										// allele is missing
-		int n = m_haplo_data->allele_num(hp->getGlobalLocus(len-1));
+		int n = m_haplodata.allele_num(hp->getGlobalLocus(len-1));
 		if (len == 1) {
 			for (int j=0; j<n; ++j) {
 				node->setChild(j, hp);
@@ -102,7 +101,7 @@ HaploPattern *BackwardPatternTree::findLongestMatchPattern(PatternNode *node, co
 	HaploPattern *result, *temp;
 	result = node->data();
 	if ((*as)[ll].isMissing()) {						// allele is missing
-		n = m_haplo_data->allele_num(lg);
+		n = m_haplodata.allele_num(lg);
 		for (i=0; i<n; i++) {
 			if (node->getChild(i)) {					// previous locus is matching
 				if (len > 1) {
@@ -118,7 +117,7 @@ HaploPattern *BackwardPatternTree::findLongestMatchPattern(PatternNode *node, co
 		}
 	}
 	else {
-		i = m_haplo_data->getAlleleIndex(lg, (*as)[ll]);
+		i = m_haplodata.getAlleleIndex(lg, (*as)[ll]);
 		if (node->getChild(i)) {								// previous locus is matching
 			if (len > 1) {
 				temp = findLongestMatchPattern(node->getChild(i), as, lg-1, ll-1, len-1);
@@ -140,7 +139,7 @@ HaploPattern *BackwardPatternTree::findLikelyMatchPattern(PatternNode *node, con
 	HaploPattern *result, *temp;
 	result = node->data();
 	if ((*as)[ll].isMissing()) {						// allele is missing
-		n = m_haplo_data->allele_num(lg);
+		n = m_haplodata.allele_num(lg);
 		for (i=0; i<n; i++) {
 			if (node->getChild(i)) {					// previous locus is matching
 				if (len > 1) {
@@ -156,7 +155,7 @@ HaploPattern *BackwardPatternTree::findLikelyMatchPattern(PatternNode *node, con
 		}
 	}
 	else {
-		i = m_haplo_data->getAlleleIndex(lg, (*as)[ll]);
+		i = m_haplodata.getAlleleIndex(lg, (*as)[ll]);
 		if (node->getChild(i)) {						// previous locus is matching
 			if (len > 1) {
 				temp = findLikelyMatchPattern(node->getChild(i), as, lg-1, ll-1, len-1);
@@ -177,13 +176,12 @@ HaploPattern *BackwardPatternTree::findLikelyMatchPattern(PatternNode *node, con
 //
 // class ForwardPatternTree
 
-ForwardPatternTree::ForwardPatternTree(const HaploData *haplo)
-: m_haplo_data(haplo),
-  m_genotype_len(haplo->genotype_len()),
-  m_trees(haplo->genotype_len()+1)
+ForwardPatternTree::ForwardPatternTree(const HaploData &hd)
+: m_haplodata(hd),
+  m_trees(hd.genotype_len()+1)
 {
-	for (int i=0; i<=m_genotype_len; ++i) {
-		m_trees[i].resize(haplo->max_allele_num());
+	for (int i=0; i<=hd.genotype_len(); ++i) {
+		m_trees[i].resize(hd.max_allele_num());
 	}
 }
 
@@ -191,7 +189,7 @@ void ForwardPatternTree::addPattern(PatternNode *node, HaploPattern *hp, int len
 {
 	int i = hp->getAlleleIndex(hp->length()-len);
 	if (i < 0) {										// allele is missing
-		int n = m_haplo_data->allele_num(hp->getGlobalLocus(hp->length()-len));
+		int n = m_haplodata.allele_num(hp->getGlobalLocus(hp->length()-len));
 		if (len == 1) {
 			for (int j=0; j<n; ++j) {
 				node->setChild(j, hp);

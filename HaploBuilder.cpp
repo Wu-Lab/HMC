@@ -28,7 +28,7 @@ void HaploBuilder::initialize()
 	AlleleSequence temp;
 	list<HaploPattern*>::iterator head;
 	m_pattern_num = m_patterns.size();
-	m_pattern_tree.reset(new BackwardPatternTree(m_haplodata));
+	m_pattern_tree.reset(new BackwardPatternTree(*m_haplodata));
 	m_head_len = genotype_len();
 	m_head_list.clear();
 	for (i=0; i<m_pattern_num; ++i) {
@@ -142,7 +142,7 @@ void HaploBuilder::resolve(const Genotype &genotype, Genotype &resolution, vecto
 		total_likelihood = 0;
 		res_list.clear();
 		for (i_hp = m_haplopairs[genotype_len()].begin(); i_hp != m_haplopairs[genotype_len()].end(); i_hp++) {
-			total_likelihood += (*i_hp)->m_forward_likelihood;
+			total_likelihood += (*i_hp)->forward_likelihood();
 			res_list.push_back(*i_hp);
 		}
 		sort(res_list.begin(), res_list.end(), HaploPair::greater_likelihood());
