@@ -51,6 +51,8 @@ class ForwardPatternTree {
 public:
 	explicit ForwardPatternTree(const HaploData &hd);
 
+	PatternNode *root(int i) { return &m_trees[i]; }
+
 	void addPattern(HaploPattern *hp) {	addPattern(&m_trees[hp->start()], hp, hp->length()); }
 
 protected:

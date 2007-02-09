@@ -26,9 +26,10 @@ protected:
 	list<HaploPattern*> m_head_list;
 	int m_head_len;
 
-	Haplotype *m_genotype;
 	vector<vector<HaploPair*> > m_haplopairs;
 	vector<map<int, int> > m_best_pair;
+
+	double m_current_genotype_frequency;
 
 public:
 	HaploBuilder();
@@ -60,6 +61,9 @@ protected:
 	void extendAll(int i, Allele a1, Allele a2);
 	void extend(HaploPair *hp, Allele a1, Allele a2);
 	void calcBackwardLikelihood();
+
+	void adjustFrequency(vector<HaploPattern*> &patterns);
+	void adjustFrequency(PatternNode *node, int locus, const Allele &a, double last_freq, const map<HaploPair*, double> last_match[2]);
 };
 
 

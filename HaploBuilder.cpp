@@ -66,27 +66,17 @@ void HaploBuilder::initialize()
 
 void HaploBuilder::adjust(double min_freq)
 {
-	int i, j;
-	vector<double> freq;
-	HaploPattern *hp;
-	Genotype res;
-	vector<HaploPair*> res_list;
-	freq.resize(m_pattern_num, 0);
-	for (i=0; i<genotype_num(); ++i) {
-		resolve((*m_haplodata)[i], res, res_list);
-		calcBackwardLikelihood();
-		for (j=0; j<m_pattern_num; ++j) {
-			hp = m_patterns[j];
-			if (hp->isMatch((*m_haplodata)[i])) {
-				freq[hp->id()] += HaploPair::evaluatePattern(hp, m_haplopairs[hp->start()+1]) / (*m_haplodata)[i].likelihood();
-			}
-		}
-		Logger::status("Adjust haplotype patterns: %d     ", i);
+	int i;
+	vector<HaploPattern*> patterns;
+	for (i=0; i<m_pattern_num; ++i) {
+		patterns.push_back(new HaploPattern(*m_patterns[i]));
 	}
-	for (j=0; j<m_pattern_num; ++j) {
-		hp = m_patterns[j];
-		hp->setFrequency(freq[hp->id()] / genotype_num());
+	adjustFrequency(patterns);
+	for (i=0; i<m_pattern_num; ++i) {
+		m_patterns[i]->setFrequency(patterns[i]->frequency());
+		m_patterns[i]->setTransitionProb(patterns[i]->transition_prob());
 	}
+	DeleteAll_Clear()(patterns);
 }
 
 void HaploBuilder::resolve(const Genotype &genotype, Genotype &resolution, vector<HaploPair*> &res_list, HaploPattern *target_pattern)
@@ -284,6 +274,140 @@ void HaploBuilder::calcBackwardLikelihood()
 	for (i=genotype_len()-1; i>=m_head_len; --i) {
 		for (i_hp=m_haplopairs[i].begin(); i_hp!=m_haplopairs[i].end(); ++i_hp) {
 			(*i_hp)->calcBackwardLikelihood();
+		}
+	}
+}
+
+void HaploBuilder::adjustFrequency(vector<HaploPattern*> &patterns)
+{
+	int i, n;
+	int start, geno;
+	Genotype res;
+	vector<HaploPair*> res_list;
+	ForwardPatternTree tree(*m_haplodata);
+	map<HaploPair*, double> match_list[2];
+
+	n = patterns.size();
+	for (i=0; i<n; i++) {
+		HaploPattern *hp = patterns[i];
+		tree.addPattern(hp);
+		hp->setFrequency(0);
+		hp->setTransitionProb(0);
+	}
+
+	for (geno=0; geno<genotype_num(); ++geno) {
+		resolve((*m_haplodata)[geno], res, res_list);
+		calcBackwardLikelihood();
+		m_current_genotype_frequency = (*m_haplodata)[geno].likelihood();
+
+		for (start=0; start<genotype_len(); ++start) {
+			match_list[0].clear();
+			match_list[1].clear();
+
+			int end = start < m_head_len ? m_head_len : start;
+			n = m_haplopairs[end].size();
+			for (i=0; i<n; ++i) {
+				HaploPair *hp = m_haplopairs[end][i];
+				match_list[0][hp] = hp->forward_likelihood();
+			}
+
+			PatternNode *node = tree.root(start);
+			n = node->size();
+			for (i=0; i<node->size(); ++i) {
+				if (node->getChild(i)) {
+					adjustFrequency(node->getChild(i), start, m_haplodata->allele_symbol(start, i), 1.0, match_list);
+				}
+			}
+		}
+	}
+
+
+	n = patterns.size();
+	for (i=0; i<n; i++) {
+		HaploPattern *hp = patterns[i];
+		if (hp->transition_prob() > 0) {
+			hp->setTransitionProb(hp->frequency() / hp->transition_prob());
+		}
+		else {
+			hp->setTransitionProb(0);
+		}
+		hp->setFrequency(hp->frequency() / genotype_num());
+	}
+}
+
+void HaploBuilder::adjustFrequency(PatternNode *node, int locus, const Allele &a, double last_freq, const map<HaploPair*, double> last_match[2])
+{
+	map<HaploPair*, double> match_list[2];
+	map<HaploPair*, double>::const_iterator i_mp;
+	vector<HaploPair*>::const_iterator i_link;
+
+	if (locus < m_head_len) {
+		for (i_mp=last_match[0].begin(); i_mp!=last_match[0].end(); ++i_mp) {
+			HaploPair *hp = (*i_mp).first;
+			double weight = (*i_mp).second;
+			if (hp->pattern_a()[locus] == a) {
+				if (hp->pattern_b()[locus] == a) {
+					match_list[0][hp] += weight;
+				}
+				else {
+					match_list[1][hp] += weight * 0.5;
+				}
+			}
+		}
+		for (i_mp=last_match[1].begin(); i_mp!=last_match[1].end(); ++i_mp) {
+			HaploPair *hp = (*i_mp).first;
+			double weight = (*i_mp).second;
+			if (hp->pattern_a()[locus] == a) {
+				match_list[1][hp] += weight;
+			}
+		}
+	}
+	else {
+		for (i_mp=last_match[0].begin(); i_mp!=last_match[0].end(); ++i_mp) {
+			HaploPair *last_hp = (*i_mp).first;
+			double weight = (*i_mp).second;
+			for (i_link=last_hp->forward_links().begin(); i_link!=last_hp->forward_links().end(); ++i_link) {
+				HaploPair *hp = *i_link;
+				if (hp->allele_a() == a) {
+					if (hp->allele_b() == a) {
+						match_list[0][hp] += weight * hp->transition_prob();
+					}
+					else {
+						match_list[1][hp] += weight * hp->transition_prob() * 0.5;
+					}
+				}
+			}
+		}
+		for (i_mp=last_match[1].begin(); i_mp!=last_match[1].end(); ++i_mp) {
+			HaploPair *last_hp = (*i_mp).first;
+			double weight = (*i_mp).second;
+			for (i_link=last_hp->forward_links().begin(); i_link!=last_hp->forward_links().end(); ++i_link) {
+				HaploPair *hp = *i_link;
+				if (hp->allele_a() == a) {
+					match_list[1][hp] += weight * hp->transition_prob();
+				}
+			}
+		}
+	}
+
+	double freq = 0;
+	for (i_mp=match_list[0].begin(); i_mp!=match_list[0].end(); ++i_mp) {
+		freq += (*i_mp).second * (*i_mp).first->backward_likelihood();
+	}
+	for (i_mp=match_list[1].begin(); i_mp!=match_list[1].end(); ++i_mp) {
+		freq += (*i_mp).second * (*i_mp).first->backward_likelihood() * 2.0;
+	}
+	freq /= m_current_genotype_frequency;
+
+	if (node->data()) {
+		HaploPattern *hp = node->data();
+		hp->setFrequency(hp->frequency() + freq);
+		hp->setTransitionProb(hp->transition_prob() + last_freq);
+	}
+
+	for (int i=0; i<node->size(); i++) {
+		if (node->getChild(i)) {
+			adjustFrequency(node->getChild(i), locus+1, m_haplodata->allele_symbol(locus+1, i), freq, match_list);
 		}
 	}
 }

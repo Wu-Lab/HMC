@@ -1,4 +1,6 @@
 
+#include <algorithm>
+
 #include "PatternManager.h"
 #include "Allele.h"
 #include "Genotype.h"
@@ -15,8 +17,11 @@ PatternManager::~PatternManager()
 void PatternManager::findPatternByFreq(double min_freq, int min_len, int max_len)
 {
 	int geno_len = m_builder.genotype_len();
-	m_min_len.resize(geno_len, min_len <= 0 ? 2 : min_len);
-	m_max_len.resize(geno_len, max_len <= 0 ? geno_len : max_len);
+	max_len = max_len <= 0 ? geno_len : max_len;
+	min_len = max(min_len, 2);
+	max_len = max(max_len, min_len);
+	m_min_len.resize(geno_len, min_len);
+	m_max_len.resize(geno_len, max_len);
 	DeleteAll_Clear()(m_patterns);
 	generateCandidates();
 	searchPattern(min_freq);
@@ -28,8 +33,11 @@ void PatternManager::findPatternByNum(int max_num, int min_len, int max_len)
 {
 	int last_size;
 	int geno_len = m_builder.genotype_len();
-	m_min_len.resize(geno_len, min_len <= 0 ? 2 : min_len);
-	m_max_len.resize(geno_len, max_len <= 0 ? geno_len : max_len);
+	max_len = max_len <= 0 ? geno_len : max_len;
+	min_len = max(min_len, 2);
+	max_len = max(max_len, min_len);
+	m_min_len.resize(geno_len, min_len);
+	m_max_len.resize(geno_len, max_len);
 	DeleteAll_Clear()(m_patterns);
 	generateCandidates();
 	double min_freq = 1.0;
@@ -54,6 +62,7 @@ void PatternManager::findPatternByNum(int max_num, int min_len, int max_len)
 void PatternManager::findPatternBlock(int len)
 {
 	int geno_len = m_builder.genotype_len();
+	len = max(2, len);
 	m_min_len.resize(geno_len, len);
 	m_max_len.resize(geno_len, len);
 	DeleteAll_Clear()(m_patterns);

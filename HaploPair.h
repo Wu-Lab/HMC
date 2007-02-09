@@ -34,6 +34,7 @@ public:
 	int id_b() const { return m_pattern_b.id(); }
 	int end() const { return m_pattern_a.end(); }
 
+	const vector<HaploPair*> &forward_links() const { return m_forward_links; }
 	double transition_prob() const { return m_transition_prob; }
 	double forward_likelihood() const { return m_forward_likelihood; }
 	double backward_likelihood() const { return m_backward_likelihood; }
@@ -47,7 +48,6 @@ public:
 	const HaploPattern *successor_b(T &i) const { return m_pattern_b.successors(i); }
 
 	void calcBackwardLikelihood();
-	static double evaluatePattern(const HaploPattern *hp, vector<HaploPair*> &hp_list);
 
 	using NoThrowNewDelete::operator new;
 	using NoThrowNewDelete::operator delete;
