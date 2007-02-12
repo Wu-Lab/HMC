@@ -47,7 +47,7 @@ void BackwardPatternTree::addPattern(PatternNode *node, HaploPattern *hp, int le
 	}
 }
 
-HaploPattern *BackwardPatternTree::findLongestMatchPattern(int end, const HaploPattern *hp, int len)
+HaploPattern *BackwardPatternTree::findLongestMatchPattern(int end, const HaploPattern *hp, int len) const
 {
 	if (end <= hp->start() || end > hp->end()) {
 		return 0;
@@ -59,7 +59,7 @@ HaploPattern *BackwardPatternTree::findLongestMatchPattern(int end, const HaploP
 	}
 }
 
-HaploPattern *BackwardPatternTree::findLongestMatchPattern(int end, const AlleleSequence *as, int as_start, int len)
+HaploPattern *BackwardPatternTree::findLongestMatchPattern(int end, const AlleleSequence *as, int as_start, int len) const
 {
 	if (end <= as_start || end > (as_start+as->length())) {
 		return 0;
@@ -71,7 +71,7 @@ HaploPattern *BackwardPatternTree::findLongestMatchPattern(int end, const Allele
 	}
 }
 
-HaploPattern *BackwardPatternTree::findLikelyMatchPattern(int end, const HaploPattern *hp, int len)
+HaploPattern *BackwardPatternTree::findLikelyMatchPattern(int end, const HaploPattern *hp, int len) const
 {
 	if (end <= hp->start() || end > hp->end()) {
 		return 0;
@@ -83,7 +83,7 @@ HaploPattern *BackwardPatternTree::findLikelyMatchPattern(int end, const HaploPa
 	}
 }
 
-HaploPattern *BackwardPatternTree::findLikelyMatchPattern(int end, const AlleleSequence *as, int as_start, int len)
+HaploPattern *BackwardPatternTree::findLikelyMatchPattern(int end, const AlleleSequence *as, int as_start, int len) const
 {
 	if (end <= as_start || end > (as_start+as->length())) {
 		return 0;
@@ -95,7 +95,7 @@ HaploPattern *BackwardPatternTree::findLikelyMatchPattern(int end, const AlleleS
 	}
 }
 
-HaploPattern *BackwardPatternTree::findLongestMatchPattern(PatternNode *node, const AlleleSequence *as, int lg, int ll, int len)
+HaploPattern *BackwardPatternTree::findLongestMatchPattern(const PatternNode *node, const AlleleSequence *as, int lg, int ll, int len) const
 {
 	int i, n;
 	HaploPattern *result, *temp;
@@ -133,7 +133,7 @@ HaploPattern *BackwardPatternTree::findLongestMatchPattern(PatternNode *node, co
 	return result;
 }
 
-HaploPattern *BackwardPatternTree::findLikelyMatchPattern(PatternNode *node, const AlleleSequence *as, int lg, int ll, int len)
+HaploPattern *BackwardPatternTree::findLikelyMatchPattern(const PatternNode *node, const AlleleSequence *as, int lg, int ll, int len) const
 {
 	int i, n;
 	HaploPattern *result, *temp;

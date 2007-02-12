@@ -25,20 +25,20 @@ public:
 
 	void addPattern(HaploPattern *hp) {	addPattern(&m_trees[hp->end()], hp, hp->length()); }
 
-	HaploPattern *findLongestMatchPattern(int end, const HaploPattern *hp, int len = 0);
-	HaploPattern *findLongestMatchPattern(int end, const AlleleSequence *as, int as_start = 0, int len = 0);
-	HaploPattern *findLikelyMatchPattern(int end, const HaploPattern *hp, int len = 0);
-	HaploPattern *findLikelyMatchPattern(int end, const AlleleSequence *as, int as_start = 0, int len = 0);
+	HaploPattern *findLongestMatchPattern(int end, const HaploPattern *hp, int len = 0) const;
+	HaploPattern *findLongestMatchPattern(int end, const AlleleSequence *as, int as_start = 0, int len = 0) const;
+	HaploPattern *findLikelyMatchPattern(int end, const HaploPattern *hp, int len = 0) const;
+	HaploPattern *findLikelyMatchPattern(int end, const AlleleSequence *as, int as_start = 0, int len = 0) const;
 
-	HaploPattern *getSingleAllelePattern(int end, int index);
+	HaploPattern *getSingleAllelePattern(int end, int index) const;
 
 protected:
 	void addPattern(PatternNode *node, HaploPattern *hp, int len);
-	HaploPattern *findLongestMatchPattern(PatternNode *node, const AlleleSequence *as, int lg, int ll, int len);
-	HaploPattern *findLikelyMatchPattern(PatternNode *node, const AlleleSequence *as, int lg, int ll, int len);
+	HaploPattern *findLongestMatchPattern(const PatternNode *node, const AlleleSequence *as, int lg, int ll, int len) const;
+	HaploPattern *findLikelyMatchPattern(const PatternNode *node, const AlleleSequence *as, int lg, int ll, int len) const;
 };
 
-inline HaploPattern *BackwardPatternTree::getSingleAllelePattern(int end, int index)
+inline HaploPattern *BackwardPatternTree::getSingleAllelePattern(int end, int index) const
 {
 	return m_trees[end].getChild(index)->data();
 }

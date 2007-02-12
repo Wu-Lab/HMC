@@ -7,6 +7,7 @@
 #include <list>
 
 #include "HaploPattern.h"
+#include "PatternTree.h"
 
 
 class Allele;
@@ -32,18 +33,25 @@ class PatternManager {
 		}
 	};
 
-	const HaploBuilder &m_builder;
+	HaploBuilder &m_builder;
 	vector<HaploPattern*> m_patterns;
 	vector<PatternCandidate*> m_candidates;
+	double m_min_freq;
 	vector<int> m_min_len;
 	vector<int> m_max_len;
 
+	tr1::shared_ptr<BackwardPatternTree> m_pattern_tree;
+	vector<HaploPattern*> m_head_list;
+
 public:
-	PatternManager(const HaploBuilder &hb) : m_builder(hb) { }
+	PatternManager(HaploBuilder &hb) : m_builder(hb) { }
 	~PatternManager();
 
 	HaploPattern *operator [](int i) { return m_patterns[i]; }
 	const HaploPattern *operator [](int i) const { return m_patterns[i]; }
+	const BackwardPatternTree *pattern_tree() const { return m_pattern_tree.get(); }
+	const vector<HaploPattern*> &head_list() const { return m_head_list; }
+	int head_len() const { return m_min_len[0]; }
 
 	int size() const { return m_patterns.size(); }
 
@@ -51,13 +59,17 @@ public:
 	void findPatternByNum(int max_num, int min_len = 2, int max_len = 0);
 	void findPatternBlock(int len);
 
+	void adjustPatterns(bool extend = true);
+
 protected:
 	void generateCandidates();
-	void searchPattern(double min_freq, bool reserve_candidates = false);
+	void searchPattern(bool reserve_candidates = false);
 
 	void checkFrequency(HaploPattern *hp, MatchingState &ms) const;
 	void checkFrequencyWithExtension(HaploPattern *hp, MatchingState &ms, const MatchingState &old_ms, int start, int len = 1) const;
 	double getMatchingFrequency(const Genotype &g, const Allele *pa, int start, int len) const;
+
+	void initialize();
 };
 
 

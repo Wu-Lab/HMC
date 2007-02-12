@@ -55,7 +55,7 @@ void HaploPattern::repack()
 			break;
 		}
 	}
-	for (i=length()-1; i>=m_start; i--) {
+	for (i=length()-1; i>=m_start; --i) {
 		if (m_alleles[i].isMissing()) {
 			m_end--;
 			repacked = true;

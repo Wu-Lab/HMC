@@ -20,11 +20,6 @@ class HaploBuilder {
 protected:
 	HaploData *m_haplodata;
 	PatternManager m_patterns;
-	int m_pattern_num;
-
-	tr1::shared_ptr<BackwardPatternTree> m_pattern_tree;
-	list<HaploPattern*> m_head_list;
-	int m_head_len;
 
 	vector<vector<HaploPair*> > m_haplopairs;
 	vector<map<int, int> > m_best_pair;
@@ -39,19 +34,21 @@ public:
 	const HaploData *haplodata() const { return m_haplodata; }
 	const HaploPattern *patterns(int i) const { return m_patterns[i]; }
 
-	int pattern_num() const { return m_pattern_num; }
+	int pattern_num() const { return m_patterns.size(); }
 	int genotype_num() const { return m_haplodata->genotype_num(); }
 	int genotype_len() const { return m_haplodata->genotype_len(); }
 
 	void setHaploData(HaploData &hd);
 
 	void initialize();
-	void adjust(double min_freq = 0);
+	void adjust() { m_patterns.adjustPatterns(); }
 
 	void resolve(const Genotype &genotype, Genotype &resolution, vector<HaploPair*> &res_list, HaploPattern *target_pattern = 0);
 
 	double getLikelihood(const Haplotype &haplotype);
 	double getLikelihood(const Genotype &genotype);
+
+	void adjustFrequency(vector<HaploPattern*> &patterns);
 
 protected:
 	void clear();
@@ -60,9 +57,8 @@ protected:
 
 	void extendAll(int i, Allele a1, Allele a2);
 	void extend(HaploPair *hp, Allele a1, Allele a2);
-	void calcBackwardLikelihood();
 
-	void adjustFrequency(vector<HaploPattern*> &patterns);
+	void calcBackwardLikelihood();
 	void adjustFrequency(PatternNode *node, int locus, const Allele &a, double last_freq, const map<HaploPair*, double> last_match[2]);
 };
 
