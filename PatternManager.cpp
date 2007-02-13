@@ -280,8 +280,11 @@ void PatternManager::adjustPatterns(bool extend)
 			patterns.push_back(new HaploPattern(*m_patterns[i]));
 		}
 		m_builder.adjustFrequency(patterns);
-		DeleteAll_Clear()(m_patterns);
-		m_patterns.swap(patterns);
+		for (i=0; i<n; ++i) {
+			m_patterns[i]->setFrequency(patterns[i]->frequency());
+			m_patterns[i]->setTransitionProb(patterns[i]->transition_prob());
+		}
+		DeleteAll_Clear()(patterns);
 	}
 	else {
 		n = m_patterns.size();
