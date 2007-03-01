@@ -27,20 +27,19 @@ HMC::HMC(int argc, char *argv[])
 	configs.add_options()
 		("nologo", "Suppress logo and copyright information")
 		("debug,d", po::value<int>()->default_value(4), "Set debug level")
-		("input-format,f", po::value<string>(&m_input_format)->default_value("PHASE"), "Set input file format")
+		("input-format", po::value<string>(&m_input_format)->default_value("PHASE"), "Set input file format")
 		("output-patterns", po::value<string>(), "")
 		;
 
 	po::options_description parameters("Model parameters");
 	parameters.add_options()
 		("model,m", po::value<string>()->default_value("MC-v"), "Set the inference model")
-		("mc-order,o", po::value<int>(), "Markov chain order")
-		("min-freq-rel,r", po::value<double>(), "Minimum relative frequency of patterns")
-		("min-freq-abs,a", po::value<double>()->default_value(2.0), "Minimum absolute frequency of patterns")
-		("min-pattern-len", po::value<int>(), "Minimum length of patterns")
-		("max-pattern-len", po::value<int>()->default_value(30), "Maximum length of patterns")
-		("num-patterns", po::value<int>(), "Maximum number of patterns")
-		("iteration,i", po::value<int>()->default_value(1), "")
+		("min-freq,f", po::value<double>(&m_builder.min_freq)->default_value(0.02), "Minimum relative frequency of patterns")
+		("num-patterns,n", po::value<int>(&m_builder.num_patterns), "Maximum number of patterns")
+		("min-pattern-len", po::value<int>(&m_builder.min_pattern_len)->default_value(2), "Minimum length of patterns")
+		("max-pattern-len", po::value<int>(&m_builder.max_pattern_len)->default_value(30), "Maximum length of patterns")
+		("mc-order,o", po::value<int>(&m_builder.mc_order)->default_value(1), "Markov chain order")
+		("iteration,i", po::value<int>(&m_builder.max_iteration)->default_value(1), "")
 		;
 
 	po::options_description utilities("Utility options");
@@ -73,9 +72,7 @@ HMC::HMC(int argc, char *argv[])
 
 	po::notify(m_args);
 
-	conflicting_options(m_args, "min-freq-rel", "min-freq-abs");
-	conflicting_options(m_args, "min-freq-rel", "num-patterns");
-	conflicting_options(m_args, "min-freq-abs", "num-patterns");
+	conflicting_options(m_args, "min-freq", "num-patterns");
 
 	parseOptions();
 }
@@ -184,37 +181,6 @@ void HMC::parseOptions()
 		Logger::error("Unknown model %s!", m_args["model"].as<string>().c_str());
 		exit(1);
 	}
-
-	if (m_args.count("min-pattern-len")) {
-		m_builder.setMinPatternLen(m_args["min-pattern-len"].as<int>());
-	}
-	else {
-		m_builder.setMinPatternLen(1);
-	}
-
-	if (m_args.count("max-pattern-len")) {
-		m_builder.setMaxPatternLen(m_args["max-pattern-len"].as<int>());
-	}
-	else {
-		m_builder.setMaxPatternLen(-1);
-	}
-
-	if (m_args.count("num-patterns")) {
-		m_builder.setNumPatterns(m_args["num-patterns"].as<int>());
-	}
-	else if (m_args.count("min-freq-abs")) {
-		m_builder.setMinFreqAbs(m_args["min-freq-abs"].as<double>());
-		m_builder.setNumPatterns(-1);
-	}
-	else if (m_args.count("min-freq-rel")) {
-		m_builder.setMinFreqRel(m_args["min-freq-rel"].as<double>());
-		m_builder.setMinFreqAbs(-1);
-		m_builder.setNumPatterns(-1);
-	}
-
-	if (m_args.count("mc-order")) {
-		m_builder.setOrder(m_args["mc-order"].as<int>());
-	}
 }
 
 void HMC::run()
@@ -246,10 +212,6 @@ void HMC::run()
 
 void HMC::resolve()
 {
-	int i, iter, max_iter;
-	HaploData unphased_genos;
-	vector<HaploPair*> res_list;
-
 	Logger::verbose("");
 	Logger::beginTimer(3, "Find bottleneck");
 	Logger::beginTimer(4, "Find bottleneck");
@@ -257,41 +219,11 @@ void HMC::resolve()
 	Logger::pauseTimer(3);
 	Logger::pauseTimer(4);
 
-	unphased_genos = m_genos;
-	unphased_genos.randomizePhase();
-	HaploComp compare(&m_genos, &unphased_genos);
-	Logger::info("");
-	Logger::info("  Switch Error = %f, IHP = %f, IGP = %f",
-		compare.switch_error(), compare.incorrect_haplotype_percentage(), compare.incorrect_genotype_percentage());
-	m_resolutions = unphased_genos;
-	m_builder.build(unphased_genos);
-
 	Logger::verbose("");
 	Logger::beginTimer(2, "Resolve Genotype");
 
-	max_iter = min(m_genos.unphased_num(), m_args["iteration"].as<int>());
-	for (iter=0; iter<max_iter; iter++) {
-		double ll = 0;
-		for (i=0; i<m_genos.unphased_num(); i++) {
-//			if (!unphased_genos[i].isPhased()) {
-				Logger::status("Iteration %d: Resolving Genotype[%d] %s ...", iter, i, m_genos[i].id().c_str());
-				m_builder.resolve(unphased_genos[i], m_resolutions[i], res_list);
-				m_resolutions[i].setID(m_genos[i].id());
-				if (res_list.size() == 0) {
-					Logger::warning("Unable to resolve Genotype[%d]: %s!", i, m_genos[i].id().c_str());
-				}
-				unphased_genos[i].setLikelihood(m_resolutions[i].likelihood());
-//			}
-			ll += log(m_resolutions[i].likelihood());
-		}
+	m_builder.run(m_genos, m_resolutions);
 
-		HaploComp compare(&m_genos, &m_resolutions);
-		Logger::info("");
-		Logger::info("  Switch Error = %f, IHP = %f, IGP = %f, LL = %f",
-			compare.switch_error(), compare.incorrect_haplotype_percentage(), compare.incorrect_genotype_percentage(), ll);
-
-		if (iter < max_iter - 1) m_builder.adjust();
-	}
 	Logger::verbose("");
 	Logger::endTimer(4);
 	Logger::verbose("");

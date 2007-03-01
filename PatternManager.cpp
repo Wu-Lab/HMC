@@ -269,22 +269,29 @@ void PatternManager::initialize()
 	}
 }
 
-void PatternManager::adjustPatterns(bool extend)
+void PatternManager::adjustFrequency()
+{
+	int i, n;
+	vector<HaploPattern*> patterns;
+	n = m_patterns.size();
+	for (i=0; i<n; ++i) {
+		patterns.push_back(new HaploPattern(*m_patterns[i]));
+	}
+	m_builder.adjustFrequency(patterns);
+	for (i=0; i<n; ++i) {
+		m_patterns[i]->setFrequency(patterns[i]->frequency());
+		m_patterns[i]->setTransitionProb(patterns[i]->transition_prob());
+	}
+	DeleteAll_Clear()(patterns);
+}
+
+void PatternManager::adjustPatterns()
 {
 	int geno_len = m_builder.genotype_len();
 	int i, j, n;
-	vector<HaploPattern*> patterns, seeds, candidates, seeds_new;
-	if (m_min_freq < 0 || extend == false) {
-		n = m_patterns.size();
-		for (i=0; i<n; ++i) {
-			patterns.push_back(new HaploPattern(*m_patterns[i]));
-		}
-		m_builder.adjustFrequency(patterns);
-		for (i=0; i<n; ++i) {
-			m_patterns[i]->setFrequency(patterns[i]->frequency());
-			m_patterns[i]->setTransitionProb(patterns[i]->transition_prob());
-		}
-		DeleteAll_Clear()(patterns);
+	vector<HaploPattern*> patterns, seeds, candidates;
+	if (m_min_freq < 0) {
+		adjustFrequency();
 	}
 	else {
 		n = m_patterns.size();
@@ -308,23 +315,21 @@ void PatternManager::adjustPatterns(bool extend)
 			m_builder.adjustFrequency(patterns);
 			candidates.insert(candidates.end(), patterns.begin(), patterns.end());
 			patterns.clear();
-			seeds_new.clear();
 			n = seeds.size();
 			for (i=0; i<n; ++i) {
 				HaploPattern *hp = seeds[i];
 				if (hp->frequency() >= m_min_freq) {
 					if (hp->end() < geno_len && hp->length() < m_max_len[hp->start()]) {
 						int an = m_builder.haplodata()->allele_num(hp->end());
-						for (int j=0; j<an; ++j) {
+						for (j=0; j<an; ++j) {
 							HaploPattern *hp_new = new HaploPattern(*m_builder.haplodata());
 							hp_new->assign(*hp, m_builder.haplodata()->allele_symbol(hp->end(), j));
 							patterns.push_back(hp_new);
-							seeds_new.push_back(hp_new);
 						}
 					}
 				}
 			}
-			seeds.swap(seeds_new);
+			seeds = patterns;
 		}
 		DeleteAll_Clear()(m_patterns);
 		n = candidates.size();
@@ -332,10 +337,10 @@ void PatternManager::adjustPatterns(bool extend)
 			HaploPattern *hp = candidates[i];
 			if (hp->frequency() >= m_min_freq || hp->length() <= m_min_len[hp->start()]) {
 				m_patterns.push_back(hp);
-			}
-			else {
-				delete hp;
-			}
+  			}
+  			else {
+  				delete hp;
+  			}
 		}
 		Logger::verbose("Adjust haplotype patterns: %d     ", m_patterns.size());
 		initialize();

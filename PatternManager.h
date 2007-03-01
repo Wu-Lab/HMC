@@ -59,7 +59,8 @@ public:
 	void findPatternByNum(int max_num, int min_len = 2, int max_len = 0);
 	void findPatternBlock(int len);
 
-	void adjustPatterns(bool extend = true);
+	void adjustFrequency();
+	void adjustPatterns();
 
 protected:
 	void generateCandidates();

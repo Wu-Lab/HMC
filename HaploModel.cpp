@@ -1,6 +1,9 @@
 
 #include "HaploModel.h"
 #include "HaploData.h"
+#include "HaploComp.h"
+
+#include <cfloat>
 
 #include "MemLeak.h"
 
@@ -8,22 +11,11 @@
 HaploModel::HaploModel()
 {
 	m_model = MC_v;
-	m_min_pattern_len = 1;
-	m_max_pattern_len = 2;
-	m_num_patterns = -1;
-	m_min_freq_abs = -1;
-	m_min_freq_rel = -1;
-	m_order = 1;
-}
-
-double HaploModel::getMinFreq() const
-{
-	if (m_min_freq_abs > 0) {
-		return m_min_freq_abs;
-	}
-	else {
-		return m_min_freq_rel * genotype_num();
-	}
+	min_freq = -1;
+	num_patterns = -1;
+	min_pattern_len = 2;
+	max_pattern_len = -1;
+	mc_order = 1;
 }
 
 void HaploModel::build(HaploData &hd)
@@ -49,14 +41,11 @@ void HaploModel::findPatterns_mc_v()
 	Logger::info("Running HMC engine MC-v ...");
 	Logger::verbose("");
 	Logger::beginTimer(1, "Search Haplotype pattern");
-	if (m_num_patterns > 0) {
-		m_patterns.findPatternByNum(m_num_patterns, m_min_pattern_len, m_max_pattern_len);
-	}
-	else if (m_min_freq_abs > 0) {
-		m_patterns.findPatternByFreq(m_min_freq_abs / genotype_num(), m_min_pattern_len, m_max_pattern_len);
+	if (num_patterns > 0) {
+		m_patterns.findPatternByNum(num_patterns, min_pattern_len, max_pattern_len);
 	}
 	else {
-		m_patterns.findPatternByFreq(m_min_freq_rel, m_min_pattern_len, m_max_pattern_len);
+		m_patterns.findPatternByFreq(min_freq, min_pattern_len, max_pattern_len);
 	}
 	Logger::endTimer(1);
 }
@@ -67,7 +56,7 @@ void HaploModel::findPatterns_mc_d()
 	Logger::info("Run HMC engine MC-d ...");
 	Logger::verbose("");
 	Logger::beginTimer(1, "Search Haplotype pattern");
-	m_patterns.findPatternBlock(m_order+1);
+	m_patterns.findPatternBlock(mc_order+1);
 	Logger::endTimer(1);
 }
 
@@ -77,14 +66,58 @@ void HaploModel::findPatterns_mc_b()
 	Logger::info("Running HMC engine MC-b ...");
 	Logger::verbose("");
 	Logger::beginTimer(1, "Search Haplotype pattern");
-	if (m_num_patterns > 0) {
-		m_patterns.findPatternByNum(m_num_patterns, m_min_pattern_len, m_max_pattern_len);
-	}
-	else if (m_min_freq_abs > 0) {
-		m_patterns.findPatternByFreq(m_min_freq_abs / genotype_num(), m_min_pattern_len, m_max_pattern_len);
+	if (num_patterns > 0) {
+		m_patterns.findPatternByNum(num_patterns, min_pattern_len, max_pattern_len);
 	}
 	else {
-		m_patterns.findPatternByFreq(m_min_freq_rel, m_min_pattern_len, m_max_pattern_len);
+		m_patterns.findPatternByFreq(min_freq, min_pattern_len, max_pattern_len);
 	}
 	Logger::endTimer(1);
+}
+
+void HaploModel::run(const HaploData &genos, HaploData &resolutions)
+{
+	int i, iter;
+	double ll, old_ll;
+	HaploData unphased;
+	vector<HaploPair*> res_list;
+
+	unphased = genos;
+	resolutions = genos;
+
+	unphased.randomizePhase();
+	build(unphased);
+
+	old_ll = -DBL_MAX;
+	for (iter=1; iter<=max_iteration; ++iter) {
+		ll = 0;
+		for (i=0; i<genos.unphased_num(); ++i) {
+//			if (!unphased[i].isPhased()) {
+				Logger::status("Iteration %d: Resolving Genotype[%d] %s ...", iter, i, genos[i].id().c_str());
+				resolve(genos[i], resolutions[i], res_list);
+				resolutions[i].setID(genos[i].id());
+				if (res_list.size() == 0) {
+					Logger::warning("Unable to resolve Genotype[%d]: %s!", i, genos[i].id().c_str());
+				}
+				unphased[i].setLikelihood(resolutions[i].likelihood());
+//			}
+			ll += log(resolutions[i].likelihood());
+		}
+
+		HaploComp compare(&genos, &resolutions);
+		Logger::info("");
+		Logger::info("  Switch Error = %f, IHP = %f, IGP = %f, LL = %f",
+			compare.switch_error(), compare.incorrect_haplotype_percentage(), compare.incorrect_genotype_percentage(), ll);
+
+		if (iter < max_iteration) {
+			if (ll >= old_ll && (old_ll - ll) / old_ll < 0.001) {
+				m_patterns.adjustPatterns();
+				old_ll = -DBL_MAX;
+			}
+			else {
+				m_patterns.adjustFrequency();
+				old_ll = ll;
+			}
+		}
+	}
 }

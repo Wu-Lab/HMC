@@ -41,7 +41,6 @@ public:
 	void setHaploData(HaploData &hd);
 
 	void initialize();
-	void adjust() { m_patterns.adjustPatterns(); }
 
 	void resolve(const Genotype &genotype, Genotype &resolution, vector<HaploPair*> &res_list, HaploPattern *target_pattern = 0);
 
