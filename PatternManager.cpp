@@ -97,30 +97,27 @@ void PatternManager::searchPattern(bool reserve_candidates)
 		PatternCandidate *pc = m_candidates.back();
 		m_candidates.pop_back();
 		const HaploPattern *hp = pc->pattern;
-		if (hp->frequency() >= m_min_freq || hp->length() <= m_min_len[hp->start()]) {
+		if (hp->frequency() >= m_min_freq || hp->length() < m_min_len[hp->start()]) {
 			if (hp->end() < geno_len && hp->length() < m_max_len[hp->start()]) {
 				for (int i=0; i<haplodata->allele_num(hp->end()); ++i) {
 					if (haplodata->allele_frequency(hp->end(), i) > 0) {
 						HaploPattern *hp_new = pc_new->pattern;
 						hp_new->assign(*hp, haplodata->allele_symbol(hp->end(), i));
 						checkFrequencyWithExtension(hp_new, pc_new->state, pc->state, hp->end());
-						if (hp->length() > 0) {
-							hp_new->setTransitionProb(hp_new->frequency() / hp->frequency());
+						hp_new->setPrefixFreq(hp->frequency());
+						if (hp_new->prefix_freq() > 0) {
+							hp_new->setTransitionProb(hp_new->frequency() / hp_new->prefix_freq());
 						}
 						else {
 							hp_new->setTransitionProb(0);
 						}
-						if (hp_new->frequency() >= m_min_freq || hp_new->length() <= m_min_len[hp_new->start()]) {
-							m_candidates.push_back(pc_new);
-							pc_new = new PatternCandidate(haplodata);
-						}
-						else if (reserve_candidates && hp_new->frequency() > 0) {
-							new_candidates.push_back(pc_new);
-							pc_new = new PatternCandidate(haplodata);
-						}
+						m_candidates.push_back(pc_new);
+						pc_new = new PatternCandidate(haplodata);
 					}
 				}
 			}
+		}
+		if (hp->prefix_freq() >= m_min_freq || hp->length() <= m_min_len[hp->start()]) {
 			if (hp->length() > 0 && hp->length() >= m_min_len[hp->start()]) {
 				m_patterns.push_back(pc->release());
 			}
@@ -335,7 +332,7 @@ void PatternManager::adjustPatterns()
 		n = candidates.size();
 		for (i=0; i<n; ++i) {
 			HaploPattern *hp = candidates[i];
-			if (hp->frequency() >= m_min_freq || hp->length() <= m_min_len[hp->start()]) {
+			if (hp->prefix_freq() >= m_min_freq || hp->length() <= m_min_len[hp->start()]) {
 				m_patterns.push_back(hp);
   			}
   			else {

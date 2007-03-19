@@ -83,10 +83,9 @@ void HaploModel::run(const HaploData &genos, HaploData &resolutions)
 	vector<HaploPair*> res_list;
 
 	unphased = genos;
-	resolutions = genos;
-
 	unphased.randomizePhase();
 	build(unphased);
+	resolutions = unphased;
 
 	old_ll = -DBL_MAX;
 	for (iter=1; iter<=max_iteration; ++iter) {
@@ -94,7 +93,7 @@ void HaploModel::run(const HaploData &genos, HaploData &resolutions)
 		for (i=0; i<genos.unphased_num(); ++i) {
 //			if (!unphased[i].isPhased()) {
 				Logger::status("Iteration %d: Resolving Genotype[%d] %s ...", iter, i, genos[i].id().c_str());
-				resolve(genos[i], resolutions[i], res_list);
+				resolve(unphased[i], resolutions[i], res_list);
 				resolutions[i].setID(genos[i].id());
 				if (res_list.size() == 0) {
 					Logger::warning("Unable to resolve Genotype[%d]: %s!", i, genos[i].id().c_str());

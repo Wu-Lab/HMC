@@ -19,7 +19,7 @@ protected:
 	const HaploData &m_haplodata;
 	int m_start, m_end;
 	unsigned int m_id;
-	double m_frequency;
+	double m_frequency, m_prefix_freq;
 	double m_transition_prob;
 	vector<const HaploPattern*> m_successors;
 
@@ -31,9 +31,10 @@ public:
 	int start() const { return m_start; }
 	int end() const { return m_end; }
 	double frequency() const { return m_frequency; }
+	double prefix_freq() const { return m_prefix_freq; }
 	double transition_prob() const { return m_transition_prob; }
-	const HaploPattern *successors(int i) const { return m_successors[i]; }
-	const HaploPattern *successors(Allele &a) const { return m_successors[m_haplodata.getAlleleIndex(m_end, a)]; }
+	const HaploPattern *successors(int i) const { return i < m_successors.size() ? m_successors[i] : 0; }
+	const HaploPattern *successors(Allele &a) const { return successors(m_haplodata.getAlleleIndex(m_end, a)); }
 
 	int getAlleleIndex(int local_locus) const;
 	int getGlobalLocus(int local_locus) const { return m_start+local_locus; }
@@ -42,7 +43,8 @@ public:
 	void setPattern(const AlleleSequence &as, int start = 0);
 	void setID(int i) { m_id = i; }
 	void setFrequency(double f) { m_frequency = f; }
-	void setTransitionProb(double p) { m_transition_prob = p; }
+	void setPrefixFreq(double f) { m_prefix_freq = f; }
+	void setTransitionProb(double p) { m_transition_prob = p < 1.0 ? p : 1.0; }
 	void setSuccessor(size_t i, const HaploPattern *pn);
 
 	void repack();
@@ -84,6 +86,7 @@ inline HaploPattern::HaploPattern(const HaploData &hd, int start)
   m_end(start),
   m_id(0),
   m_frequency(0),
+  m_prefix_freq(0),
   m_transition_prob(1.0)
 {
 }

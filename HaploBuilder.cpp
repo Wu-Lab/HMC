@@ -249,7 +249,7 @@ void HaploBuilder::adjustFrequency(vector<HaploPattern*> &patterns)
 		HaploPattern *hp = patterns[i];
 		tree.addPattern(hp);
 		hp->setFrequency(0);
-		hp->setTransitionProb(0);
+		hp->setPrefixFreq(0);
 	}
 
 	for (geno=0; geno<genotype_num(); ++geno) {
@@ -282,13 +282,14 @@ void HaploBuilder::adjustFrequency(vector<HaploPattern*> &patterns)
 	n = patterns.size();
 	for (i=0; i<n; ++i) {
 		HaploPattern *hp = patterns[i];
-		if (hp->transition_prob() > 0) {
-			hp->setTransitionProb(hp->frequency() / hp->transition_prob());
+		if (hp->prefix_freq() > 0) {
+			hp->setTransitionProb(hp->frequency() / hp->prefix_freq());
 		}
 		else {
-			hp->setTransitionProb(0);
+			hp->setTransitionProb(1.0);
 		}
 		hp->setFrequency(hp->frequency() / genotype_num());
+		hp->setPrefixFreq(hp->prefix_freq() / genotype_num());
 	}
 }
 
@@ -359,7 +360,7 @@ void HaploBuilder::adjustFrequency(PatternNode *node, int locus, const Allele &a
 	if (node->data()) {
 		HaploPattern *hp = node->data();
 		hp->setFrequency(hp->frequency() + freq);
-		hp->setTransitionProb(hp->transition_prob() + last_freq);
+		hp->setPrefixFreq(hp->prefix_freq() + last_freq);
 	}
 
 	for (int i=0; i<node->size(); ++i) {
