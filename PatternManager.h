@@ -55,6 +55,9 @@ public:
 
 	int size() const { return m_patterns.size(); }
 
+	HaploPattern *getSingleAllelePattern(int end, int index) const;
+	HaploPattern *getSingleAllelePattern(int end, Allele a) const;
+
 	void findPatternByFreq(double min_freq, int min_len = 2, int max_len = 0);
 	void findPatternByNum(int max_num, int min_len = 2, int max_len = 0);
 	void findPatternBlock(int len);
