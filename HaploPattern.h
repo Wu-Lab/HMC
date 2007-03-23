@@ -85,8 +85,8 @@ inline HaploPattern::HaploPattern(const HaploData &hd, int start)
   m_start(start),
   m_end(start),
   m_id(0),
-  m_frequency(0),
-  m_prefix_freq(0),
+  m_frequency(1.0),
+  m_prefix_freq(1.0),
   m_transition_prob(1.0)
 {
 }

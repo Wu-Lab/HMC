@@ -13,7 +13,7 @@ HaploModel::HaploModel()
 	m_model = MC_v;
 	min_freq = -1;
 	num_patterns = -1;
-	min_pattern_len = 2;
+	min_pattern_len = 1;
 	max_pattern_len = -1;
 	mc_order = 1;
 }
@@ -109,7 +109,7 @@ void HaploModel::run(const HaploData &genos, HaploData &resolutions)
 			compare.switch_error(), compare.incorrect_haplotype_percentage(), compare.incorrect_genotype_percentage(), ll);
 
 		if (iter < max_iteration) {
-			if (ll >= old_ll && (old_ll - ll) / old_ll < 0.001) {
+			if (ll >= old_ll && (old_ll - ll) / old_ll < 0.01) {
 				m_patterns.adjustPatterns();
 				old_ll = -DBL_MAX;
 			}
