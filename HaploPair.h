@@ -23,7 +23,7 @@ class HaploPair : public NoThrowNewDelete {
 
 public:
 	explicit HaploPair(const HaploPattern *hpa, const HaploPattern *hpb);
-	explicit HaploPair(HaploPair *hp, const HaploPattern *hpa, const HaploPattern *hpb);
+	explicit HaploPair(HaploPair *hp, const HaploPattern *hpa, const HaploPattern *hpb, double prob = 1.0);
 	void add(HaploPair *hp, const HaploPattern *hpa, const HaploPattern *hpb);
 
 	const HaploPattern &pattern_a() const { return m_pattern_a; }

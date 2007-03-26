@@ -209,20 +209,48 @@ void HaploBuilder::extendAll(int i, Allele a1, Allele a2)
 
 void HaploBuilder::extend(HaploPair *hp, Allele a1, Allele a2)
 {
-	const HaploPattern *hpa, *hpb;
-	hpa = hp->successor_a(a1);
-	hpb = hp->successor_b(a2);
-	if (hpa && hpb) {
-		map<int, int>::iterator i = m_best_pair[hpa->id()].lower_bound(hpb->id());
-		if (i == m_best_pair[hpa->id()].end() || (*i).first != hpb->id()) {
-			m_haplopairs[hp->end()+1].push_back(new HaploPair(hp, hpa, hpb));
-		 	m_best_pair[hpa->id()].insert(i, make_pair(hpb->id(), m_haplopairs[hp->end()+1].size()));
-		}
-		else {
-			m_haplopairs[hp->end()+1][(*i).second-1]->add(hp, hpa, hpb);
-		}
+	const HaploPattern *hp1a, *hp1b, *hp2a, *hp2b;
+	hp1a = hp->successor_a(a1);
+	hp1b = hp->successor_b(a2);
+#if 1
+	if (hp1a && hp1b) {
+		addHaploPair(hp, hp1a, hp1b);
+	}
+#else
+	hp2a = m_patterns.getSingleAllelePattern(hp->end()+1, a1);
+	hp2b = m_patterns.getSingleAllelePattern(hp->end()+1, a2);
+	double p = 0.01;
+	double p0 = (1-p)*(1-p);
+	double p2 = p*p;
+	if (hp1a && hp1b &&
+		hp1a->start() == hp->pattern_a().start() &&
+		hp1b->start() == hp->pattern_b().start()) {
+		addHaploPair(hp, hp1a, hp1b, p0);
+	}
+	if (hp2a && hp2b) {
+		addHaploPair(hp, hp2a, hp2b, p2);
+	}
+	if (hp1a && hp2b &&	hp1a->start() == hp->pattern_a().start()) {
+		addHaploPair(hp, hp1a, hp2b, p);
+	}
+	if (hp2a && hp1b &&	hp1b->start() == hp->pattern_b().start()) {
+		addHaploPair(hp, hp2a, hp1b, p);
+	}
+#endif
+}
+
+void HaploBuilder::addHaploPair(HaploPair *hp, const HaploPattern *hpa, const HaploPattern *hpb, double prob)
+{
+	map<int, int>::iterator i = m_best_pair[hpa->id()].lower_bound(hpb->id());
+	if (i == m_best_pair[hpa->id()].end() || (*i).first != hpb->id()) {
+		m_haplopairs[hp->end()+1].push_back(new HaploPair(hp, hpa, hpb, prob));
+	 	m_best_pair[hpa->id()].insert(i, make_pair(hpb->id(), m_haplopairs[hp->end()+1].size()));
+	}
+	else {
+		m_haplopairs[hp->end()+1][(*i).second-1]->add(hp, hpa, hpb);
 	}
 }
+
 
 void HaploBuilder::calcBackwardLikelihood()
 {

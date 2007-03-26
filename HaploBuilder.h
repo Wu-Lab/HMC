@@ -56,6 +56,7 @@ protected:
 
 	void extendAll(int i, Allele a1, Allele a2);
 	void extend(HaploPair *hp, Allele a1, Allele a2);
+	void addHaploPair(HaploPair *hp, const HaploPattern *hpa, const HaploPattern *hpb, double prob = 1.0);
 
 	void calcBackwardLikelihood();
 	void adjustFrequency(PatternNode *node, int locus, const Allele &a, double last_freq, const map<HaploPair*, double> last_match[2]);

@@ -109,14 +109,14 @@ void HaploModel::run(const HaploData &genos, HaploData &resolutions)
 			compare.switch_error(), compare.incorrect_haplotype_percentage(), compare.incorrect_genotype_percentage(), ll);
 
 		if (iter < max_iteration) {
-			if (ll >= old_ll && (old_ll - ll) / old_ll < 0.01) {
+// 			if (ll >= old_ll && (old_ll - ll) / old_ll < 0.01) {
 				m_patterns.adjustPatterns();
-				old_ll = -DBL_MAX;
-			}
-			else {
-				m_patterns.adjustFrequency();
-				old_ll = ll;
-			}
+// 				old_ll = -DBL_MAX;
+// 			}
+// 			else {
+// 				m_patterns.adjustFrequency();
+// 				old_ll = ll;
+// 			}
 		}
 	}
 }

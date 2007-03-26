@@ -107,7 +107,7 @@ void PatternManager::searchPattern(bool reserve_candidates)
 		PatternCandidate *pc = m_candidates.back();
 		m_candidates.pop_back();
 		const HaploPattern *hp = pc->pattern;
-		if (hp->frequency() >= m_min_freq || hp->length() < m_min_len[hp->start()]) {
+		if (hp->transition_prob() >= m_min_freq || hp->length() < m_min_len[hp->start()]) {
 			if (hp->end() < geno_len && hp->length() < m_max_len[hp->start()]) {
 				for (int i=0; i<haplodata->allele_num(hp->end()); ++i) {
 					if (haplodata->allele_frequency(hp->end(), i) > 0) {
@@ -127,7 +127,7 @@ void PatternManager::searchPattern(bool reserve_candidates)
 				}
 			}
 		}
-		if (hp->frequency() >= m_min_freq || hp->length() <= m_min_len[hp->start()]) {
+		if (hp->transition_prob() >= m_min_freq || hp->length() <= m_min_len[hp->start()]) {
 			if (hp->length() > 0 && hp->length() >= m_min_len[hp->start()]) {
 				m_patterns.push_back(pc->release());
 			}
@@ -343,7 +343,7 @@ void PatternManager::adjustPatterns()
 		n = candidates.size();
 		for (i=0; i<n; ++i) {
 			HaploPattern *hp = candidates[i];
-			if (hp->frequency() >= m_min_freq || hp->length() <= m_min_len[hp->start()]) {
+			if (hp->transition_prob() >= m_min_freq || hp->length() <= m_min_len[hp->start()]) {
 				m_patterns.push_back(hp);
   			}
   			else {
