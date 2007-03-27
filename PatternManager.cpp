@@ -278,13 +278,40 @@ void PatternManager::initialize()
 
 void PatternManager::adjustFrequency()
 {
+	int geno_len = m_builder.genotype_len();
+	int i, n;
+	vector<vector<double> > total_freq;
+	total_freq.resize(geno_len);
+	for (i=0; i<geno_len; ++i) {
+		total_freq[i].resize(geno_len-i+1);
+		total_freq[i][0] = 1.0;
+	}
+	n = m_patterns.size();
+	for (i=0; i<n; ++i) {
+		HaploPattern *hp = m_patterns[i];
+		total_freq[hp->start()][hp->length()] += hp->frequency();
+	}
+	for (i=0; i<n; ++i) {
+		HaploPattern *hp = m_patterns[i];
+		if (total_freq[hp->start()][hp->length()] > 0) {
+			hp->setFrequency(hp->frequency() / total_freq[hp->start()][hp->length()]);
+			hp->setPrefixFreq(hp->prefix_freq() / total_freq[hp->start()][hp->length()-1]);
+			if (hp->prefix_freq() > 0) {
+				hp->setTransitionProb(hp->frequency() / hp->prefix_freq());
+			}
+		}
+	}
+}
+
+void PatternManager::estimateFrequency()
+{
 	int i, n;
 	vector<HaploPattern*> patterns;
 	n = m_patterns.size();
 	for (i=0; i<n; ++i) {
 		patterns.push_back(new HaploPattern(*m_patterns[i]));
 	}
-	m_builder.adjustFrequency(patterns);
+	m_builder.estimateFrequency(patterns);
 	for (i=0; i<n; ++i) {
 		m_patterns[i]->setFrequency(patterns[i]->frequency());
 		m_patterns[i]->setPrefixFreq(patterns[i]->prefix_freq());
@@ -293,13 +320,13 @@ void PatternManager::adjustFrequency()
 	DeleteAll_Clear()(patterns);
 }
 
-void PatternManager::adjustPatterns()
+void PatternManager::estimatePatterns()
 {
 	int geno_len = m_builder.genotype_len();
 	int i, j, n;
 	vector<HaploPattern*> patterns, seeds, candidates;
 	if (m_min_freq < 0) {
-		adjustFrequency();
+		estimateFrequency();
 	}
 	else {
 		n = m_patterns.size();
@@ -320,7 +347,7 @@ void PatternManager::adjustPatterns()
 			}
 		}
 		while (patterns.size() > 0) {
-			m_builder.adjustFrequency(patterns);
+			m_builder.estimateFrequency(patterns);
 			candidates.insert(candidates.end(), patterns.begin(), patterns.end());
 			patterns.clear();
 			n = seeds.size();

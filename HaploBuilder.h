@@ -47,7 +47,7 @@ public:
 	double getLikelihood(const Haplotype &haplotype);
 	double getLikelihood(const Genotype &genotype);
 
-	void adjustFrequency(vector<HaploPattern*> &patterns);
+	void estimateFrequency(vector<HaploPattern*> &patterns);
 
 protected:
 	void clear();
@@ -58,7 +58,7 @@ protected:
 	void extend(HaploPair *hp, Allele a1, Allele a2);
 
 	void calcBackwardLikelihood();
-	void adjustFrequency(PatternNode *node, int locus, const Allele &a, double last_freq, const map<HaploPair*, double> last_match[2]);
+	void estimateFrequency(PatternNode *node, int locus, const Allele &a, double last_freq, const map<HaploPair*, double> last_match[2]);
 };
 
 

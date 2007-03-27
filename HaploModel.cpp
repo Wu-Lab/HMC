@@ -10,7 +10,7 @@
 
 HaploModel::HaploModel()
 {
-	m_model = MC_v;
+	m_model = "MV";
 	min_freq = -1;
 	num_patterns = -1;
 	min_pattern_len = 1;
@@ -18,60 +18,52 @@ HaploModel::HaploModel()
 	mc_order = 1;
 }
 
+void HaploModel::setModel(string model)
+{
+	if (model == "MV" || model == "MC" || model == "MA") {
+		m_model = model;
+	}
+	else {
+		Logger::error("Unknown model %s!", model.c_str());
+		exit(1);
+	}
+}
+
 void HaploModel::build(HaploData &hd)
 {
 	setHaploData(hd);
-	switch (m_model) {
-	case MC_v:
-		findPatterns_mc_v();
-		break;
-	case MC_d:
-		findPatterns_mc_d();
-		break;
-	case MC_b:
-		findPatterns_mc_b();
-		break;
-	}
+	findPatterns();
 	initialize();
 }
 
-void HaploModel::findPatterns_mc_v()
+void HaploModel::findPatterns()
 {
 	Logger::info("");
-	Logger::info("Running HMC engine MC-v ...");
+	Logger::info("Running HMC engine %s ...", m_model.c_str());
 	Logger::verbose("");
 	Logger::beginTimer(1, "Search Haplotype pattern");
-	if (num_patterns > 0) {
-		m_patterns.findPatternByNum(num_patterns, min_pattern_len, max_pattern_len);
-	}
-	else {
-		m_patterns.findPatternByFreq(min_freq, min_pattern_len, max_pattern_len);
-	}
-	Logger::endTimer(1);
-}
 
-void HaploModel::findPatterns_mc_d()
-{
-	Logger::info("");
-	Logger::info("Run HMC engine MC-d ...");
-	Logger::verbose("");
-	Logger::beginTimer(1, "Search Haplotype pattern");
-	m_patterns.findPatternBlock(mc_order+1);
-	Logger::endTimer(1);
-}
+	if (m_model == "MV") {
+		if (num_patterns > 0) {
+			m_patterns.findPatternByNum(num_patterns, min_pattern_len, max_pattern_len);
+		}
+		else {
+			m_patterns.findPatternByFreq(min_freq, min_pattern_len, max_pattern_len);
+		}
+	}
+	else if (m_model == "MC") {
+		m_patterns.findPatternBlock(mc_order+1);
+	}
+	else if (m_model == "MA") {
+		if (num_patterns > 0) {
+			m_patterns.findPatternByNum(num_patterns, min_pattern_len, max_pattern_len);
+		}
+		else {
+			m_patterns.findPatternByFreq(min_freq, min_pattern_len, max_pattern_len);
+		}
+		m_patterns.adjustFrequency();
+	}
 
-void HaploModel::findPatterns_mc_b()
-{
-	Logger::info("");
-	Logger::info("Running HMC engine MC-b ...");
-	Logger::verbose("");
-	Logger::beginTimer(1, "Search Haplotype pattern");
-	if (num_patterns > 0) {
-		m_patterns.findPatternByNum(num_patterns, min_pattern_len, max_pattern_len);
-	}
-	else {
-		m_patterns.findPatternByFreq(min_freq, min_pattern_len, max_pattern_len);
-	}
 	Logger::endTimer(1);
 }
 
@@ -109,13 +101,16 @@ void HaploModel::run(const HaploData &genos, HaploData &resolutions)
 			compare.switch_error(), compare.incorrect_haplotype_percentage(), compare.incorrect_genotype_percentage(), ll);
 
 		if (iter < max_iteration) {
-			if (ll >= old_ll && (old_ll - ll) / old_ll < 0.01) {
-				m_patterns.adjustPatterns();
-				old_ll = -DBL_MAX;
-			}
-			else {
+// 			if (ll >= old_ll && (old_ll - ll) / old_ll < 0.01) {
+ 				m_patterns.estimatePatterns();
+// 				old_ll = -DBL_MAX;
+// 			}
+// 			else {
+//				m_patterns.estimateFrequency();
+// 				old_ll = ll;
+// 			}
+			if (m_model == "MA") {
 				m_patterns.adjustFrequency();
-				old_ll = ll;
 			}
 		}
 	}

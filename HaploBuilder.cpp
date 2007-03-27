@@ -235,7 +235,7 @@ void HaploBuilder::calcBackwardLikelihood()
 	}
 }
 
-void HaploBuilder::adjustFrequency(vector<HaploPattern*> &patterns)
+void HaploBuilder::estimateFrequency(vector<HaploPattern*> &patterns)
 {
 	int i, n;
 	int start, geno;
@@ -272,7 +272,7 @@ void HaploBuilder::adjustFrequency(vector<HaploPattern*> &patterns)
 			n = node->size();
 			for (i=0; i<node->size(); ++i) {
 				if (node->getChild(i)) {
-					adjustFrequency(node->getChild(i), start, m_haplodata->allele_symbol(start, i), 1.0, match_list);
+					estimateFrequency(node->getChild(i), start, m_haplodata->allele_symbol(start, i), 1.0, match_list);
 				}
 			}
 		}
@@ -292,7 +292,7 @@ void HaploBuilder::adjustFrequency(vector<HaploPattern*> &patterns)
 	}
 }
 
-void HaploBuilder::adjustFrequency(PatternNode *node, int locus, const Allele &a, double last_freq, const map<HaploPair*, double> last_match[2])
+void HaploBuilder::estimateFrequency(PatternNode *node, int locus, const Allele &a, double last_freq, const map<HaploPair*, double> last_match[2])
 {
 	map<HaploPair*, double> match_list[2];
 	map<HaploPair*, double>::const_iterator i_mp;
@@ -364,7 +364,7 @@ void HaploBuilder::adjustFrequency(PatternNode *node, int locus, const Allele &a
 
 	for (int i=0; i<node->size(); ++i) {
 		if (node->getChild(i)) {
-			adjustFrequency(node->getChild(i), locus+1, m_haplodata->allele_symbol(locus+1, i), freq, match_list);
+			estimateFrequency(node->getChild(i), locus+1, m_haplodata->allele_symbol(locus+1, i), freq, match_list);
 		}
 	}
 }

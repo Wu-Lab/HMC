@@ -26,14 +26,14 @@ HMC::HMC(int argc, char *argv[])
 	configs.add_options()
 		("nologo", "Suppress logo and copyright information")
 		("debug,d", po::value<int>()->default_value(4), "Set debug level")
-		("input-format", po::value<string>(&m_input_format)->default_value("PHASE"), "Set input file format")
+		("input-format,f", po::value<string>(&m_input_format)->default_value("PHASE"), "Set input file format")
 		("output-patterns", po::value<string>(), "")
 		;
 
 	po::options_description parameters("Model parameters");
 	parameters.add_options()
-		("model,m", po::value<string>()->default_value("MC-v"), "Set the inference model")
-		("min-freq,f", po::value<double>(&m_builder.min_freq)->default_value(0.02), "Minimum relative frequency of patterns")
+		("model,m", po::value<string>()->default_value("MV"), "Set the inference model")
+		("min-freq,r", po::value<double>(&m_builder.min_freq)->default_value(0.02), "Minimum relative frequency of patterns")
 		("num-patterns,n", po::value<int>(&m_builder.num_patterns), "Maximum number of patterns")
 		("min-pattern-len", po::value<int>(&m_builder.min_pattern_len)->default_value(1), "Minimum length of patterns")
 		("max-pattern-len", po::value<int>(&m_builder.max_pattern_len)->default_value(30), "Maximum length of patterns")
@@ -127,19 +127,7 @@ void HMC::parseOptions()
 		exit(1);
 	}
 
-	if (m_args["model"].as<string>() == "MC-v") {
-		m_builder.setModel(MC_v);
-	}
-	else if (m_args["model"].as<string>() == "MC-d") {
-		m_builder.setModel(MC_d);
-	}
-	else if (m_args["model"].as<string>() == "MC-b") {
-		m_builder.setModel(MC_b);
-	}
-	else {
-		Logger::error("Unknown model %s!", m_args["model"].as<string>().c_str());
-		exit(1);
-	}
+	m_builder.setModel(m_args["model"].as<string>());
 }
 
 void HMC::parseFileNames()
@@ -194,23 +182,23 @@ void HMC::run()
 
 void HMC::resolve()
 {
-	Logger::verbose("");
+	Logger::debug("");
 	Logger::beginTimer(3, "Find bottleneck");
 	Logger::beginTimer(4, "Find bottleneck");
 
 	Logger::pauseTimer(3);
 	Logger::pauseTimer(4);
 
-	Logger::verbose("");
+	Logger::debug("");
 	Logger::beginTimer(2, "Resolve Genotype");
 
 	m_builder.run(m_genos, m_resolutions);
 
-	Logger::verbose("");
+	Logger::debug("");
 	Logger::endTimer(4);
-	Logger::verbose("");
+	Logger::debug("");
 	Logger::endTimer(3);
-	Logger::verbose("");
+	Logger::debug("");
 	Logger::endTimer(2);
 	Logger::info("Solving Time = %f", Logger::timer(1).time()+Logger::timer(2).time());
 
