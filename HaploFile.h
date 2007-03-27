@@ -14,7 +14,7 @@
 
 class HaploFile {
 protected:
-	HaploData *m_haplo_data;
+	HaploData m_haplodata;
 	string m_filename;
 
 	bool m_has_id;
@@ -29,9 +29,12 @@ public:
 	void setHasID(bool enable) { m_has_id = enable; }
 
 	virtual void readHaploData(HaploData &hd);
-	virtual void writeHaploData(HaploData &hd, const char *suffix = NULL);
+	virtual void writeHaploData(HaploData &hd, const char *suffix = "");
 
-	virtual void writePattern(HaploBuilder &hd, const char *suffix = NULL);
+	virtual void writePattern(HaploBuilder &hd, const char *suffix = "");
+
+	static int getFileNameNum(const string &format);
+	static HaploFile *getHaploFile(const string &format, vector<string>::const_iterator fn);
 
 protected:
 	char *readAlleleName(char *buffer);
@@ -39,14 +42,12 @@ protected:
 };
 
 inline HaploFile::HaploFile()
-: m_haplo_data(0),
-  m_has_id(true)
+: m_has_id(true)
 {
 }
 
 inline HaploFile::HaploFile(const string &filename)
-: m_haplo_data(0),
-  m_has_id(true),
+: m_has_id(true),
   m_filename(filename)
 {
 }
@@ -67,8 +68,19 @@ public:
 
 protected:
 	void checkHeader(char *buffer);
-	char *readHaplotype(Haplotype &h, char *buffer);
-	char *writeHaplotype(const Haplotype &h, char *buffer);
+	virtual char *readHaplotype(Haplotype &h, char *buffer);
+	virtual char *writeHaplotype(const Haplotype &h, char *buffer);
+};
+
+
+class HaploFileHPM2 : public HaploFileHPM {
+public:
+	HaploFileHPM2() {};
+	HaploFileHPM2(const string &filename) : HaploFileHPM(filename) {};
+
+protected:
+	virtual char *readHaplotype(Haplotype &h, char *buffer);
+	virtual char *writeHaplotype(const Haplotype &h, char *buffer);
 };
 
 

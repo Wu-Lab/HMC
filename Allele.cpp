@@ -71,7 +71,8 @@ char *AlleleSequence::readAllele(char type, char *buffer, Allele &allele)
 			allele = -1;
 		}
 		else {
-			allele = atoi(buf);
+			int a = atoi(buf);
+			allele = a > 0 ? a : -1;
 		}
 		buf += strcspn(buf, " \t\r\n");
 	}

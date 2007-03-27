@@ -9,6 +9,44 @@
 
 #define BUFFER_LENGTH 10000
 
+
+int HaploFile::getFileNameNum(const string &format)
+{
+	int num = 0;
+	if (format == "PHASE" || format == "HPM" || format == "HPM2") {
+		num = 1;
+	}
+	else if (format == "BENCH2") {
+		num = 2;
+	}
+	else if (format == "BENCH3") {
+		num = 3;
+	}
+	return num;
+}
+
+HaploFile *HaploFile::getHaploFile(const string &format, vector<string>::const_iterator fn)
+{
+	HaploFile *file = 0;
+	if (format == "PHASE") {
+		file = new HaploFile(*fn);
+	}
+	else if (format == "HPM") {
+		file = new HaploFileHPM(*fn);
+	}
+	else if (format == "HPM2") {
+		file = new HaploFileHPM2(*fn);
+	}
+	else if (format == "BENCH2") {
+		file = new HaploFileBench(*fn, *(fn+1));
+	}
+	else if (format == "BENCH3") {
+		file = new HaploFileBench(*fn, *(fn+1), *(fn+2));
+	}
+	return file;
+}
+
+
 ////////////////////////////////
 //
 // class HaploFile
@@ -20,7 +58,6 @@ void HaploFile::readHaploData(HaploData &hd)
 	char *s, *delim = " \t\r\n";
 	Haplotype h1, h2;
 	int i, j;
-	m_haplo_data = &hd;
 	fp = fopen(m_filename.c_str(), "r");
 	if (fp == NULL) {
 		Logger::error("Can not open file %s!", m_filename.c_str());
@@ -32,16 +69,16 @@ void HaploFile::readHaploData(HaploData &hd)
 		Logger::error("Invalid file type!");
 		exit(1);
 	}
-	hd.setGenotypeNum(i);
-	hd.setGenotypeLen(j);
+	m_haplodata.setGenotypeNum(i);
+	m_haplodata.setGenotypeLen(j);
 	// set loci positions
 	fgets(line, BUFFER_LENGTH, fp);
 	s = line + strspn(line, delim);
 	if (s[0] == 'P') {
 		s += strcspn(s, delim);
 		s += strspn(s, delim);
-		for (i=0; i<hd.genotype_len(); i++) {
-			hd.setAllelePosition(i, atoi(s));
+		for (i=0; i<m_haplodata.genotype_len(); i++) {
+			m_haplodata.setAllelePosition(i, atoi(s));
 			s += strcspn(s, delim);
 			s += strspn(s, delim);
 		}
@@ -49,30 +86,37 @@ void HaploFile::readHaploData(HaploData &hd)
 		s = line + strspn(line, delim);
 	}
 	// set loci type
-	for (i=0; i<hd.genotype_len(); i++) {
-		hd.setAlleleType(i, s[0]);
+	for (i=0; i<m_haplodata.genotype_len(); i++) {
+		m_haplodata.setAlleleType(i, s[0]);
+		m_haplodata.setAlleleName(i, "M" + int2str(i+1));
 		s++;
 		s += strspn(s, delim);
 	}
-	for (i=0; i<hd.genotype_num(); i++) {
+	for (i=0; i<m_haplodata.genotype_num(); i++) {
 		if (m_has_id) {
 			fgets(line, BUFFER_LENGTH, fp);
 			if (sscanf(line, "%s", buf) > 0) {
-				hd[i].setID(buf);
+				m_haplodata[i].setID(buf);
 			}
 		}
+		else {
+			m_haplodata[i].setID(int2str(i+1));
+		}
 		fgets(line, BUFFER_LENGTH, fp);
-		h1.read(hd.allele_type().c_str(), line, hd.genotype_len());
+		h1.read(m_haplodata.allele_type().c_str(), line, m_haplodata.genotype_len());
 		fgets(line, BUFFER_LENGTH, fp);
-		h2.read(hd.allele_type().c_str(), line, hd.genotype_len());
-		if (h1.length() != hd.genotype_len() || h2.length() != hd.genotype_len()) {
+		h2.read(m_haplodata.allele_type().c_str(), line, m_haplodata.genotype_len());
+		if (h1.length() != m_haplodata.genotype_len() || h2.length() != m_haplodata.genotype_len()) {
 			Logger::error("Incorrect haplotype data for individual %d!", i);
 			exit(1);
 		}
-		hd[i].setHaplotypes(h1, h2);
+		h1.setID(m_haplodata[i].id());
+		h2.setID(m_haplodata[i].id());
+		m_haplodata[i].setHaplotypes(h1, h2);
 	}
 	fclose(fp);
-	hd.checkAlleleSymbol();
+	m_haplodata.checkAlleleSymbol();
+	hd = m_haplodata;
 }
 
 void HaploFile::writeHaploData(HaploData &hd, const char *suffix)
@@ -80,31 +124,31 @@ void HaploFile::writeHaploData(HaploData &hd, const char *suffix)
 	FILE *fp;
 	char buf[BUFFER_LENGTH], id;
 	int i, j;
-	m_haplo_data = &hd;
+	m_haplodata = hd;
 	string output_file = m_filename + suffix;
 	fp = fopen(output_file.c_str(), "w");
 	if (fp == NULL) {
 		Logger::error("Can not open file %s!", m_filename.c_str());
 		exit(1);
 	}
-	fprintf(fp, "%d\n", hd.genotype_num());
-	fprintf(fp, "%d\n", hd.genotype_len());
+	fprintf(fp, "%d\n", m_haplodata.genotype_num());
+	fprintf(fp, "%d\n", m_haplodata.genotype_len());
 	fprintf(fp, "P");
-	for (i=0; i<hd.genotype_len(); i++) {
-		fprintf(fp, " %d", hd.allele_postition(i));
+	for (i=0; i<m_haplodata.genotype_len(); i++) {
+		fprintf(fp, " %d", m_haplodata.allele_postition(i));
 	}
 	fprintf(fp, "\n");
-	fprintf(fp, "%s\n", hd.allele_type().c_str());
-	for (i=0; i<hd.genotype_num(); i++) {
-		id = hd[i].id()[0];
+	fprintf(fp, "%s\n", m_haplodata.allele_type().c_str());
+	for (i=0; i<m_haplodata.genotype_num(); i++) {
+		id = m_haplodata[i].id()[0];
 		if (id >= '0' && id <= '9') {
-			fprintf(fp, "#%s\n", hd[i].id().c_str());
+			fprintf(fp, "#%s\n", m_haplodata[i].id().c_str());
 		}
 		else {
-			fprintf(fp, "%s\n", hd[i].id().c_str());
+			fprintf(fp, "%s\n", m_haplodata[i].id().c_str());
 		}
 		for (j=0; j<2; j++) {
-			fprintf(fp, "%s\n", hd[i](j).write(hd.allele_type().c_str(), buf));
+			fprintf(fp, "%s\n", m_haplodata[i](j).write(m_haplodata.allele_type().c_str(), buf));
 		}
 	}
 	fclose(fp);
@@ -113,7 +157,7 @@ void HaploFile::writeHaploData(HaploData &hd, const char *suffix)
 void HaploFile::writePattern(HaploBuilder &hb, const char *suffix)
 {
 	char buf[BUFFER_LENGTH];
-	m_haplo_data = hb.haplodata();
+	m_haplodata = *hb.haplodata();
 	string output_file = m_filename + suffix;
 	FILE *fp = fopen(output_file.c_str(), "w");
 	if (fp == NULL) {
@@ -123,7 +167,7 @@ void HaploFile::writePattern(HaploBuilder &hb, const char *suffix)
 	fprintf(fp, "Frequency\tLength\t%s\n", writeAlleleName(buf));
 	for (int i=0; i<hb.pattern_num(); ++i) {
 		const HaploPattern *hp = hb.patterns(i);
-		fprintf(fp, "%f\t%d\t%s\n", hp->frequency() / m_haplo_data->genotype_num(), hp->length(), hp->write(buf, true));
+		fprintf(fp, "%f\t%d\t%s\n", hp->frequency() / m_haplodata.genotype_num(), hp->length(), hp->write(buf, true));
 	}
 	fclose(fp);
 }
@@ -136,8 +180,8 @@ char *HaploFile::readAlleleName(char *buffer)
 	strcpy(buf, buffer);
 	s = strtok(buf, delim);
 	i = 0;
-	while (s != NULL && i < m_haplo_data->genotype_len()) {
-		m_haplo_data->setAlleleName(i, s);
+	while (s != NULL && i < m_haplodata.genotype_len()) {
+		m_haplodata.setAlleleName(i, s);
 		s = strtok(NULL, delim);
 	}
 	delete[] buf;
@@ -148,8 +192,8 @@ char *HaploFile::writeAlleleName(char *buffer)
 {
 	int i;
 	buffer[0] = 0;
-	for (i=0; i<m_haplo_data->genotype_len(); i++) {
-		strcat(buffer, m_haplo_data->allele_name(i).c_str());
+	for (i=0; i<m_haplodata.genotype_len(); i++) {
+		strcat(buffer, m_haplodata.allele_name(i).c_str());
 		strcat(buffer, " ");
 	}
 	return buffer;
@@ -167,7 +211,6 @@ void HaploFileHPM::readHaploData(HaploData &hd)
 	vector<Haplotype*> haplos;
 	Haplotype *h;
 	int i;
-	m_haplo_data = &hd;
 	fp = fopen(m_filename.c_str(), "r");
 	if (fp == NULL) {
 		Logger::error("Can not open file %s!", m_filename.c_str());
@@ -178,7 +221,7 @@ void HaploFileHPM::readHaploData(HaploData &hd)
 	while(fgets(line, BUFFER_LENGTH, fp) != NULL) {
 		h = new Haplotype;
 		readHaplotype(*h, line);
-		if (h->length() != hd.genotype_len()) {
+		if (h->length() != m_haplodata.genotype_len()) {
 			Logger::error("Incorrect haplotype data in line %d!", haplos.size()+2);
 			exit(1);
 		}
@@ -188,13 +231,14 @@ void HaploFileHPM::readHaploData(HaploData &hd)
 		Logger::error("Incorrect haplotype data in line %d!", haplos.size()+2);
 		exit(1);
 	}
-	hd.setGenotypeNum(haplos.size()/2);
-	for (i=0; i<hd.genotype_num(); i++) {
-		hd[i].setHaplotypes(*haplos[2*i], *haplos[2*i+1]);
-		hd[i].setID(haplos[2*i]->id());
+	m_haplodata.setGenotypeNum(haplos.size()/2);
+	for (i=0; i<m_haplodata.genotype_num(); i++) {
+		m_haplodata[i].setHaplotypes(*haplos[2*i], *haplos[2*i+1]);
+		m_haplodata[i].setID(haplos[2*i]->id());
 	}
 	fclose(fp);
-	hd.checkAlleleSymbol();
+	m_haplodata.checkAlleleSymbol();
+	hd = m_haplodata;
 }
 
 void HaploFileHPM::writeHaploData(HaploData &hd, const char *suffix)
@@ -202,7 +246,7 @@ void HaploFileHPM::writeHaploData(HaploData &hd, const char *suffix)
 	FILE *fp;
 	char buf[BUFFER_LENGTH];
 	int i, j;
-	m_haplo_data = &hd;
+	m_haplodata = hd;
 	string output_file = m_filename + suffix;
 	fp = fopen(output_file.c_str(), "w");
 	if (fp == NULL) {
@@ -211,9 +255,9 @@ void HaploFileHPM::writeHaploData(HaploData &hd, const char *suffix)
 	}
 	fprintf(fp, "Id\t%s", writeAlleleName(buf));
 	fprintf(fp, "\n");
-	for (i=0; i<hd.genotype_num(); i++) {
+	for (i=0; i<m_haplodata.genotype_num(); i++) {
 		for (j=0; j<2; j++) {
-			fprintf(fp, "%s\n", writeHaplotype(hd[i](j), buf));
+			fprintf(fp, "%s\n", writeHaplotype(m_haplodata[i](j), buf));
 		}
 	}
 	fclose(fp);
@@ -224,7 +268,7 @@ void HaploFileHPM::writeHaploDataWithFreq(HaploData &hd, const char *suffix)
 	FILE *fp;
 	char buf[BUFFER_LENGTH];
 	int i, j;
-	m_haplo_data = &hd;
+	m_haplodata = hd;
 	string output_file = m_filename + suffix;
 	fp = fopen(output_file.c_str(), "w");
 	if (fp == NULL) {
@@ -232,9 +276,9 @@ void HaploFileHPM::writeHaploDataWithFreq(HaploData &hd, const char *suffix)
 		exit(1);
 	}
 	fprintf(fp, "Id\t%s\tCONFIDENCE\n", writeAlleleName(buf));
-	for (i=0; i<hd.genotype_num(); i++) {
+	for (i=0; i<m_haplodata.genotype_num(); i++) {
 		for (j=0; j<2; j++) {
-			fprintf(fp, "%s\t%e\n", writeHaplotype(hd[i](j), buf), hd[i](j).weight());
+			fprintf(fp, "%s\t%e\n", writeHaplotype(m_haplodata[i](j), buf), m_haplodata[i](j).weight());
 		}
 	}
 	fclose(fp);
@@ -242,6 +286,7 @@ void HaploFileHPM::writeHaploDataWithFreq(HaploData &hd, const char *suffix)
 
 char *HaploFileHPM::readHaplotype(Haplotype &h, char *buffer)
 {
+	string allele_type(m_haplodata.genotype_len(), 'M');
 	int i;
 	char *s, *buf, *delim = " \t\r\n";
 	buf = new char [strlen(buffer)+100];
@@ -252,7 +297,7 @@ char *HaploFileHPM::readHaplotype(Haplotype &h, char *buffer)
 		s = strtok(NULL, delim);
 	}
 	s += strlen(s)+1;
-	s = h.read(NULL, s, m_haplo_data->genotype_len());
+	s = h.read(allele_type.c_str(), s, m_haplodata.genotype_len());
 	if (m_weighted) {
 		s += strspn(s, delim);
 		h.setWeight(atof(s));
@@ -266,11 +311,12 @@ char *HaploFileHPM::readHaplotype(Haplotype &h, char *buffer)
 
 char *HaploFileHPM::writeHaplotype(const Haplotype &h, char *buffer)
 {
+	string allele_type = m_haplodata.allele_type();
 	char *s = buffer;
 	strcpy(s, h.id().c_str());
 	strcat(s, "\t");
 	s += strlen(s);
-	h.write(NULL, s);
+	h.write(allele_type.c_str(), s);
 	return buffer;
 }
 
@@ -310,11 +356,67 @@ void HaploFileHPM::checkHeader(char *buffer)
 	else {
 		m_weighted = false;
 	}
-	m_haplo_data->setGenotypeLen(len);
+	m_haplodata.setGenotypeLen(len);
 	for (i=0; i<len; i++) {
-		m_haplo_data->setAlleleName(i, names[i]);
+		m_haplodata.setAlleleName(i, names[i]);
 	}
 	delete[] buf;
+}
+
+
+char *HaploFileHPM2::readHaplotype(Haplotype &h, char *buffer)
+{
+	string allele_type(m_haplodata.genotype_len(), 'S');
+	int i;
+	char *s, *buf, *delim = " \t\r\n";
+	buf = new char [strlen(buffer)+100];
+	strcpy(buf, buffer);
+	s = strtok(buf, delim);
+	h.setID(s);
+	for (i=1; i<m_line_start; ++i) {
+		s = strtok(NULL, delim);
+	}
+	s += strlen(s)+1;
+	s = h.read(allele_type.c_str(), s, m_haplodata.genotype_len());
+	if (m_weighted) {
+		s += strspn(s, delim);
+		h.setWeight(atof(s));
+		s += strcspn(s, delim);
+	}
+	else {
+		h.setWeight(1);
+	}
+	for (i=0; i<h.length(); ++i) {
+		if (h[i] == Allele('0')) h[i] = -1;
+		else if (h[i] >= Allele('1') && h[i] <= Allele('9')) h[i] = h[i].asChar() - '0';
+		else if (h[i] >= Allele('A') && h[i] <= Allele('Z')) h[i] = h[i].asChar() - 'A' + 10;
+		else if (h[i] >= Allele('a') && h[i] <= Allele('z')) h[i] = h[i].asChar() - 'a' + 10;
+	}
+	return s;
+}
+
+char *HaploFileHPM2::writeHaplotype(const Haplotype &h, char *buffer)
+{
+	string allele_type = m_haplodata.allele_type();
+	int i;
+	Haplotype hh = h;
+	for (i=0; i<hh.length(); ++i) {
+		if (allele_type[i] == 'S') {
+			if (hh[i].isMissing()) hh[i] = 0;
+		}
+		else {
+			allele_type[i] = 'S';
+			if (hh[i].isMissing()) hh[i] = 0;
+			else if (hh[i] >= Allele(1) && hh[i] <= Allele(9)) hh[i] = hh[i].asChar() + '0';
+			else if (hh[i] >= Allele(10) && hh[i] <= Allele(35)) hh[i] = hh[i].asChar() + 'A' - 10;
+		}
+	}
+	char *s = buffer;
+	strcpy(s, hh.id().c_str());
+	strcat(s, "\t");
+	s += strlen(s);
+	hh.write(allele_type.c_str(), s);
+	return buffer;
 }
 
 
@@ -329,7 +431,6 @@ void HaploFileBench::readHaploData(HaploData &hd)
 	char *s, *delim = " \t\r\n";
 	vector<Haplotype*> haplos;
 	int i;
-	m_haplo_data = &hd;
 	fp = fopen(m_filename.c_str(), "r");
 	if (fp == NULL) {
 		Logger::error("Can not open file %s!", m_filename.c_str());
@@ -338,10 +439,11 @@ void HaploFileBench::readHaploData(HaploData &hd)
 	// get genotype length
 	fgets(line, BUFFER_LENGTH, fp);
 	s = line + strspn(line, delim);
-	hd.setGenotypeLen(strcspn(s, delim));
+	m_haplodata.setGenotypeLen(strcspn(s, delim));
 	// set loci type
-	for (i=0; i<hd.genotype_len(); i++) {
-		hd.setAlleleType(i, 'S');
+	for (i=0; i<m_haplodata.genotype_len(); i++) {
+		m_haplodata.setAlleleType(i, 'S');
+		m_haplodata.setAlleleName(i, "M" + int2str(i+1));
 	}
 	fclose(fp);
 	readHaploFile(haplos, m_filename.c_str());
@@ -350,13 +452,14 @@ void HaploFileBench::readHaploData(HaploData &hd)
 		readHaploFile(haplos, m_children_file.c_str());
 		m_children_num = haplos.size() / 2 - m_parents_num;
 	}
-	hd.setGenotypeNum(m_parents_num + m_children_num);
-	hd.setUnphasedNum(m_parents_num);
-	for (i=0; i<hd.genotype_num(); i++) {
-		hd[i].setHaplotypes(*haplos[2*i], *haplos[2*i+1]);
-		hd[i].setID(haplos[2*i]->id());
+	m_haplodata.setGenotypeNum(m_parents_num + m_children_num);
+	m_haplodata.setUnphasedNum(m_parents_num);
+	for (i=0; i<m_haplodata.genotype_num(); i++) {
+		m_haplodata[i].setHaplotypes(*haplos[2*i], *haplos[2*i+1]);
+		m_haplodata[i].setID(haplos[2*i]->id());
 	}
-	hd.checkAlleleSymbol();
+	m_haplodata.checkAlleleSymbol();
+	hd = m_haplodata;
 }
 
 void HaploFileBench::writeHaploData(HaploData &hd, const char *suffix)
@@ -364,16 +467,16 @@ void HaploFileBench::writeHaploData(HaploData &hd, const char *suffix)
 	FILE *fp;
 	char buf[BUFFER_LENGTH];
 	int i, j;
-	m_haplo_data = &hd;
+	m_haplodata = hd;
 	string output_file = m_filename + suffix;
 	fp = fopen(output_file.c_str(), "w");
 	if (fp == NULL) {
 		Logger::error("Can not open file %s!", m_filename.c_str());
 		exit(1);
 	}
-	for (i=0; i<hd.genotype_num(); i++) {
+	for (i=0; i<m_haplodata.genotype_num(); i++) {
 		for (j=0; j<2; j++) {
-			fprintf(fp, "%s   %d 0 %s\n", writeHaplotype(hd[i](j), buf), i+2*j, hd[i](j).id().c_str());
+			fprintf(fp, "%s   %d 0 %s\n", writeHaplotype(m_haplodata[i](j), buf), i+2*j, m_haplodata[i](j).id().c_str());
 		}
 	}
 	fclose(fp);
@@ -384,16 +487,16 @@ void HaploFileBench::writeHaploDataWithFreq(HaploData &hd, const char *suffix)
 	FILE *fp;
 	char buf[BUFFER_LENGTH];
 	int i, j;
-	m_haplo_data = &hd;
+	m_haplodata = hd;
 	string output_file = m_filename + suffix;
 	fp = fopen(output_file.c_str(), "w");
 	if (fp == NULL) {
 		Logger::error("Can not open file %s!", m_filename.c_str());
 		exit(1);
 	}
-	for (i=0; i<hd.genotype_num(); i++) {
+	for (i=0; i<m_haplodata.genotype_num(); i++) {
 		for (j=0; j<2; j++) {
-			fprintf(fp, "%s   %f\n", writeHaplotype(hd[i](j), buf), hd[i](j).weight());
+			fprintf(fp, "%s   %f\n", writeHaplotype(m_haplodata[i](j), buf), m_haplodata[i](j).weight());
 		}
 	}
 	fclose(fp);
@@ -423,7 +526,7 @@ void HaploFileBench::readHaploFile(vector<Haplotype*> &haplos, const char *filen
 		s += strspn(s, delim);		// next is id
 		s[strcspn(s, "\r\n")] = 0;
 		h->setID(s);
-		if (h->length() != m_haplo_data->genotype_len()) {
+		if (h->length() != m_haplodata.genotype_len()) {
 			Logger::error("Incorrect haplotype data in line %d of %s!", haplos.size()+2, filename);
 			exit(1);
 		}
@@ -441,7 +544,7 @@ char *HaploFileBench::readHaplotype(Haplotype &h, char *buffer, int heterozygous
 {
 	int i;
 	char *buf, *delim = " \t\r\n";
-	h.setLength(m_haplo_data->genotype_len());
+	h.setLength(m_haplodata.genotype_len());
 	buf = buffer + strspn(buffer, delim);
 	for (i=0; i<h.length(); i++) {
 		if (buf[i] == '0') {

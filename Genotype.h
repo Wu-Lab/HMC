@@ -36,7 +36,7 @@ public:
 	double weight() const { return m_weight; }
 	bool isPhased() const { return m_is_phased; }
 
-	void setID(const string &id) { m_id = id; }
+	void setID(const string &id) { m_id = id; string_replace(m_id, " ", "_"); }
 	void setLength(int len) { m_haplotypes[0].setLength(len); m_haplotypes[1].setLength(len); }
 	void setLikelihood(double likelihood) { m_likelihood = likelihood; }
 	void setWeight(double weight) { m_weight = weight; }

@@ -20,9 +20,9 @@ class HMC {
 	po::options_description m_options;
 	po::options_description m_visible_options;
 	po::variables_map m_args;
-	string m_input_format;
-	vector<string> m_input_files;
-	HaploFile *m_haplo_file;
+	vector<string> m_filenames;
+	string m_input_format, m_convert_format;
+	tr1::shared_ptr<HaploFile> m_input_file, m_convert_file;
 
 	HaploModel m_builder;
 	HaploData m_genos;
@@ -40,10 +40,13 @@ public:
 
 	void printOptions();
 	void parseOptions();
+	void parseFileNames();
 
 	void run();
 
 	void resolve();
+
+	void convertFormat();
 	void compareWith(const string &filename);
 };
 
