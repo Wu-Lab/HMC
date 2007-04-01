@@ -34,9 +34,6 @@ HaploPair::HaploPair(HaploPair *hp, const HaploPattern *hpa, const HaploPattern 
   m_backward_link(hp), m_backward_likelihood(1.0)
 {
 	m_transition_prob = hpa->transition_prob() * hpb->transition_prob();
-	double prob_recomb = 0.0005;
-	if (hpa->length() == 1) m_transition_prob * prob_recomb;
-	if (hpb->length() == 1) m_transition_prob * prob_recomb;
 	m_best_likelihood = hp->m_best_likelihood * m_transition_prob;
 	m_forward_likelihood = hp->m_forward_likelihood * m_transition_prob;
 	hp->m_forward_links.push_back(this);

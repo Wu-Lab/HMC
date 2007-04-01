@@ -102,11 +102,11 @@ void HaploModel::run(const HaploData &genos, HaploData &resolutions)
 
 		if (iter < max_iteration) {
 // 			if (ll >= old_ll && (old_ll - ll) / old_ll < 0.01) {
- 				m_patterns.estimatePatterns();
+				m_patterns.estimatePatterns();
 // 				old_ll = -DBL_MAX;
 // 			}
 // 			else {
-//				m_patterns.estimateFrequency();
+//  				m_patterns.estimateFrequency();
 // 				old_ll = ll;
 // 			}
 			if (m_model == "MA") {

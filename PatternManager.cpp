@@ -279,12 +279,15 @@ void PatternManager::initialize()
 void PatternManager::adjustFrequency()
 {
 	int geno_len = m_builder.genotype_len();
-	int i, n;
+	int i, j, n;
 	vector<vector<double> > total_freq;
 	total_freq.resize(geno_len);
 	for (i=0; i<geno_len; ++i) {
-		total_freq[i].resize(geno_len-i+1);
-		total_freq[i][0] = 1.0;
+		total_freq[i].resize(geno_len-i+1, 0);
+		n = min(m_min_len[i], total_freq[i].size());
+		for (j=0; j<n; ++j) {
+			total_freq[i][j] = 1.0;
+		}
 	}
 	n = m_patterns.size();
 	for (i=0; i<n; ++i) {
@@ -293,12 +296,9 @@ void PatternManager::adjustFrequency()
 	}
 	for (i=0; i<n; ++i) {
 		HaploPattern *hp = m_patterns[i];
-		if (total_freq[hp->start()][hp->length()] > 0) {
-			hp->setFrequency(hp->frequency() / total_freq[hp->start()][hp->length()]);
-			hp->setPrefixFreq(hp->prefix_freq() / total_freq[hp->start()][hp->length()-1]);
-			if (hp->prefix_freq() > 0) {
-				hp->setTransitionProb(hp->frequency() / hp->prefix_freq());
-			}
+		if (hp->frequency() > 1.0 || hp->transition_prob() > 1.0 || hp->prefix_freq() > 1.0 ||
+			hp->frequency() < 0 || hp->transition_prob() < 0 || hp->prefix_freq() < 0) {
+			Logger::error("================ %d, %d, %f, %f, %f", hp->start(), hp->length(), hp->frequency(), hp->prefix_freq(), hp->transition_prob());
 		}
 	}
 }

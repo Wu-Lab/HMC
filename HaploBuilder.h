@@ -58,7 +58,7 @@ protected:
 	void extend(HaploPair *hp, Allele a1, Allele a2);
 
 	void calcBackwardLikelihood();
-	void estimateFrequency(PatternNode *node, int locus, const Allele &a, double last_freq, const map<HaploPair*, double> last_match[2]);
+	double estimateFrequency(PatternNode *node, int locus, const Allele &a, double last_freq, const map<HaploPair*, double> last_match[2]);
 };
 
 
