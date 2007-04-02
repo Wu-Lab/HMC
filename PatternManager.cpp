@@ -159,9 +159,9 @@ void PatternManager::checkFrequency(HaploPattern *hp, MatchingState &ms) const
 			if (hp->isMatch(g)) {
 				double freq = 1.0;
 				if (g.isPhased()) {
-					if (g.weight() < 1) {
+					if (g.posterior_probability() < 1) {
 						freq = getMatchingFrequency(g, &(*hp)[0], hp->start(), hp->length());
-						total_freq += freq * (1 - g.weight());
+						total_freq += freq * (1 - g.posterior_probability());
 					}
 					double w = 0;
 					if (hp->isMatch(g(0))) {
@@ -170,7 +170,7 @@ void PatternManager::checkFrequency(HaploPattern *hp, MatchingState &ms) const
 					if (hp->isMatch(g(1))) {
 						w += 0.5;
 					}
-					total_freq += w * g.weight();
+					total_freq += w * g.posterior_probability();
 				}
 				else {
 					freq = getMatchingFrequency(g, &(*hp)[0], hp->start(), hp->length());
@@ -199,9 +199,9 @@ void PatternManager::checkFrequencyWithExtension(HaploPattern *hp, MatchingState
 			if (hp->isMatch(g, start, len)) {
 				double freq = i_ms->second;
 				if (g.isPhased()) {
-					if (g.weight() < 1) {
+					if (g.posterior_probability() < 1) {
 						freq *= getMatchingFrequency(g, &(*hp)[start-hp->start()], start, len);
-						total_freq += freq * (1 - g.weight());
+						total_freq += freq * (1 - g.posterior_probability());
 					}
 					double w = 0;
 					if (hp->isMatch(g(0))) {
@@ -210,7 +210,7 @@ void PatternManager::checkFrequencyWithExtension(HaploPattern *hp, MatchingState
 					if (hp->isMatch(g(1))) {
 						w += 0.5;
 					}
-					total_freq += w * g.weight();
+					total_freq += w * g.posterior_probability();
 				}
 				else {
 					freq *= getMatchingFrequency(g, &(*hp)[start-hp->start()], start, len);
@@ -236,6 +236,7 @@ double PatternManager::getMatchingFrequency(const Genotype &g, const Allele *pa,
 			for (j=0; j<2; ++j) {
 				b = g(j)[start+i];
 				if (b.isMissing()) {		// b is missing
+//					freq += m_builder.haplodata()->allele_frequency(start+i, pa[i]);
 					freq += m_builder.haplodata()->allele_frequency(start+i, pa[i]) > 0 ?
 						(1.0/m_builder.haplodata()->allele_num(start+i)) : 0;
 				}
@@ -283,7 +284,7 @@ void PatternManager::adjustFrequency()
 	vector<vector<double> > total_freq;
 	total_freq.resize(geno_len);
 	for (i=0; i<geno_len; ++i) {
-		total_freq[i].resize(geno_len-i+1, 0);
+		total_freq[i].assign(geno_len-i+1, 0);
 		n = min(m_min_len[i], total_freq[i].size());
 		for (j=0; j<n; ++j) {
 			total_freq[i][j] = 1.0;

@@ -12,8 +12,9 @@ Genotype::Genotype(const Haplotype &h1, const Haplotype &h2)
 : m_heterozygous_num(0),
   m_missing_num(0),
   m_missing_allele_num(0),
-  m_likelihood(0),
-  m_weight(1.0),
+  m_prior_probability(1.0),
+  m_posterior_probability(1.0),
+  m_genotype_probability(1.0),
   m_is_phased(false)
 {
 	if (h1.length() == h2.length()) {
@@ -31,8 +32,9 @@ void Genotype::setHaplotypes(Haplotype &h1, Haplotype &h2)
 {
 	m_haplotypes[0] = h1;
 	m_haplotypes[1] = h2;
-	m_likelihood = 0;
-	m_weight = 1.0;
+	m_prior_probability = 1.0;
+	m_posterior_probability = 1.0;
+	m_genotype_probability = 1.0;
 	m_is_phased = false;
 	checkGenotype();
 }

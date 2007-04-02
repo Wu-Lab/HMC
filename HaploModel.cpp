@@ -75,7 +75,7 @@ void HaploModel::run(const HaploData &genos, HaploData &resolutions)
 	vector<HaploPair*> res_list;
 
 	unphased = genos;
-	unphased.randomizePhase();
+//	unphased.randomizePhase();
 	build(unphased);
 	resolutions = unphased;
 
@@ -90,9 +90,9 @@ void HaploModel::run(const HaploData &genos, HaploData &resolutions)
 				if (res_list.size() == 0) {
 					Logger::warning("Unable to resolve Genotype[%d]: %s!", i, genos[i].id().c_str());
 				}
-				unphased[i].setLikelihood(resolutions[i].likelihood());
+				unphased[i].setGenotypeProbability(resolutions[i].genotype_probability());
 //			}
-			ll += log(resolutions[i].likelihood());
+			ll += log(resolutions[i].genotype_probability());
 		}
 
 		HaploComp compare(&genos, &resolutions);
@@ -100,18 +100,16 @@ void HaploModel::run(const HaploData &genos, HaploData &resolutions)
 		Logger::info("  Switch Error = %f, IHP = %f, IGP = %f, LL = %f",
 			compare.switch_error(), compare.incorrect_haplotype_percentage(), compare.incorrect_genotype_percentage(), ll);
 
-		if (iter < max_iteration) {
-// 			if (ll >= old_ll && (old_ll - ll) / old_ll < 0.01) {
-				m_patterns.estimatePatterns();
-// 				old_ll = -DBL_MAX;
-// 			}
-// 			else {
-//  				m_patterns.estimateFrequency();
-// 				old_ll = ll;
-// 			}
+		if (iter < max_iteration && ll >= old_ll && (old_ll - ll) / old_ll > 0.0001) {
+			m_patterns.estimatePatterns();
+ //			m_patterns.estimateFrequency();
+			old_ll = ll;
 			if (m_model == "MA") {
 				m_patterns.adjustFrequency();
 			}
+		}
+		else {
+			break;
 		}
 	}
 }

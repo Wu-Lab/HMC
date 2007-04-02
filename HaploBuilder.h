@@ -24,7 +24,7 @@ protected:
 	vector<vector<HaploPair*> > m_haplopairs;
 	vector<map<int, int> > m_best_pair;
 
-	double m_current_genotype_frequency;
+	double m_current_genotype_probability;
 
 public:
 	HaploBuilder();
