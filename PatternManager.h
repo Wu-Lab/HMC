@@ -75,6 +75,7 @@ protected:
 	double getMatchingFrequency(const Genotype &g, const Allele *pa, int start, int len) const;
 
 	void initialize();
+	void extendPatterns(vector<HaploPattern*> &patterns, vector<HaploPattern*> &seeds);
 };
 
 
