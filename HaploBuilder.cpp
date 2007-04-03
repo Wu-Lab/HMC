@@ -214,15 +214,15 @@ void HaploBuilder::extend(HaploPair *hp, Allele a1, Allele a2)
 	const HaploPattern *hp1a, *hp1b, *hp2a, *hp2b;
 	hp1a = hp->successor_a(a1);
 	hp1b = hp->successor_b(a2);
-#if 1
+#if 0
 	if (hp1a && hp1b) {
 		addHaploPair(hp, hp1a, hp1b);
 	}
 #else
 	hp2a = m_patterns.getSingleAllelePattern(hp->end()+1, a1);
 	hp2b = m_patterns.getSingleAllelePattern(hp->end()+1, a2);
-	double p = 0.01;
-	double p0 = (1-p)*(1-p);
+	double p = 0.1;
+	double p0 = 1.0;
 	double p2 = p*p;
 	if (hp1a && hp1b &&
 		hp1a->start() == hp->pattern_a().start() &&
