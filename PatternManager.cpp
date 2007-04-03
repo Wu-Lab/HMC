@@ -347,25 +347,11 @@ void PatternManager::estimatePatterns()
 				}
 			}
 		}
-		while (patterns.size() > 0) {
+		while (!patterns.empty()) {
 			m_builder.estimateFrequency(patterns);
 			candidates.insert(candidates.end(), patterns.begin(), patterns.end());
 			patterns.clear();
-			n = seeds.size();
-			for (i=0; i<n; ++i) {
-				HaploPattern *hp = seeds[i];
-				if (hp->frequency() >= m_min_freq) {
-					if (hp->end() < geno_len && hp->length() < m_max_len[hp->start()]) {
-						int an = m_builder.haplodata()->allele_num(hp->end());
-						for (j=0; j<an; ++j) {
-							HaploPattern *hp_new = new HaploPattern(*m_builder.haplodata());
-							hp_new->assign(*hp, m_builder.haplodata()->allele_symbol(hp->end(), j));
-							patterns.push_back(hp_new);
-						}
-					}
-				}
-			}
-			seeds = patterns;
+			extendPatterns(patterns, seeds);
 		}
 		DeleteAll_Clear()(m_patterns);
 		n = candidates.size();
@@ -380,5 +366,33 @@ void PatternManager::estimatePatterns()
 		}
 		Logger::verbose("Adjust haplotype patterns: %d     ", m_patterns.size());
 		initialize();
+	}
+}
+
+void PatternManager::extendPatterns(vector<HaploPattern*> &patterns, vector<HaploPattern*> &seeds)
+{
+	int geno_len = m_builder.genotype_len();
+	int i, j, n;
+	vector<HaploPattern*> new_seeds;
+	int level = 4;
+	while (level-- > 0) {
+		n = seeds.size();
+		for (i=0; i<n; ++i) {
+			HaploPattern *hp = seeds[i];
+			if (hp->end() < geno_len && hp->length() < m_max_len[hp->start()]) {
+				if (hp->frequency() >= m_min_freq) {
+					int an = m_builder.haplodata()->allele_num(hp->end());
+					for (j=0; j<an; ++j) {
+						HaploPattern *hp_new = new HaploPattern(*m_builder.haplodata());
+						hp_new->assign(*hp, m_builder.haplodata()->allele_symbol(hp->end(), j));
+						hp_new->setFrequency(hp->frequency());
+						patterns.push_back(hp_new);
+						new_seeds.push_back(hp_new);
+					}
+				}
+			}
+		}
+		seeds.clear();
+		seeds.swap(new_seeds);
 	}
 }
