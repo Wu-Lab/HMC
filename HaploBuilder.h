@@ -24,7 +24,7 @@ protected:
 	vector<vector<HaploPair*> > m_haplopairs;
 	vector<map<int, int> > m_best_pair;
 
-	double m_current_genotype_frequency;
+	double m_current_genotype_probability;
 
 public:
 	HaploBuilder();
@@ -47,7 +47,7 @@ public:
 	double getLikelihood(const Haplotype &haplotype);
 	double getLikelihood(const Genotype &genotype);
 
-	void adjustFrequency(vector<HaploPattern*> &patterns);
+	void estimateFrequency(vector<HaploPattern*> &patterns);
 
 protected:
 	void clear();
@@ -59,7 +59,7 @@ protected:
 	void addHaploPair(HaploPair *hp, const HaploPattern *hpa, const HaploPattern *hpb, double prob = 1.0);
 
 	void calcBackwardLikelihood();
-	void adjustFrequency(PatternNode *node, int locus, const Allele &a, double last_freq, const map<HaploPair*, double> last_match[2]);
+	double estimateFrequency(PatternNode *node, int locus, const Allele &a, double last_freq, const map<HaploPair*, double> last_match[2]);
 };
 
 

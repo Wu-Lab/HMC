@@ -21,6 +21,10 @@ public:
 
 	friend bool operator ==(const Allele &lhs, const Allele &rhs);
 	friend bool operator !=(const Allele &lhs, const Allele &rhs);
+	friend bool operator <(const Allele &lhs, const Allele &rhs);
+	friend bool operator <=(const Allele &lhs, const Allele &rhs);
+	friend bool operator >(const Allele &lhs, const Allele &rhs);
+	friend bool operator >=(const Allele &lhs, const Allele &rhs);
 
 	int asInt() const { return m_value; }
 	char asChar() const { return m_value; }
@@ -34,6 +38,26 @@ inline bool operator ==(const Allele &lhs, const Allele &rhs)
 inline bool operator !=(const Allele &lhs, const Allele &rhs)
 {
 	return !(lhs == rhs);
+}
+
+inline bool operator <(const Allele &lhs, const Allele &rhs)
+{
+	return (lhs.m_value < rhs.m_value);
+}
+
+inline bool operator <=(const Allele &lhs, const Allele &rhs)
+{
+	return ((lhs == rhs) || (lhs < rhs));
+}
+
+inline bool operator >(const Allele &lhs, const Allele &rhs)
+{
+	return !(lhs < rhs);
+}
+
+inline bool operator >=(const Allele &lhs, const Allele &rhs)
+{
+	return ((lhs == rhs) || (lhs > rhs));
 }
 
 

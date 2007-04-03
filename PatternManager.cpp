@@ -159,9 +159,9 @@ void PatternManager::checkFrequency(HaploPattern *hp, MatchingState &ms) const
 			if (hp->isMatch(g)) {
 				double freq = 1.0;
 				if (g.isPhased()) {
-					if (g.weight() < 1) {
+					if (g.posterior_probability() < 1) {
 						freq = getMatchingFrequency(g, &(*hp)[0], hp->start(), hp->length());
-						total_freq += freq * (1 - g.weight());
+						total_freq += freq * (1 - g.posterior_probability());
 					}
 					double w = 0;
 					if (hp->isMatch(g(0))) {
@@ -170,7 +170,7 @@ void PatternManager::checkFrequency(HaploPattern *hp, MatchingState &ms) const
 					if (hp->isMatch(g(1))) {
 						w += 0.5;
 					}
-					total_freq += w * g.weight();
+					total_freq += w * g.posterior_probability();
 				}
 				else {
 					freq = getMatchingFrequency(g, &(*hp)[0], hp->start(), hp->length());
@@ -199,9 +199,9 @@ void PatternManager::checkFrequencyWithExtension(HaploPattern *hp, MatchingState
 			if (hp->isMatch(g, start, len)) {
 				double freq = i_ms->second;
 				if (g.isPhased()) {
-					if (g.weight() < 1) {
+					if (g.posterior_probability() < 1) {
 						freq *= getMatchingFrequency(g, &(*hp)[start-hp->start()], start, len);
-						total_freq += freq * (1 - g.weight());
+						total_freq += freq * (1 - g.posterior_probability());
 					}
 					double w = 0;
 					if (hp->isMatch(g(0))) {
@@ -210,7 +210,7 @@ void PatternManager::checkFrequencyWithExtension(HaploPattern *hp, MatchingState
 					if (hp->isMatch(g(1))) {
 						w += 0.5;
 					}
-					total_freq += w * g.weight();
+					total_freq += w * g.posterior_probability();
 				}
 				else {
 					freq *= getMatchingFrequency(g, &(*hp)[start-hp->start()], start, len);
@@ -236,6 +236,7 @@ double PatternManager::getMatchingFrequency(const Genotype &g, const Allele *pa,
 			for (j=0; j<2; ++j) {
 				b = g(j)[start+i];
 				if (b.isMissing()) {		// b is missing
+//					freq += m_builder.haplodata()->allele_frequency(start+i, pa[i]);
 					freq += m_builder.haplodata()->allele_frequency(start+i, pa[i]) > 0 ?
 						(1.0/m_builder.haplodata()->allele_num(start+i)) : 0;
 				}
@@ -278,13 +279,40 @@ void PatternManager::initialize()
 
 void PatternManager::adjustFrequency()
 {
+	int geno_len = m_builder.genotype_len();
+	int i, j, n;
+	vector<vector<double> > total_freq;
+	total_freq.resize(geno_len);
+	for (i=0; i<geno_len; ++i) {
+		total_freq[i].assign(geno_len-i+1, 0);
+		n = min(m_min_len[i], total_freq[i].size());
+		for (j=0; j<n; ++j) {
+			total_freq[i][j] = 1.0;
+		}
+	}
+	n = m_patterns.size();
+	for (i=0; i<n; ++i) {
+		HaploPattern *hp = m_patterns[i];
+		total_freq[hp->start()][hp->length()] += hp->frequency();
+	}
+	for (i=0; i<n; ++i) {
+		HaploPattern *hp = m_patterns[i];
+		if (hp->frequency() > 1.0 || hp->transition_prob() > 1.0 || hp->prefix_freq() > 1.0 ||
+			hp->frequency() < 0 || hp->transition_prob() < 0 || hp->prefix_freq() < 0) {
+			Logger::error("================ %d, %d, %f, %f, %f", hp->start(), hp->length(), hp->frequency(), hp->prefix_freq(), hp->transition_prob());
+		}
+	}
+}
+
+void PatternManager::estimateFrequency()
+{
 	int i, n;
 	vector<HaploPattern*> patterns;
 	n = m_patterns.size();
 	for (i=0; i<n; ++i) {
 		patterns.push_back(new HaploPattern(*m_patterns[i]));
 	}
-	m_builder.adjustFrequency(patterns);
+	m_builder.estimateFrequency(patterns);
 	for (i=0; i<n; ++i) {
 		m_patterns[i]->setFrequency(patterns[i]->frequency());
 		m_patterns[i]->setPrefixFreq(patterns[i]->prefix_freq());
@@ -293,13 +321,13 @@ void PatternManager::adjustFrequency()
 	DeleteAll_Clear()(patterns);
 }
 
-void PatternManager::adjustPatterns()
+void PatternManager::estimatePatterns()
 {
 	int geno_len = m_builder.genotype_len();
 	int i, j, n;
 	vector<HaploPattern*> patterns, seeds, candidates;
 	if (m_min_freq < 0) {
-		adjustFrequency();
+		estimateFrequency();
 	}
 	else {
 		n = m_patterns.size();
@@ -320,7 +348,7 @@ void PatternManager::adjustPatterns()
 			}
 		}
 		while (patterns.size() > 0) {
-			m_builder.adjustFrequency(patterns);
+			m_builder.estimateFrequency(patterns);
 			candidates.insert(candidates.end(), patterns.begin(), patterns.end());
 			patterns.clear();
 			n = seeds.size();

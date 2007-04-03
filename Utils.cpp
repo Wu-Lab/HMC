@@ -175,3 +175,45 @@ void Logger::resumeTimer(int i)
 {
 	m_timer[i].resume();
 }
+
+
+////////////////////////////////
+//
+// functions for string
+
+void string_replace(string &str, const string &src, const string &dst)
+{
+	string::size_type npos = static_cast<string::size_type>(string::npos);
+	string::size_type pos = 0;
+	string::size_type srclen = src.size();
+	string::size_type dstlen = dst.size();
+	while((pos=str.find(src, pos)) != npos) {
+		str.replace(pos, srclen, dst);
+		pos += dstlen;
+	}
+}
+
+string int2str(int num)
+{
+	if (num == 0) return "0";
+	string str = "";
+	int num_abs = num > 0 ? num : -num;
+	while (num_abs) {
+		str = static_cast<char>(num_abs % 10 + '0') + str;
+		num_abs /= 10;
+	}
+	if (num < 0) str = "-" + str;
+	return str;
+}
+
+int str2int(const string &str)
+{
+	int len = str.size(), num = 0, i = 0;
+    if (str[0] == '-') i = 1;
+	while (i < len) {
+		num = num * 10 + static_cast<int>(str[i] - '0');
+		++i;
+	}
+	if (str[0] == '-') num *= -1;
+	return num;
+}

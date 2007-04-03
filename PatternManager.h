@@ -63,7 +63,8 @@ public:
 	void findPatternBlock(int len);
 
 	void adjustFrequency();
-	void adjustPatterns();
+	void estimateFrequency();
+	void estimatePatterns();
 
 protected:
 	void generateCandidates();

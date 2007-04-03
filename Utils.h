@@ -162,4 +162,11 @@ ostream &operator<<(ostream &os, const vector<T> &v)
 };
 
 
+// functions for string
+
+void string_replace(string &str, const string &src, const string &dst);
+string int2str(int num);
+int str2int(const string &str);
+
+
 #endif // __UTILS_H

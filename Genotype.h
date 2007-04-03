@@ -16,8 +16,9 @@ protected:
 	int m_heterozygous_num;
 	int m_missing_num;
 	int m_missing_allele_num;
-	double m_likelihood;
-	double m_weight;
+	double m_prior_probability;
+	double m_posterior_probability;
+	double m_genotype_probability;
 	bool m_is_phased;
 
 public:
@@ -32,14 +33,16 @@ public:
 	int heterozygous_num() const { return m_heterozygous_num; }
 	int missing_num() const { return m_missing_num; }
 	int missing_allele_num() const { return m_missing_allele_num; }
-	double likelihood() const { return m_likelihood; }
-	double weight() const { return m_weight; }
+	double prior_probability() const { return m_prior_probability; }
+	double posterior_probability() const { return m_posterior_probability; }
+	double genotype_probability() const { return m_genotype_probability; }
 	bool isPhased() const { return m_is_phased; }
 
-	void setID(const string &id) { m_id = id; }
+	void setID(const string &id) { m_id = id; string_replace(m_id, " ", "_"); }
 	void setLength(int len) { m_haplotypes[0].setLength(len); m_haplotypes[1].setLength(len); }
-	void setLikelihood(double likelihood) { m_likelihood = likelihood; }
-	void setWeight(double weight) { m_weight = weight; }
+	void setPriorProbability(double p) { m_prior_probability = p; }
+	void setPosteriorProbability(double p) { m_posterior_probability = p; }
+	void setGenotypeProbability(double p) { m_genotype_probability = p; }
 	void setIsPhased(bool state) { m_is_phased = state; }
 	void setHaplotypes(Haplotype &h1, Haplotype &h2);
 	void checkGenotype();
@@ -67,8 +70,9 @@ inline Genotype::Genotype()
 : m_heterozygous_num(0),
   m_missing_num(0),
   m_missing_allele_num(0),
-  m_likelihood(0),
-  m_weight(1.0),
+  m_prior_probability(1.0),
+  m_posterior_probability(1.0),
+  m_genotype_probability(1.0),
   m_is_phased(false)
 {
 }
@@ -77,8 +81,9 @@ inline Genotype::Genotype(int len)
 : m_heterozygous_num(0),
   m_missing_num(0),
   m_missing_allele_num(0),
-  m_likelihood(0),
-  m_weight(1.0),
+  m_prior_probability(1.0),
+  m_posterior_probability(1.0),
+  m_genotype_probability(1.0),
   m_is_phased(false)
 {
   m_haplotypes[0].setLength(len);

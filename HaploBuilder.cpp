@@ -91,14 +91,16 @@ void HaploBuilder::resolve(const Genotype &genotype, Genotype &resolution, vecto
 		sort(res_list.begin(), res_list.end(), HaploPair::greater_likelihood());
 		best_hp = res_list.front();
 		resolution = best_hp->getGenotype();
-		resolution.setLikelihood(total_likelihood);
-		resolution.setWeight(best_hp->best_likelihood() / total_likelihood);
+		resolution.setPriorProbability(best_hp->best_likelihood());
+		resolution.setPosteriorProbability(best_hp->best_likelihood() / total_likelihood);
+		resolution.setGenotypeProbability(total_likelihood);
 	}
 	else {
 		res_list.clear();
 		resolution = genotype;
-		resolution.setLikelihood(0);
-		resolution.setWeight(0);
+		resolution.setPriorProbability(0);
+		resolution.setPosteriorProbability(1.0);
+		resolution.setGenotypeProbability(0);
 	}
 }
 
@@ -263,7 +265,7 @@ void HaploBuilder::calcBackwardLikelihood()
 	}
 }
 
-void HaploBuilder::adjustFrequency(vector<HaploPattern*> &patterns)
+void HaploBuilder::estimateFrequency(vector<HaploPattern*> &patterns)
 {
 	int i, n;
 	int start, geno;
@@ -283,7 +285,7 @@ void HaploBuilder::adjustFrequency(vector<HaploPattern*> &patterns)
 	for (geno=0; geno<genotype_num(); ++geno) {
 		resolve((*m_haplodata)[geno], res, res_list);
 		calcBackwardLikelihood();
-		m_current_genotype_frequency = (*m_haplodata)[geno].likelihood();
+		m_current_genotype_probability = (*m_haplodata)[geno].genotype_probability();
 
 		for (start=0; start<genotype_len(); ++start) {
 			match_list[0].clear();
@@ -300,7 +302,7 @@ void HaploBuilder::adjustFrequency(vector<HaploPattern*> &patterns)
 			n = node->size();
 			for (i=0; i<node->size(); ++i) {
 				if (node->getChild(i)) {
-					adjustFrequency(node->getChild(i), start, m_haplodata->allele_symbol(start, i), 1.0, match_list);
+					estimateFrequency(node->getChild(i), start, m_haplodata->allele_symbol(start, i), 1.0, match_list);
 				}
 			}
 		}
@@ -309,18 +311,21 @@ void HaploBuilder::adjustFrequency(vector<HaploPattern*> &patterns)
 	n = patterns.size();
 	for (i=0; i<n; ++i) {
 		HaploPattern *hp = patterns[i];
-		if (hp->prefix_freq() > 0) {
-			hp->setTransitionProb(hp->frequency() / hp->prefix_freq());
+		double freq = min(hp->frequency(), genotype_num());
+		double prefix_freq = min(hp->prefix_freq(), genotype_num());
+		freq = min(freq, prefix_freq);
+		hp->setFrequency(freq / genotype_num());
+		hp->setPrefixFreq(prefix_freq / genotype_num());
+		if (prefix_freq > 0) {
+			hp->setTransitionProb(freq / prefix_freq);
 		}
 		else {
-			hp->setTransitionProb(hp->frequency() / genotype_num());
+			hp->setTransitionProb(freq / genotype_num());
 		}
-		hp->setFrequency(hp->frequency() / genotype_num());
-		hp->setPrefixFreq(hp->prefix_freq() / genotype_num());
 	}
 }
 
-void HaploBuilder::adjustFrequency(PatternNode *node, int locus, const Allele &a, double last_freq, const map<HaploPair*, double> last_match[2])
+double HaploBuilder::estimateFrequency(PatternNode *node, int locus, const Allele &a, double last_freq, const map<HaploPair*, double> last_match[2])
 {
 	map<HaploPair*, double> match_list[2];
 	map<HaploPair*, double>::const_iterator i_mp;
@@ -382,7 +387,7 @@ void HaploBuilder::adjustFrequency(PatternNode *node, int locus, const Allele &a
 	for (i_mp=match_list[1].begin(); i_mp!=match_list[1].end(); ++i_mp) {
 		freq += (*i_mp).second * (*i_mp).first->backward_likelihood();
 	}
-	freq /= m_current_genotype_frequency;
+	freq /= m_current_genotype_probability;
 
 	if (node->data()) {
 		HaploPattern *hp = node->data();
@@ -392,7 +397,9 @@ void HaploBuilder::adjustFrequency(PatternNode *node, int locus, const Allele &a
 
 	for (int i=0; i<node->size(); ++i) {
 		if (node->getChild(i)) {
-			adjustFrequency(node->getChild(i), locus+1, m_haplodata->allele_symbol(locus+1, i), freq, match_list);
+			estimateFrequency(node->getChild(i), locus+1, m_haplodata->allele_symbol(locus+1, i), freq, match_list);
 		}
 	}
+
+	return freq;
 }
