@@ -14,8 +14,9 @@ class HaploPair : public NoThrowNewDelete {
 
 	const HaploPattern &m_pattern_a, &m_pattern_b;
 	const Allele &m_allele_a, &m_allele_b;
-	vector<HaploPair*> m_forward_links;
+	vector<HaploPair*> m_forward_links[2];
 	HaploPair *m_backward_link;
+	bool m_backward_link_reversed;
 	double m_transition_prob;
 	double m_forward_likelihood;
 	double m_backward_likelihood;
@@ -23,8 +24,8 @@ class HaploPair : public NoThrowNewDelete {
 
 public:
 	explicit HaploPair(const HaploPattern *hpa, const HaploPattern *hpb);
-	explicit HaploPair(HaploPair *hp, const HaploPattern *hpa, const HaploPattern *hpb);
-	void add(HaploPair *hp, const HaploPattern *hpa, const HaploPattern *hpb);
+	explicit HaploPair(const HaploPattern *hpa, const HaploPattern *hpb, HaploPair *hp, bool reversed = false);
+	void add(HaploPair *hp, bool reversed = false);
 
 	const HaploPattern &pattern_a() const { return m_pattern_a; }
 	const HaploPattern &pattern_b() const { return m_pattern_b; }
@@ -34,7 +35,7 @@ public:
 	int id_b() const { return m_pattern_b.id(); }
 	int end() const { return m_pattern_a.end(); }
 
-	const vector<HaploPair*> &forward_links() const { return m_forward_links; }
+	const vector<HaploPair*> &forward_links(int i) const { return m_forward_links[i]; }
 	double transition_prob() const { return m_transition_prob; }
 	double forward_likelihood() const { return m_forward_likelihood; }
 	double backward_likelihood() const { return m_backward_likelihood; }
