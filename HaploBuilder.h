@@ -21,6 +21,9 @@ protected:
 	HaploData *m_haplodata;
 	PatternManager m_patterns;
 
+	HaploData m_samples;
+	int m_sample_size;
+
 	vector<vector<HaploPair*> > m_haplopairs;
 	vector<map<int, int> > m_best_pair;
 
@@ -33,12 +36,14 @@ public:
 	HaploData *haplodata() { return m_haplodata; }
 	const HaploData *haplodata() const { return m_haplodata; }
 	const HaploPattern *patterns(int i) const { return m_patterns[i]; }
+	const HaploData *samples() const { return &m_samples; }
 
 	int pattern_num() const { return m_patterns.size(); }
 	int genotype_num() const { return m_haplodata->genotype_num(); }
 	int genotype_len() const { return m_haplodata->genotype_len(); }
 
 	void setHaploData(HaploData &hd);
+	void setSampleSize(int size = 1);
 
 	void initialize();
 

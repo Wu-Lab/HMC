@@ -7,7 +7,7 @@
 
 
 HaploBuilder::HaploBuilder()
-: m_patterns(*this)
+: m_patterns(*this), m_sample_size(1)
 {
 }
 
@@ -19,6 +19,12 @@ HaploBuilder::~HaploBuilder()
 void HaploBuilder::setHaploData(HaploData &hd)
 {
 	m_haplodata = &hd;
+	m_samples = hd;
+}
+
+void HaploBuilder::setSampleSize(int size)
+{
+	m_sample_size = size;
 }
 
 void HaploBuilder::initialize()
@@ -80,6 +86,9 @@ void HaploBuilder::resolve(const Genotype &genotype, Genotype &resolution, vecto
 		if (m_haplopairs[i+1].size() <= 0) {
 			break;
 		}
+		for (i_hp = m_haplopairs[i+1].begin(); i_hp != m_haplopairs[i+1].end(); ++i_hp) {
+			(*i_hp)->sortBestLinks();
+		}
 	}
 	if (m_haplopairs[genotype_len()].size() > 0) {
 		total_likelihood = 0;
@@ -90,9 +99,8 @@ void HaploBuilder::resolve(const Genotype &genotype, Genotype &resolution, vecto
 		}
 		sort(res_list.begin(), res_list.end(), HaploPair::greater_likelihood());
 		best_hp = res_list.front();
-		resolution = best_hp->getGenotype();
-		resolution.setPriorProbability(best_hp->best_likelihood());
-		resolution.setPosteriorProbability(best_hp->best_likelihood() / total_likelihood);
+		resolution = best_hp->getGenotype(0);
+		resolution.setPosteriorProbability(resolution.prior_probability() / total_likelihood);
 		resolution.setGenotypeProbability(total_likelihood);
 	}
 	else {
@@ -238,7 +246,7 @@ void HaploBuilder::addHaploPair(HaploPair *hp, const HaploPattern *hpa, const Ha
 	 	m_best_pair[hpa->id()].insert(i, make_pair(hpb->id(), m_haplopairs[hp->end()+1].size()));
 	}
 	else {
-		m_haplopairs[hp->end()+1][(*i).second-1]->add(hp, reversed);
+		m_haplopairs[hp->end()+1][(*i).second-1]->add(hp, reversed, m_sample_size);
 	}
 }
 

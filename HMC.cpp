@@ -10,7 +10,7 @@
 #include "Options.h"
 
 
-const char *HMC::m_version = "0.8.2";
+const char *HMC::m_version = "0.9.0";
 const char *HMC::m_year = "2007";
 
 
