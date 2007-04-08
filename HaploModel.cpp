@@ -1,6 +1,6 @@
 
 #include "HaploModel.h"
-#include "HaploData.h"
+#include "GenoData.h"
 #include "HaploComp.h"
 
 #include <cfloat>
@@ -29,9 +29,9 @@ void HaploModel::setModel(string model)
 	}
 }
 
-void HaploModel::build(HaploData &hd)
+void HaploModel::build(GenoData &genos)
 {
-	setHaploData(hd);
+	setGenoData(genos);
 	findPatterns();
 	initialize();
 }
@@ -67,11 +67,11 @@ void HaploModel::findPatterns()
 	Logger::endTimer(1);
 }
 
-void HaploModel::run(const HaploData &genos, HaploData &resolutions)
+void HaploModel::run(const GenoData &genos, GenoData &resolutions)
 {
 	int i, iter;
 	double ll, old_ll;
-	HaploData unphased;
+	GenoData unphased;
 	vector<HaploPair*> res_list;
 
 	unphased = genos;

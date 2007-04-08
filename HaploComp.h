@@ -4,11 +4,11 @@
 
 
 #include "Utils.h"
-#include "HaploData.h"
+#include "GenoData.h"
 
 
 class HaploComp {
-	const HaploData *m_haplo_real, *m_haplo_infer, *m_haplo_input;
+	const GenoData *m_genos_real, *m_genos_infer, *m_genos_input;
 	int m_genotype_num;
 	int m_genotype_len;
 
@@ -29,7 +29,7 @@ class HaploComp {
 
 public:
 	HaploComp();
-	explicit HaploComp(const HaploData *real, const HaploData *infer, const HaploData *input = NULL);
+	explicit HaploComp(const GenoData *real, const GenoData *infer, const GenoData *input = NULL);
 
 	double switch_error() const { return m_switch_error; }
 	double incorrect_genotype_percentage() const { return m_incorrect_genotype_percentage; }

@@ -1,6 +1,6 @@
 
 #include "HaploPattern.h"
-#include "HaploData.h"
+#include "GenoData.h"
 
 #include "MemLeak.h"
 
@@ -18,7 +18,7 @@ int HaploPattern::getAlleleIndex(int local_locus) const
 		index = -1;
 	}
 	else {
-		index = m_haplodata.getAlleleIndex(m_start+local_locus, m_alleles[local_locus]);
+		index = m_genos.getAlleleIndex(m_start+local_locus, m_alleles[local_locus]);
 	}
 	return index;
 }
@@ -95,7 +95,7 @@ char *HaploPattern::write(char *buffer, bool long_format) const
 	AlleleSequence::write(NULL, s);
 	s += strlen(s);
 	if (long_format) {
-		AlleleSequence(m_haplodata.genotype_len()-m_end).write(NULL, s);
+		AlleleSequence(m_genos.genotype_len()-m_end).write(NULL, s);
 	}
 	return buffer;
 }

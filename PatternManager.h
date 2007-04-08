@@ -22,8 +22,8 @@ class PatternManager {
 		HaploPattern *pattern;
 		MatchingState state;
 
-		PatternCandidate(const HaploData *hd, int start = 0)
-			: pattern(new HaploPattern(*hd, start)) { }
+		PatternCandidate(const GenoData *genos, int start = 0)
+			: pattern(new HaploPattern(*genos, start)) { }
 		~PatternCandidate() { delete pattern; }
 		HaploPattern *release() {
 			HaploPattern *hp = pattern;

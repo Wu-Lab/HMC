@@ -6,9 +6,9 @@
 
 HaploComp::HaploComp()
 {
-	m_haplo_real = NULL;
-	m_haplo_infer = NULL;
-	m_haplo_input = NULL;
+	m_genos_real = NULL;
+	m_genos_infer = NULL;
+	m_genos_input = NULL;
 	m_genotype_num = 0;
 	m_genotype_len = 0;
 	m_switch_error = 0;
@@ -26,19 +26,19 @@ HaploComp::HaploComp()
 	m_missing_error_denominator = 0;
 }
 
-HaploComp::HaploComp(const HaploData *real, const HaploData *infer, const HaploData *input)
+HaploComp::HaploComp(const GenoData *real, const GenoData *infer, const GenoData *input)
 {	
 	int i, sd, ig;
-	m_haplo_real = real;
-	m_haplo_infer = infer;
-	if (input == NULL) m_haplo_input = real;
-	if (m_haplo_real->genotype_num() != m_haplo_infer->genotype_num() ||
-		m_haplo_real->genotype_len() != m_haplo_infer->genotype_len()) {
+	m_genos_real = real;
+	m_genos_infer = infer;
+	if (input == NULL) m_genos_input = real;
+	if (m_genos_real->genotype_num() != m_genos_infer->genotype_num() ||
+		m_genos_real->genotype_len() != m_genos_infer->genotype_len()) {
 		Logger::error("Attempt to compare inconsistent haplotype data!");
 		exit(1);
 	}
-	m_genotype_num = m_haplo_real->unphased_num();
-	m_genotype_len = m_haplo_real->genotype_len();
+	m_genotype_num = m_genos_real->unphased_num();
+	m_genotype_len = m_genos_real->genotype_len();
 	m_switch_error = 0;
 	m_incorrect_genotype_percentage = 0;
 	m_incorrect_haplotype_percentage = 0;
@@ -53,9 +53,9 @@ HaploComp::HaploComp(const HaploData *real, const HaploData *infer, const HaploD
 	m_missing_error_numerator = 0;
 	m_missing_error_denominator = 0;
 	for (i=0; i<m_genotype_num; i++) {
-		const Genotype &geno_real = (*m_haplo_real)[i];
-		const Genotype &geno_infer = (*m_haplo_infer)[i];
-		const Genotype &geno_input = (*m_haplo_input)[i];
+		const Genotype &geno_real = (*m_genos_real)[i];
+		const Genotype &geno_infer = (*m_genos_infer)[i];
+		const Genotype &geno_input = (*m_genos_input)[i];
 		// Switch Error
 		sd = geno_real.getSwitchDistanceIgnoreMissing(geno_infer);
 		m_switch_error_numerator += sd;
@@ -68,7 +68,7 @@ HaploComp::HaploComp(const HaploData *real, const HaploData *infer, const HaploD
 		if (sd > 0) m_incorrect_haplotype_numerator++;
 		if (geno_real.heterozygous_num() > 1) m_incorrect_haplotype_denominator++;
 		// Missing Error
-		if (m_haplo_input != m_haplo_real) {
+		if (m_genos_input != m_genos_real) {
 			getMissingError(geno_real, geno_infer, geno_input);
 		}
 	}
@@ -146,7 +146,7 @@ void HaploComp::calculate()
 	m_switch_error = (double) m_switch_error_numerator / m_switch_error_denominator;
 	m_incorrect_genotype_percentage = (double) m_incorrect_genotype_numerator / m_incorrect_genotype_denominator;
 	m_incorrect_haplotype_percentage = (double) m_incorrect_haplotype_numerator / m_incorrect_haplotype_denominator;
-	if (m_haplo_input != m_haplo_real && m_missing_error_denominator > 0) {
+	if (m_genos_input != m_genos_real && m_missing_error_denominator > 0) {
 		m_missing_error = (double) m_missing_error_numerator / m_missing_error_denominator;
 	}
 	else {

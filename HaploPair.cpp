@@ -3,7 +3,7 @@
 
 #include "HaploPair.h"
 #include "HaploPattern.h"
-#include "HaploData.h"
+#include "GenoData.h"
 
 #include "MemLeak.h"
 
@@ -77,7 +77,7 @@ Genotype HaploPair::getGenotype(int index) const
 {
 	int a = 0, b = 1;
 	int i = end() - 1;
-	Genotype g(m_pattern_a.haplodata().genotype_len());
+	Genotype g(m_pattern_a.genos().genotype_len());
 	g.setPriorProbability(getLikelihood(index));
 	const HaploPair *hp = this;
 	while (hp) {
