@@ -132,8 +132,7 @@ void GenoData::simplify()
 		for (j=0; j<2; ++j) {
 			Haplotype &h = m_genotypes[i](j);
 			for (k=0; k<m_genotype_len; ++k) {
-				if (!h[k].isMissing())
-				{
+				if (!h[k].isMissing()) {
 					if (m_allele_type[k] == 'S') {
 						h[k] = getAlleleIndex(k, h[k]) + '1';
 					}

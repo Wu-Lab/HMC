@@ -11,6 +11,9 @@
 #include "Genotype.h"
 
 
+class HaploData;
+
+
 class GenoData {
 protected:
 	vector<Genotype> m_genotypes;
@@ -55,6 +58,8 @@ public:
 	void checkAlleleSymbol();
 	void randomizePhase();
 	void simplify();
+
+	friend class HaploData;
 };
 
 
