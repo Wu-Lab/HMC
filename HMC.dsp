@@ -100,6 +100,10 @@ SOURCE=.\Constant.cpp
 # End Source File
 # Begin Source File
 
+SOURCE=.\GenoData.cpp
+# End Source File
+# Begin Source File
+
 SOURCE=.\Genotype.cpp
 # End Source File
 # Begin Source File
@@ -169,6 +173,10 @@ SOURCE=.\Allele.h
 # Begin Source File
 
 SOURCE=.\Constant.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\GenoData.h
 # End Source File
 # Begin Source File
 

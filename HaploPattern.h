@@ -10,13 +10,13 @@
 #include "Allele.h"
 #include "Haplotype.h"
 #include "Genotype.h"
-#include "HaploData.h"
+#include "GenoData.h"
 
 
 class HaploPattern : public AlleleSequence, public NoThrowNewDelete {
 protected:
 	static boost::pool<> m_pool;
-	const HaploData &m_haplodata;
+	const GenoData &m_genos;
 	int m_start, m_end;
 	unsigned int m_id;
 	double m_frequency, m_prefix_freq;
@@ -24,9 +24,9 @@ protected:
 	vector<const HaploPattern*> m_successors;
 
 public:
-	explicit HaploPattern(const HaploData &hd, int start = 0);
+	explicit HaploPattern(const GenoData &genos, int start = 0);
 
-	const HaploData &haplodata() const { return m_haplodata; }
+	const GenoData &genos() const { return m_genos; }
 	unsigned int id() const { return m_id; }
 	int start() const { return m_start; }
 	int end() const { return m_end; }
@@ -34,7 +34,7 @@ public:
 	double prefix_freq() const { return m_prefix_freq; }
 	double transition_prob() const { return m_transition_prob; }
 	const HaploPattern *successors(int i) const { return i < m_successors.size() ? m_successors[i] : 0; }
-	const HaploPattern *successors(Allele &a) const { return successors(m_haplodata.getAlleleIndex(m_end, a)); }
+	const HaploPattern *successors(Allele &a) const { return successors(m_genos.getAlleleIndex(m_end, a)); }
 
 	int getAlleleIndex(int local_locus) const;
 	int getGlobalLocus(int local_locus) const { return m_start+local_locus; }
@@ -80,8 +80,8 @@ public:
 	};
 };
 
-inline HaploPattern::HaploPattern(const HaploData &hd, int start)
-: m_haplodata(hd),
+inline HaploPattern::HaploPattern(const GenoData &genos, int start)
+: m_genos(genos),
   m_start(start),
   m_end(start),
   m_id(0),

@@ -7,14 +7,14 @@
 #include <vector>
 
 #include "Utils.h"
-#include "HaploData.h"
+#include "GenoData.h"
 #include "HaploPattern.h"
 #include "HaploBuilder.h"
 
 
 class HaploFile {
 protected:
-	HaploData m_haplodata;
+	GenoData m_genos;
 	string m_filename;
 
 	bool m_has_id;
@@ -28,10 +28,10 @@ public:
 	void setFileName(const string &filename) { m_filename = filename; }
 	void setHasID(bool enable) { m_has_id = enable; }
 
-	virtual void readHaploData(HaploData &hd);
-	virtual void writeHaploData(HaploData &hd, const char *suffix = "");
+	virtual void readGenoData(GenoData &genos);
+	virtual void writeGenoData(GenoData &genos, const char *suffix = "");
 
-	virtual void writePattern(HaploBuilder &hd, const char *suffix = "");
+	virtual void writePattern(HaploBuilder &genos, const char *suffix = "");
 
 	static int getFileNameNum(const string &format);
 	static HaploFile *getHaploFile(const string &format, vector<string>::const_iterator fn);
@@ -62,9 +62,9 @@ public:
 	HaploFileHPM() {};
 	HaploFileHPM(const string &filename) : HaploFile(filename) {};
 
-	virtual void readHaploData(HaploData &hd);
-	virtual void writeHaploData(HaploData &hd, const char *suffix = NULL);
-	virtual void writeHaploDataWithFreq(HaploData &hd, const char *suffix = NULL);
+	virtual void readGenoData(GenoData &genos);
+	virtual void writeGenoData(GenoData &genos, const char *suffix = NULL);
+	virtual void writeGenoDataWithFreq(GenoData &genos, const char *suffix = NULL);
 
 protected:
 	void checkHeader(char *buffer);
@@ -99,9 +99,9 @@ public:
 	int parents_num() const { return m_parents_num; }
 	int children_num() const { return m_children_num; }
 
-	virtual void readHaploData(HaploData &hd);
-	virtual void writeHaploData(HaploData &hd, const char *suffix = NULL);
-	virtual void writeHaploDataWithFreq(HaploData &hd, const char *suffix = NULL);
+	virtual void readGenoData(GenoData &genos);
+	virtual void writeGenoData(GenoData &genos, const char *suffix = NULL);
+	virtual void writeGenoDataWithFreq(GenoData &genos, const char *suffix = NULL);
 
 protected:
 	void readHaploFile(vector<Haplotype*> &haplos, const char *filename);

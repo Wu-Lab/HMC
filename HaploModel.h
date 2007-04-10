@@ -24,9 +24,9 @@ public:
 
 	void setModel(string model);
 
-	void build(HaploData &hd);
+	void build(GenoData &genos);
 
-	void run(const HaploData &genos, HaploData &resolutions);
+	void run(const GenoData &genos, GenoData &resolutions);
 
 protected:
 	void findPatterns();

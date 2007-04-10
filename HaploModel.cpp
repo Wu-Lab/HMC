@@ -1,6 +1,6 @@
 
 #include "HaploModel.h"
-#include "HaploData.h"
+#include "GenoData.h"
 #include "HaploComp.h"
 
 #include <cfloat>
@@ -29,9 +29,9 @@ void HaploModel::setModel(string model)
 	}
 }
 
-void HaploModel::build(HaploData &hd)
+void HaploModel::build(GenoData &genos)
 {
-	setHaploData(hd);
+	setGenoData(genos);
 	findPatterns();
 	initialize();
 }
@@ -67,12 +67,12 @@ void HaploModel::findPatterns()
 	Logger::endTimer(1);
 }
 
-void HaploModel::run(const HaploData &genos, HaploData &resolutions)
+void HaploModel::run(const GenoData &genos, GenoData &resolutions)
 {
 	int i, iter;
 	double ll, old_ll;
-	HaploData unphased;
-	vector<HaploPair*> res_list;
+	GenoData unphased;
+	vector<Genotype> res_list;
 
 	unphased = genos;
 //	unphased.randomizePhase();
@@ -87,7 +87,7 @@ void HaploModel::run(const HaploData &genos, HaploData &resolutions)
 				Logger::status("Iteration %d: Resolving Genotype[%d] %s ...", iter, i, genos[i].id().c_str());
 				resolve(unphased[i], resolutions[i], res_list);
 				resolutions[i].setID(genos[i].id());
-				if (res_list.size() == 0) {
+				if (res_list.empty()) {
 					Logger::warning("Unable to resolve Genotype[%d]: %s!", i, genos[i].id().c_str());
 				}
 				unphased[i].setGenotypeProbability(resolutions[i].genotype_probability());

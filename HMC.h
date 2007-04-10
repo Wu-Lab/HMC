@@ -6,7 +6,7 @@
 #include <boost/program_options.hpp>
 
 #include "Utils.h"
-#include "HaploData.h"
+#include "GenoData.h"
 #include "HaploModel.h"
 
 
@@ -25,8 +25,8 @@ class HMC {
 	tr1::shared_ptr<HaploFile> m_input_file, m_convert_file;
 
 	HaploModel m_builder;
-	HaploData m_genos;
-	HaploData m_resolutions;
+	GenoData m_genos;
+	GenoData m_resolutions;
 
 	static const char *m_version;
 	static const char *m_year;

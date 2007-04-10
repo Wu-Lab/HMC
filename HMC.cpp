@@ -10,7 +10,7 @@
 #include "Options.h"
 
 
-const char *HMC::m_version = "0.8.0";
+const char *HMC::m_version = "0.9.0";
 const char *HMC::m_year = "2007";
 
 
@@ -165,7 +165,7 @@ void HMC::run()
 {
 	// read input file
 	Logger::info("Reading genotype file ...");
-	m_input_file->readHaploData(m_genos);
+	m_input_file->readGenoData(m_genos);
 	Logger::info("Succesfully read Haplotype file with %d markers and %d genotypes.",
 					m_genos.genotype_len(), m_genos.genotype_num());
 
@@ -210,7 +210,7 @@ void HMC::resolve()
 // 		Logger::debug("Genotype[%d] %g, %g, %g", i, w1, w2, w3);
 // 	}
 
-	m_input_file->writeHaploData(m_resolutions, ".reconstructed");
+	m_input_file->writeGenoData(m_resolutions, ".reconstructed");
 	if (m_args.count("output-patterns"))
 	{
 		m_input_file->writePattern(m_builder, ".patterns");
@@ -225,16 +225,16 @@ void HMC::convertFormat()
 	if (m_args.count("randomize")) {
 		m_genos.randomizePhase();
 	}
-	m_convert_file->writeHaploData(m_genos);
+	m_convert_file->writeGenoData(m_genos);
 }
 
 void HMC::compareWith(const string &filename)
 {
 	HaploFile comp_file;
-	HaploData comp_genos;
+	GenoData comp_genos;
 
 	comp_file.setFileName(filename);
-	comp_file.readHaploData(comp_genos);
+	comp_file.readGenoData(comp_genos);
 	Logger::info("Succesfully read Haplotype file with %d markers and %d genotypes.",
 					comp_genos.genotype_len(), comp_genos.genotype_num());
 	HaploComp compare(&comp_genos, &m_genos);

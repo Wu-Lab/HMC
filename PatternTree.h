@@ -10,18 +10,18 @@
 
 
 class AlleleSequence;
-class HaploData;
+class GenoData;
 
 
 typedef TreeNode<HaploPattern*> PatternNode;
 
 
 class BackwardPatternTree {
-	const HaploData &m_haplodata;
+	const GenoData &m_genos;
 	vector<PatternNode> m_trees;
 
 public:
-	explicit BackwardPatternTree(const HaploData &hd);
+	explicit BackwardPatternTree(const GenoData &genos);
 
 	void addPattern(HaploPattern *hp) {	addPattern(&m_trees[hp->end()], hp, hp->length()); }
 
@@ -45,11 +45,11 @@ inline HaploPattern *BackwardPatternTree::getSingleAllelePattern(int end, int in
 
 
 class ForwardPatternTree {
-	const HaploData &m_haplodata;
+	const GenoData &m_genos;
 	vector<PatternNode> m_trees;
 
 public:
-	explicit ForwardPatternTree(const HaploData &hd);
+	explicit ForwardPatternTree(const GenoData &genos);
 
 	PatternNode *root(int i) { return &m_trees[i]; }
 
