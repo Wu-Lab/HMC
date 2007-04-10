@@ -72,7 +72,7 @@ void HaploModel::run(const GenoData &genos, GenoData &resolutions)
 	int i, iter;
 	double ll, old_ll;
 	GenoData unphased;
-	vector<HaploPair*> res_list;
+	vector<Genotype> res_list;
 
 	unphased = genos;
 //	unphased.randomizePhase();
@@ -87,7 +87,7 @@ void HaploModel::run(const GenoData &genos, GenoData &resolutions)
 				Logger::status("Iteration %d: Resolving Genotype[%d] %s ...", iter, i, genos[i].id().c_str());
 				resolve(unphased[i], resolutions[i], res_list);
 				resolutions[i].setID(genos[i].id());
-				if (res_list.size() == 0) {
+				if (res_list.empty()) {
 					Logger::warning("Unable to resolve Genotype[%d]: %s!", i, genos[i].id().c_str());
 				}
 				unphased[i].setGenotypeProbability(resolutions[i].genotype_probability());

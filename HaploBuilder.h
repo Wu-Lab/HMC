@@ -12,6 +12,7 @@
 #include "Allele.h"
 #include "HaploPattern.h"
 #include "HaploPair.h"
+#include "HaploData.h"
 #include "PatternTree.h"
 #include "PatternManager.h"
 
@@ -21,7 +22,7 @@ protected:
 	GenoData *m_genos;
 	PatternManager m_patterns;
 
-	GenoData m_samples;
+	HaploData m_samples;
 	int m_sample_size;
 
 	vector<vector<HaploPair*> > m_haplopairs;
@@ -36,18 +37,18 @@ public:
 	GenoData *genos() { return m_genos; }
 	const GenoData *genos() const { return m_genos; }
 	const HaploPattern *patterns(int i) const { return m_patterns[i]; }
-	const GenoData *samples() const { return &m_samples; }
+	HaploData *samples() { return &m_samples; }
+	const HaploData *samples() const { return &m_samples; }
 
 	int pattern_num() const { return m_patterns.size(); }
 	int genotype_num() const { return m_genos->genotype_num(); }
 	int genotype_len() const { return m_genos->genotype_len(); }
 
 	void setGenoData(GenoData &genos);
-	void setSampleSize(int size = 1);
 
 	void initialize();
 
-	void resolve(const Genotype &genotype, Genotype &resolution, vector<HaploPair*> &res_list, HaploPattern *target_pattern = 0);
+	void resolve(const Genotype &genotype, Genotype &resolution, vector<Genotype> &res_list, int sample_size = 1);
 
 	double getLikelihood(const Haplotype &haplotype);
 	double getLikelihood(const Genotype &genotype);

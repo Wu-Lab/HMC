@@ -64,6 +64,13 @@ public:
 	int getDiffNumIgnoreMissing(const Genotype &g) const;
 	int getSwitchDistance(const Genotype &g) const;
 	int getSwitchDistanceIgnoreMissing(const Genotype &g) const;
+
+	struct greater_posterior_probability {
+		bool operator()(const Genotype &g1, const Genotype &g2) const
+		{
+			return g1.posterior_probability() > g2.posterior_probability();
+		}
+	};
 };
 
 inline Genotype::Genotype()

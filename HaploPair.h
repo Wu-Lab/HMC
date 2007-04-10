@@ -75,6 +75,7 @@ public:
 	int end() const { return m_pattern_a.end(); }
 
 	const vector<HaploPair*> &forward_links(int i) const { return m_forward_links[i]; }
+	const vector<HaploPairLink> &best_links() const { return m_best_links; }
 	double transition_prob() const { return m_transition_prob; }
 	double forward_likelihood() const { return m_forward_likelihood; }
 	double backward_likelihood() const { return m_backward_likelihood; }

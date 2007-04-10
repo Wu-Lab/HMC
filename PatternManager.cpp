@@ -152,8 +152,8 @@ void PatternManager::checkFrequency(HaploPattern *hp, MatchingState &ms) const
 	else
 	{
 		double total_freq = 0;
-		int geno_num = m_builder.samples()->genotype_num();
-		const GenoData &genos = *m_builder.samples();
+		int geno_num = m_builder.genotype_num();
+		const GenoData &genos = *m_builder.genos();
 		for (int i=0; i<geno_num; ++i) {
 			const Genotype &g = genos[i];
 			double freq = 0;
@@ -190,7 +190,7 @@ void PatternManager::checkFrequencyWithExtension(HaploPattern *hp, MatchingState
 		ms.clear();
 		double total_freq = 0;
 		MatchingState::const_iterator i_ms = oms.begin();
-		const GenoData &genos = *m_builder.samples();
+		const GenoData &genos = *m_builder.genos();
 		while (i_ms != oms.end()) {
 			const Genotype &g = genos[i_ms->first];
 			double freq = i_ms->second;
@@ -236,7 +236,7 @@ void PatternManager::checkFrequencyWithExtension(HaploPattern *hp, MatchingState
 			}
 			++i_ms;
 		}
-		hp->setFrequency(total_freq / m_builder.samples()->genotype_num());
+		hp->setFrequency(total_freq / m_builder.genotype_num());
 	}
 }
 

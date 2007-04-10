@@ -22,11 +22,6 @@ void HaploBuilder::setGenoData(GenoData &genos)
 	m_samples = genos;
 }
 
-void HaploBuilder::setSampleSize(int size)
-{
-	m_sample_size = size;
-}
-
 void HaploBuilder::initialize()
 {
 	for_each(m_haplopairs.begin(), m_haplopairs.end(), DeleteAll_Clear());
@@ -34,15 +29,15 @@ void HaploBuilder::initialize()
 	m_best_pair.resize(pattern_num());
 }
 
-void HaploBuilder::resolve(const Genotype &genotype, Genotype &resolution, vector<HaploPair*> &res_list, HaploPattern *target_pattern)
+void HaploBuilder::resolve(const Genotype &genotype, Genotype &resolution, vector<Genotype> &res_list, int sample_size)
 {
 	int pn = pattern_num();
 	int head_len = m_patterns.head_len();
 	int i, j, k;
 	Allele a, b;
 	double total_likelihood;
-	HaploPair *best_hp;
 	vector<HaploPair*>::iterator i_hp;
+	m_sample_size = sample_size > 1 ? sample_size : 1;
 	for_each(m_haplopairs.begin(), m_haplopairs.end(), DeleteAll_Clear());
 	m_haplopairs.resize(genotype_len()+1);
 	m_best_pair.resize(pn);
@@ -95,13 +90,18 @@ void HaploBuilder::resolve(const Genotype &genotype, Genotype &resolution, vecto
 		res_list.clear();
 		for (i_hp = m_haplopairs[genotype_len()].begin(); i_hp != m_haplopairs[genotype_len()].end(); ++i_hp) {
 			total_likelihood += (*i_hp)->forward_likelihood();
-			res_list.push_back(*i_hp);
+			k = min(m_sample_size, (*i_hp)->best_links().size());
+			for (i=0; i<k; ++i) {
+				res_list.push_back((*i_hp)->getGenotype(i));
+			}
 		}
-		sort(res_list.begin(), res_list.end(), HaploPair::greater_likelihood());
-		best_hp = res_list.front();
-		resolution = best_hp->getGenotype(0);
-		resolution.setPosteriorProbability(resolution.prior_probability() / total_likelihood);
-		resolution.setGenotypeProbability(total_likelihood);
+		k = res_list.size();
+		for (i=0; i<k; ++i) {
+			res_list[i].setPosteriorProbability(res_list[i].prior_probability() / total_likelihood);
+			res_list[i].setGenotypeProbability(total_likelihood);
+		}
+		sort(res_list.begin(), res_list.end(), Genotype::greater_posterior_probability());
+		resolution = res_list.front();
 	}
 	else {
 		res_list.clear();
@@ -266,7 +266,7 @@ void HaploBuilder::estimateFrequency(vector<HaploPattern*> &patterns)
 	int i, n;
 	int start, geno;
 	Genotype res;
-	vector<HaploPair*> res_list;
+	vector<Genotype> res_list;
 	ForwardPatternTree tree(*m_genos);
 	map<HaploPair*, double> match_list[3];
 
