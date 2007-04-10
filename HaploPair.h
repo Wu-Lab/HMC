@@ -15,27 +15,29 @@ struct HaploPairLink {
 	HaploPair *link;
 	int index;
 	bool reversed;
+	bool homozygous;
 	double likelihood;
 
-	HaploPairLink() : link(0), index(0), reversed(false), likelihood(0) {}
-	HaploPairLink(HaploPair *h, int i, bool r, double l);
+	HaploPairLink() : link(0), index(0), reversed(false), homozygous(false), likelihood(0) {}
+	HaploPairLink(HaploPair *hp, int i, bool r, bool h, double l);
 
-	void set(HaploPair *h, int i, bool r, double l);
+	void set(HaploPair *hp, int i, bool r, bool h, double l);
 
 	friend bool operator <(const HaploPairLink &lhs, const HaploPairLink &rhs);
 	friend bool operator >(const HaploPairLink &lhs, const HaploPairLink &rhs);
 };
 
-inline HaploPairLink::HaploPairLink(HaploPair *h, int i, bool r, double l)
-: link(h), index(i), reversed(r), likelihood(l)
+inline HaploPairLink::HaploPairLink(HaploPair *hp, int i, bool r, bool h, double l)
+: link(hp), index(i), reversed(r), homozygous(h), likelihood(l)
 {
 }
 
-inline void HaploPairLink::set(HaploPair *h, int i, bool r, double l)
+inline void HaploPairLink::set(HaploPair *hp, int i, bool r, bool h, double l)
 {
-	link = h;
+	link = hp;
 	index = i;
 	reversed = r;
+	homozygous = h;
 	likelihood = l;
 }
 
@@ -107,6 +109,8 @@ public:
 private:
 	HaploPair(const HaploPair &);
 	HaploPair &operator=(const HaploPair &);
+
+	bool addBestLinks(HaploPair *hp, int i, bool r, bool h, double l, int &best_num, vector<HaploPairLink>::iterator &i_link);
 };
 
 inline double HaploPair::getLikelihood(int index) const

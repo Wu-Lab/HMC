@@ -25,11 +25,12 @@ HaploPair::HaploPair(const HaploPattern *hpa, const HaploPattern *hpb)
 		exit(1);
 	}
 	m_forward_likelihood = m_transition_prob = hpa->frequency() * hpb->frequency();
-	if (hpa->id() != hpb->id()) {
+	bool homo = (hpa->id() == hpb->id());
+	if (!homo) {
 		m_forward_likelihood *= 2.0;
 	}
 	m_best_links.resize(1);
-	m_best_links[0].set(0, 0, false, m_transition_prob);
+	m_best_links[0].set(0, 0, false, homo, m_transition_prob);
 }
 
 HaploPair::HaploPair(const HaploPattern *hpa, const HaploPattern *hpb, HaploPair *hp, bool reversed)
@@ -38,13 +39,28 @@ HaploPair::HaploPair(const HaploPattern *hpa, const HaploPattern *hpb, HaploPair
   m_backward_likelihood(1.0)
 {
 	int i, n;
+	double likelihood;
 	m_transition_prob = hpa->transition_prob() * hpb->transition_prob();
 	m_forward_likelihood = hp->m_forward_likelihood * m_transition_prob;
 	hp->m_forward_links[reversed ? 1 : 0].push_back(this);
 	n = hp->m_best_links.size();
 	m_best_links.resize(n);
-	for (i=0; i<n; ++i) {
-		m_best_links[i].set(hp, i, reversed, hp->m_best_links[i].likelihood * m_transition_prob);
+	if (m_allele_a == m_allele_b) {
+		for (i=0; i<n; ++i) {
+			m_best_links[i].set(hp, i, reversed, hp->m_best_links[i].homozygous,
+				hp->m_best_links[i].likelihood * m_transition_prob);
+		}
+	}
+	else {
+		for (i=0; i<n; ++i) {
+			if (hp->m_best_links[i].homozygous && reversed) {
+				likelihood = 0;
+			}
+			else {
+				likelihood = hp->m_best_links[i].likelihood * m_transition_prob;
+			}
+			m_best_links[i].set(hp, i, reversed, false, likelihood);
+		}
 	}
 }
 
@@ -55,22 +71,48 @@ void HaploPair::add(HaploPair *hp, bool reversed, int best_num)
 	vector<HaploPairLink>::iterator i_link;
 	m_forward_likelihood += hp->m_forward_likelihood * m_transition_prob;
 	hp->m_forward_links[reversed ? 1 : 0].push_back(this);
-	m = max(best_num-m_best_links.size(), 0);
+	best_num = max(best_num-m_best_links.size(), 0);
+	i_link = min_element(m_best_links.begin(), m_best_links.end());
 	n = hp->m_best_links.size();
-	m = min(m, n);
-	for (i=0; i<m; ++i) {
-		m_best_links.push_back(HaploPairLink(hp, i, reversed, hp->m_best_links[i].likelihood * m_transition_prob));
+	if (m_allele_a == m_allele_b) {
+		for (i=0; i<n; ++i) {
+			likelihood = hp->m_best_links[i].likelihood * m_transition_prob;
+			if (!addBestLinks(hp, i, reversed, false, likelihood, best_num, i_link)) break;
+		}
 	}
-	for (i=m; i<n; ++i) {
-		i_link = min_element(m_best_links.begin(), m_best_links.end());
-		likelihood = hp->m_best_links[i].likelihood * m_transition_prob;
-		if (likelihood > i_link->likelihood) {
-			i_link->set(hp, i, reversed, likelihood);
+	else {
+		for (i=0; i<n; ++i) {
+			if (hp->m_best_links[i].homozygous && reversed) {
+				likelihood = 0;
+			}
+			else {
+				likelihood = hp->m_best_links[i].likelihood * m_transition_prob;
+			}
+			if (likelihood > 0) {
+				if (!addBestLinks(hp, i, reversed, false, likelihood, best_num, i_link)) break;
+			}
+		}
+	}
+}
+
+bool HaploPair::addBestLinks(HaploPair *hp, int i, bool r, bool h, double l, int &best_num, vector<HaploPairLink>::iterator &i_link)
+{
+	if (best_num-- > 0) {
+		m_best_links.push_back(HaploPairLink(hp, i, r, h, l));
+		if (l < i_link->likelihood) {
+			i_link = m_best_links.end() - 1;
+		}
+	}
+	else {
+		if (l > i_link->likelihood) {
+			i_link->set(hp, i, r, h, l);
+			i_link = min_element(m_best_links.begin(), m_best_links.end());
 		}
 		else {
-			break;
+			return false;
 		}
 	}
+	return true;
 }
 
 Genotype HaploPair::getGenotype(int index) const
@@ -78,7 +120,12 @@ Genotype HaploPair::getGenotype(int index) const
 	int a = 0, b = 1;
 	int i = end() - 1;
 	Genotype g(m_pattern_a.genos().genotype_len());
-	g.setPriorProbability(getLikelihood(index));
+	if (m_best_links[index].homozygous) {
+		g.setPriorProbability(getLikelihood(index));
+	}
+	else {
+		g.setPriorProbability(getLikelihood(index) * 2.0);
+	}
 	const HaploPair *hp = this;
 	while (hp) {
 		if ((index < hp->m_best_links.size()) && hp->m_best_links[index].link) {
