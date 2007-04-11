@@ -35,9 +35,10 @@ void HaploBuilder::resolve(const Genotype &genotype, Genotype &resolution, vecto
 	int head_len = m_patterns.head_len();
 	int i, j, k;
 	Allele a, b;
-	double total_likelihood;
+	double total_likelihood, coverage;
 	vector<HaploPair*>::iterator i_hp;
-	m_sample_size = sample_size > 1 ? sample_size : 1;
+//	m_sample_size = sample_size > 1 ? sample_size : 1;
+	m_sample_size = 100;
 	for_each(m_haplopairs.begin(), m_haplopairs.end(), DeleteAll_Clear());
 	m_haplopairs.resize(genotype_len()+1);
 	m_best_pair.resize(pn);
@@ -90,16 +91,22 @@ void HaploBuilder::resolve(const Genotype &genotype, Genotype &resolution, vecto
 		res_list.clear();
 		for (i_hp = m_haplopairs[genotype_len()].begin(); i_hp != m_haplopairs[genotype_len()].end(); ++i_hp) {
 			total_likelihood += (*i_hp)->forward_likelihood();
-			k = min(m_sample_size, (*i_hp)->best_links().size());
-			for (i=0; i<k; ++i) {
+			sample_size = min(m_sample_size, (*i_hp)->best_links().size());
+			for (i=0; i<sample_size; ++i) {
 				res_list.push_back((*i_hp)->getGenotype(i));
 			}
+			sample_size = min(m_sample_size, res_list.size());
+			nth_element(res_list.begin(), res_list.begin()+sample_size-1, res_list.end(), Genotype::greater_prior_probability());
+			res_list.resize(sample_size);
 		}
-		k = res_list.size();
-		for (i=0; i<k; ++i) {
+		coverage = 0;
+		sample_size = res_list.size();
+		for (i=0; i<sample_size; ++i) {
 			res_list[i].setPosteriorProbability(res_list[i].prior_probability() / total_likelihood);
 			res_list[i].setGenotypeProbability(total_likelihood);
+			coverage += res_list[i].prior_probability();
 		}
+		if (coverage > total_likelihood) Logger::info("Coverage %f", coverage / total_likelihood);
 		sort(res_list.begin(), res_list.end(), Genotype::greater_posterior_probability());
 		resolution = res_list.front();
 	}
@@ -107,7 +114,7 @@ void HaploBuilder::resolve(const Genotype &genotype, Genotype &resolution, vecto
 		res_list.clear();
 		resolution = genotype;
 		resolution.setPriorProbability(0);
-		resolution.setPosteriorProbability(1.0);
+		resolution.setPosteriorProbability(0);
 		resolution.setGenotypeProbability(0);
 	}
 }

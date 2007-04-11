@@ -71,15 +71,22 @@ public:
 			return g1.posterior_probability() > g2.posterior_probability();
 		}
 	};
+
+	struct greater_prior_probability {
+		bool operator()(const Genotype &g1, const Genotype &g2) const
+		{
+			return g1.prior_probability() > g2.prior_probability();
+		}
+	};
 };
 
 inline Genotype::Genotype()
 : m_heterozygous_num(0),
   m_missing_num(0),
   m_missing_allele_num(0),
-  m_prior_probability(1.0),
-  m_posterior_probability(1.0),
-  m_genotype_probability(1.0),
+  m_prior_probability(0),
+  m_posterior_probability(0),
+  m_genotype_probability(0),
   m_is_phased(false)
 {
 }
@@ -88,9 +95,9 @@ inline Genotype::Genotype(int len)
 : m_heterozygous_num(0),
   m_missing_num(0),
   m_missing_allele_num(0),
-  m_prior_probability(1.0),
-  m_posterior_probability(1.0),
-  m_genotype_probability(1.0),
+  m_prior_probability(0),
+  m_posterior_probability(0),
+  m_genotype_probability(0),
   m_is_phased(false)
 {
   m_haplotypes[0].setLength(len);

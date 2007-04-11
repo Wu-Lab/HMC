@@ -12,9 +12,9 @@ Genotype::Genotype(const Haplotype &h1, const Haplotype &h2)
 : m_heterozygous_num(0),
   m_missing_num(0),
   m_missing_allele_num(0),
-  m_prior_probability(1.0),
-  m_posterior_probability(1.0),
-  m_genotype_probability(1.0),
+  m_prior_probability(0),
+  m_posterior_probability(0),
+  m_genotype_probability(0),
   m_is_phased(false)
 {
 	if (h1.length() == h2.length()) {

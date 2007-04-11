@@ -29,8 +29,7 @@ HaploPair::HaploPair(const HaploPattern *hpa, const HaploPattern *hpb)
 	if (!homo) {
 		m_forward_likelihood *= 2.0;
 	}
-	m_best_links.resize(1);
-	m_best_links[0].set(0, 0, false, homo, m_transition_prob);
+	m_best_links.push_back(HaploPairLink(0, 0, false, homo, m_transition_prob));
 }
 
 HaploPair::HaploPair(const HaploPattern *hpa, const HaploPattern *hpb, HaploPair *hp, bool reversed)
@@ -77,7 +76,7 @@ void HaploPair::add(HaploPair *hp, bool reversed, int best_num)
 	if (m_allele_a == m_allele_b) {
 		for (i=0; i<n; ++i) {
 			likelihood = hp->m_best_links[i].likelihood * m_transition_prob;
-			if (!addBestLinks(hp, i, reversed, false, likelihood, best_num, i_link)) break;
+			if (!addBestLinks(hp, i, reversed, hp->m_best_links[i].homozygous, likelihood, best_num, i_link)) break;
 		}
 	}
 	else {
@@ -98,7 +97,9 @@ void HaploPair::add(HaploPair *hp, bool reversed, int best_num)
 bool HaploPair::addBestLinks(HaploPair *hp, int i, bool r, bool h, double l, int &best_num, vector<HaploPairLink>::iterator &i_link)
 {
 	if (best_num-- > 0) {
+		int offset = i_link - m_best_links.begin();
 		m_best_links.push_back(HaploPairLink(hp, i, r, h, l));
+		i_link = m_best_links.begin() + offset;
 		if (l < i_link->likelihood) {
 			i_link = m_best_links.end() - 1;
 		}
@@ -117,6 +118,7 @@ bool HaploPair::addBestLinks(HaploPair *hp, int i, bool r, bool h, double l, int
 
 Genotype HaploPair::getGenotype(int index) const
 {
+	const HaploPair *hp, *next_hp;
 	int a = 0, b = 1;
 	int i = end() - 1;
 	Genotype g(m_pattern_a.genos().genotype_len());
@@ -126,14 +128,15 @@ Genotype HaploPair::getGenotype(int index) const
 	else {
 		g.setPriorProbability(getLikelihood(index) * 2.0);
 	}
-	const HaploPair *hp = this;
+	hp = this;
 	while (hp) {
 		if ((index < hp->m_best_links.size()) && hp->m_best_links[index].link) {
 			g(a)[i] = hp->m_pattern_a[i-hp->m_pattern_a.start()];
 			g(b)[i] = hp->m_pattern_b[i-hp->m_pattern_b.start()];
 			if (hp->m_best_links[index].reversed) swap(a, b);
-			hp = hp->m_best_links[index].link;
+			next_hp = hp->m_best_links[index].link;
 			index = hp->m_best_links[index].index;
+			hp = next_hp;
 			--i;
 		}
 		else {
