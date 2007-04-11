@@ -19,7 +19,7 @@ HaploBuilder::~HaploBuilder()
 void HaploBuilder::setGenoData(GenoData &genos)
 {
 	m_genos = &genos;
-	m_samples = genos;
+	m_samples.clear();
 }
 
 void HaploBuilder::initialize()
@@ -38,8 +38,7 @@ void HaploBuilder::resolve(const Genotype &genotype, Genotype &resolution, vecto
 	double total_likelihood, coverage;
 	vector<HaploPairLink> res_link;
 	vector<HaploPair*>::iterator i_hp;
-//	m_sample_size = sample_size > 1 ? sample_size : 1;
-	m_sample_size = 1000;
+	m_sample_size = sample_size > 1 ? sample_size : 1;
 	for_each(m_haplopairs.begin(), m_haplopairs.end(), DeleteAll_Clear());
 	m_haplopairs.resize(genotype_len()+1);
 	m_best_pair.resize(pn);

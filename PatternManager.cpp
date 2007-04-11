@@ -152,31 +152,45 @@ void PatternManager::checkFrequency(HaploPattern *hp, MatchingState &ms) const
 	else
 	{
 		double total_freq = 0;
-		int geno_num = m_builder.genotype_num();
-		const GenoData &genos = *m_builder.genos();
-		for (int i=0; i<geno_num; ++i) {
-			const Genotype &g = genos[i];
-			double freq = 0;
-			if (g.isPhased()) {
-				double w = 0;
-				if (hp->isMatch(g(0))) {
-					w += 0.5;
-					freq += 1.0;
+		if (m_builder.samples()->empty()) {
+			const GenoData &genos = *m_builder.genos();
+			int geno_num = genos.genotype_num();
+			for (int i=0; i<geno_num; ++i) {
+				const Genotype &g = genos[i];
+				double freq = 0;
+				if (g.isPhased()) {
+					if (hp->isMatch(g(0))) {
+						freq += 1.0;
+						total_freq += 0.5;
+					}
+					if (hp->isMatch(g(1))) {
+						freq += 2.0;
+						total_freq += 0.5;
+					}
+					if (freq > 0.5) ms.push_back(make_pair(i, freq));
 				}
-				if (hp->isMatch(g(1))) {
-					w += 0.5;
-					freq += 2.0;
+				else if (hp->isMatch(g)) {
+					freq = getMatchingFrequency(g, &(*hp)[0], hp->start(), hp->length());
+					total_freq += freq;
+					ms.push_back(make_pair(i, freq));
 				}
-				total_freq += w * g.posterior_probability();
-				if (freq > 0.5) ms.push_back(make_pair(i, freq));
 			}
-			else if (hp->isMatch(g)) {
-				freq = getMatchingFrequency(g, &(*hp)[0], hp->start(), hp->length());
+			hp->setFrequency(total_freq / geno_num);
+		}
+		else {
+			const HaploData &haplos = *m_builder.samples();
+			int haplo_num = haplos.haplotype_num();
+			for (int i=0; i<haplo_num; ++i) {
+				const Haplotype &h = haplos[i];
+				double freq = 0;
+				if (hp->isMatch(h)) {
+					freq = h.weight();
+				}
 				total_freq += freq;
 				ms.push_back(make_pair(i, freq));
 			}
+			hp->setFrequency(total_freq / haplos.total_weight());
 		}
-		hp->setFrequency(total_freq / geno_num);
 	}
 }
 
@@ -190,53 +204,66 @@ void PatternManager::checkFrequencyWithExtension(HaploPattern *hp, MatchingState
 		ms.clear();
 		double total_freq = 0;
 		MatchingState::const_iterator i_ms = oms.begin();
-		const GenoData &genos = *m_builder.genos();
-		while (i_ms != oms.end()) {
-			const Genotype &g = genos[i_ms->first];
-			double freq = i_ms->second;
-			if (g.isPhased()) {
-				double w = 0;
-				if (freq > 2.5) {
-					if (hp->isMatch(g(0), start, len)) {
-						w += 0.5;
+		if (m_builder.samples()->empty()) {
+			const GenoData &genos = *m_builder.genos();
+			while (i_ms != oms.end()) {
+				const Genotype &g = genos[i_ms->first];
+				double freq = i_ms->second;
+				if (g.isPhased()) {
+					if (freq > 2.5) {
+						if (hp->isMatch(g(0), start, len)) {
+							total_freq += 0.5;
+						}
+						else {
+							freq -= 1.0;
+						}
+						if (hp->isMatch(g(1), start, len)) {
+							total_freq += 0.5;
+						}
+						else {
+							freq -= 2.0;
+						}
 					}
-					else {
-						freq -= 1.0;
+					else if (freq > 1.5) {
+						if (hp->isMatch(g(1), start, len)) {
+							total_freq += 0.5;
+						}
+						else {
+							freq -= 2.0;
+						}
 					}
-					if (hp->isMatch(g(1), start, len)) {
-						w += 0.5;
+					else if (freq > 0.5) {
+						if (hp->isMatch(g(0), start, len)) {
+							total_freq += 0.5;
+						}
+						else {
+							freq -= 1.0;
+						}
 					}
-					else {
-						freq -= 2.0;
-					}
+					if (freq > 0.5) ms.push_back(make_pair(i_ms->first, freq));
 				}
-				else if (freq > 1.5) {
-					if (hp->isMatch(g(1), start, len)) {
-						w += 0.5;
-					}
-					else {
-						freq -= 2.0;
-					}
+				else if (hp->isMatch(g, start, len)) {
+					freq *= getMatchingFrequency(g, &(*hp)[start-hp->start()], start, len);
+					total_freq += freq;
+					ms.push_back(make_pair(i_ms->first, freq));
 				}
-				else if (freq > 0.5) {
-					if (hp->isMatch(g(0), start, len)) {
-						w += 0.5;
-					}
-					else {
-						freq -= 1.0;
-					}
-				}
-				total_freq += w * g.posterior_probability();
-				if (freq > 0.5) ms.push_back(make_pair(i_ms->first, freq));
+				++i_ms;
 			}
-			else if (hp->isMatch(g, start, len)) {
-				freq *= getMatchingFrequency(g, &(*hp)[start-hp->start()], start, len);
-				total_freq += freq;
-				ms.push_back(make_pair(i_ms->first, freq));
-			}
-			++i_ms;
+			hp->setFrequency(total_freq / m_builder.genotype_num());
 		}
-		hp->setFrequency(total_freq / m_builder.genotype_num());
+		else {
+			const HaploData &haplos = *m_builder.samples();
+			while (i_ms != oms.end()) {
+				const Haplotype &h = haplos[i_ms->first];
+				double freq = i_ms->second;
+				if (hp->isMatch(h, start, len)) {
+					total_freq += freq;
+				}
+				ms.push_back(make_pair(i_ms->first, freq));
+				++i_ms;
+			}
+			hp->setFrequency(total_freq / haplos.total_weight());
+		}
 	}
 }
 

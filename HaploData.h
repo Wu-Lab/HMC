@@ -60,6 +60,9 @@ public:
 	void checkTotalWeight();
 	void checkAlleleSymbol();
 	void simplify();
+
+	void clear() { setHaplotypeNum(0); }
+	bool empty() const { return (m_haplotype_num == 0); }
 };
 
 
