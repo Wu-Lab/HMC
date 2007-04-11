@@ -33,12 +33,13 @@ void HaploBuilder::resolve(const Genotype &genotype, Genotype &resolution, vecto
 {
 	int pn = pattern_num();
 	int head_len = m_patterns.head_len();
-	int i, j, k;
+	int i, j, k, n;
 	Allele a, b;
 	double total_likelihood, coverage;
+	vector<HaploPairLink> res_link;
 	vector<HaploPair*>::iterator i_hp;
 //	m_sample_size = sample_size > 1 ? sample_size : 1;
-	m_sample_size = 100;
+	m_sample_size = 1000;
 	for_each(m_haplopairs.begin(), m_haplopairs.end(), DeleteAll_Clear());
 	m_haplopairs.resize(genotype_len()+1);
 	m_best_pair.resize(pn);
@@ -82,31 +83,35 @@ void HaploBuilder::resolve(const Genotype &genotype, Genotype &resolution, vecto
 		if (m_haplopairs[i+1].size() <= 0) {
 			break;
 		}
-		for (i_hp = m_haplopairs[i+1].begin(); i_hp != m_haplopairs[i+1].end(); ++i_hp) {
-			(*i_hp)->sortBestLinks();
-		}
 	}
 	if (m_haplopairs[genotype_len()].size() > 0) {
 		total_likelihood = 0;
-		res_list.clear();
+		res_link.clear();
 		for (i_hp = m_haplopairs[genotype_len()].begin(); i_hp != m_haplopairs[genotype_len()].end(); ++i_hp) {
 			total_likelihood += (*i_hp)->forward_likelihood();
-			sample_size = min(m_sample_size, (*i_hp)->best_links().size());
-			for (i=0; i<sample_size; ++i) {
-				res_list.push_back((*i_hp)->getGenotype(i));
+			k = res_link.size();
+			n = (*i_hp)->best_links().size();
+			res_link.insert(res_link.end(), (*i_hp)->best_links().begin(), (*i_hp)->best_links().end());
+			for (i=k; i<k+n; ++i) {
+				res_link[i].link = (*i_hp);
+				res_link[i].index = i-k;
+				if (!res_link[i].homozygous) res_link[i].likelihood *= 2.0;
 			}
-			sample_size = min(m_sample_size, res_list.size());
-			nth_element(res_list.begin(), res_list.begin()+sample_size-1, res_list.end(), Genotype::greater_prior_probability());
-			res_list.resize(sample_size);
+			if (res_link.size() > m_sample_size) {
+				nth_element(res_link.begin(), res_link.begin()+m_sample_size-1, res_link.end(), greater<HaploPairLink>());
+				res_link.resize(m_sample_size);
+			}
 		}
 		coverage = 0;
-		sample_size = res_list.size();
-		for (i=0; i<sample_size; ++i) {
+		res_list.clear();
+		n = res_link.size();
+		for (i=0; i<n; ++i) {
+			res_list.push_back(res_link[i].link->getGenotype(res_link[i].index));
 			res_list[i].setPosteriorProbability(res_list[i].prior_probability() / total_likelihood);
 			res_list[i].setGenotypeProbability(total_likelihood);
-			coverage += res_list[i].prior_probability();
+			coverage += res_list[i].posterior_probability();
 		}
-		if (coverage > total_likelihood) Logger::info("Coverage %f", coverage / total_likelihood);
+		if (coverage > 1) Logger::info("Coverage %f", coverage);
 		sort(res_list.begin(), res_list.end(), Genotype::greater_posterior_probability());
 		resolution = res_list.front();
 	}

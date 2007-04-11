@@ -109,8 +109,6 @@ public:
 private:
 	HaploPair(const HaploPair &);
 	HaploPair &operator=(const HaploPair &);
-
-	bool addBestLinks(HaploPair *hp, int i, bool r, bool h, double l, int &best_num, vector<HaploPairLink>::iterator &i_link);
 };
 
 inline double HaploPair::getLikelihood(int index) const
