@@ -182,12 +182,10 @@ void PatternManager::checkFrequency(HaploPattern *hp, MatchingState &ms) const
 			int haplo_num = haplos.haplotype_num();
 			for (int i=0; i<haplo_num; ++i) {
 				const Haplotype &h = haplos[i];
-				double freq = 0;
 				if (hp->isMatch(h)) {
-					freq = h.weight();
+					total_freq += h.weight();
+					ms.push_back(make_pair(i, 0));
 				}
-				total_freq += freq;
-				ms.push_back(make_pair(i, freq));
 			}
 			hp->setFrequency(total_freq / haplos.total_weight());
 		}
@@ -255,11 +253,10 @@ void PatternManager::checkFrequencyWithExtension(HaploPattern *hp, MatchingState
 			const HaploData &haplos = *m_builder.samples();
 			while (i_ms != oms.end()) {
 				const Haplotype &h = haplos[i_ms->first];
-				double freq = i_ms->second;
 				if (hp->isMatch(h, start, len)) {
-					total_freq += freq;
+					total_freq += h.weight();
+					ms.push_back(make_pair(i_ms->first, 0));
 				}
-				ms.push_back(make_pair(i_ms->first, freq));
 				++i_ms;
 			}
 			hp->setFrequency(total_freq / haplos.total_weight());
@@ -279,12 +276,12 @@ double PatternManager::getMatchingFrequency(const Genotype &g, const Allele *pa,
 			for (j=0; j<2; ++j) {
 				b = g(j)[start+i];
 				if (b.isMissing()) {		// b is missing
-//					freq += m_builder.genos()->allele_frequency(start+i, pa[i]);
-					freq += m_builder.genos()->allele_frequency(start+i, pa[i]) > 0 ?
-						(1.0/m_builder.genos()->allele_num(start+i)) : 0;
+					freq += m_builder.genos()->allele_frequency(start+i, pa[i]);
+// 					freq += m_builder.genos()->allele_frequency(start+i, pa[i]) > 0 ?
+// 						(1.0/m_builder.genos()->allele_num(start+i)) : 0;
 				}
 				else if (b == pa[i]) {
-					freq += 1;
+					freq += 1.0;
 				}
 			}
 			total_freq *= 0.5 * freq;

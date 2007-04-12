@@ -46,9 +46,7 @@ public:
 
 	void setGenoData(GenoData &genos);
 
-	void initialize();
-
-	void resolve(const Genotype &genotype, Genotype &resolution, vector<Genotype> &res_list, int sample_size = 1);
+	double resolve(const Genotype &genotype, Genotype &resolution, vector<Genotype> &res_list, int sample_size = 1);
 
 	double getLikelihood(const Haplotype &haplotype);
 	double getLikelihood(const Genotype &genotype);
@@ -58,6 +56,7 @@ public:
 protected:
 	void clear();
 	void clearHaploPairs();
+	void initialize();
 	void initHeadList(const Genotype &genotype);
 
 	void extendAll(int i, Allele a1, Allele a2);

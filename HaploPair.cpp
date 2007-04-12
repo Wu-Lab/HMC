@@ -52,10 +52,10 @@ HaploPair::HaploPair(const HaploPattern *hpa, const HaploPattern *hpb, HaploPair
 	}
 	if (m_allele_a != m_allele_b) {
 		for (i=0; i<n; ++i) {
-			if (m_best_links[i].homozygous && reversed) {
-				m_best_links[i].likelihood = 0;
+			if (m_best_links[i].homozygous) {
+				if (reversed) m_best_links[i].likelihood = 0;
+				m_best_links[i].homozygous = false;
 			}
-			m_best_links[i].homozygous = false;
 		}
 	}
 }
@@ -76,10 +76,10 @@ void HaploPair::add(HaploPair *hp, bool reversed, int best_num)
 	}
 	if (m_allele_a != m_allele_b) {
 		for (i=k; i<k+n; ++i) {
-			if (m_best_links[i].homozygous && reversed) {
-				m_best_links[i].likelihood = 0;
+			if (m_best_links[i].homozygous) {
+				if (reversed) m_best_links[i].likelihood = 0;
+				m_best_links[i].homozygous = false;
 			}
-			m_best_links[i].homozygous = false;
 		}
 	}
 	if (m_best_links.size() > best_num) {

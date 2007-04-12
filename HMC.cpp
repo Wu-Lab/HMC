@@ -38,7 +38,12 @@ HMC::HMC(int argc, char *argv[])
 		("min-pattern-len", po::value<int>(&m_builder.min_pattern_len)->default_value(1), "Minimum length of patterns")
 		("max-pattern-len", po::value<int>(&m_builder.max_pattern_len)->default_value(30), "Maximum length of patterns")
 		("mc-order,o", po::value<int>(&m_builder.mc_order)->default_value(1), "Markov chain order")
-		("iteration,i", po::value<int>(&m_builder.max_iteration)->default_value(1), "")
+		("re-estimate-without-sampling", po::value<bool>(&m_builder.re_estimate_without_sampling)->default_value(false), "Re-estimate frequency without sampling")
+		("sample-size", po::value<int>(&m_builder.sample_size)->default_value(10), "Sample some most probable configurations")
+		("max-sample-size", po::value<int>(&m_builder.max_sample_size), "Maximum sample size")
+		("final-sample-size", po::value<int>(&m_builder.final_sample_size)->default_value(1), "Final sample size")
+		("max-iteration,i", po::value<int>(&m_builder.max_iteration)->default_value(1), "Maximum iteration number")
+		("min-iteration", po::value<int>(&m_builder.min_iteration)->default_value(-1), "Minimum iteration number")
 		;
 
 	po::options_description utilities("Utility options");

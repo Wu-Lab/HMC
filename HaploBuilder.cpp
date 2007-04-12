@@ -27,9 +27,12 @@ void HaploBuilder::initialize()
 	for_each(m_haplopairs.begin(), m_haplopairs.end(), DeleteAll_Clear());
 	m_haplopairs.resize(genotype_len()+1);
 	m_best_pair.resize(pattern_num());
+	for (int i=0; i<pattern_num(); ++i) {
+		m_best_pair[i].clear();
+	}
 }
 
-void HaploBuilder::resolve(const Genotype &genotype, Genotype &resolution, vector<Genotype> &res_list, int sample_size)
+double HaploBuilder::resolve(const Genotype &genotype, Genotype &resolution, vector<Genotype> &res_list, int sample_size)
 {
 	int pn = pattern_num();
 	int head_len = m_patterns.head_len();
@@ -39,12 +42,7 @@ void HaploBuilder::resolve(const Genotype &genotype, Genotype &resolution, vecto
 	vector<HaploPairLink> res_link;
 	vector<HaploPair*>::iterator i_hp;
 	m_sample_size = sample_size > 1 ? sample_size : 1;
-	for_each(m_haplopairs.begin(), m_haplopairs.end(), DeleteAll_Clear());
-	m_haplopairs.resize(genotype_len()+1);
-	m_best_pair.resize(pn);
-	for (i=0; i<pn; ++i) {
-		m_best_pair[i].clear();
-	}
+	initialize();
 	initHeadList(genotype);
 	for (i=head_len; i<genotype_len(); ++i) {
 		if (genotype.isMissing(i)) {
@@ -101,6 +99,7 @@ void HaploBuilder::resolve(const Genotype &genotype, Genotype &resolution, vecto
 				res_link.resize(m_sample_size);
 			}
 		}
+		sort(res_link.begin(), res_link.end(), greater<HaploPairLink>());
 		coverage = 0;
 		res_list.clear();
 		n = res_link.size();
@@ -110,17 +109,17 @@ void HaploBuilder::resolve(const Genotype &genotype, Genotype &resolution, vecto
 			res_list[i].setGenotypeProbability(total_likelihood);
 			coverage += res_list[i].posterior_probability();
 		}
-		if (coverage > 1) Logger::info("Coverage %f", coverage);
-		sort(res_list.begin(), res_list.end(), Genotype::greater_posterior_probability());
 		resolution = res_list.front();
 	}
 	else {
+		coverage = 0;
 		res_list.clear();
 		resolution = genotype;
 		resolution.setPriorProbability(0);
 		resolution.setPosteriorProbability(0);
 		resolution.setGenotypeProbability(0);
 	}
+	return coverage;
 }
 
 double HaploBuilder::getLikelihood(const Haplotype &haplotype)
@@ -232,15 +231,12 @@ void HaploBuilder::extendAll(int i, Allele a1, Allele a2)
 
 void HaploBuilder::extend(HaploPair *hp, Allele a1, Allele a2)
 {
+	if (hp->forward_likelihood() <= 0) return;
 	const HaploPattern *hpa, *hpb;
 	hpa = hp->successor_a(a1);
 	hpb = hp->successor_b(a2);
 	if (hpa && hpb) {
 		addHaploPair(hp, hpa, hpb);
-	}
-	if (hp->forward_likelihood() == 0) {
-		Logger::error("================================");
-		exit(1);
 	}
 }
 
