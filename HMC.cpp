@@ -33,12 +33,13 @@ HMC::HMC(int argc, char *argv[])
 	po::options_description parameters("Model parameters");
 	parameters.add_options()
 		("model,m", po::value<string>()->default_value("MV"), "Set the inference model")
-		("min-freq,r", po::value<double>(&m_builder.min_freq)->default_value(0.02), "Minimum relative frequency of patterns")
+		("min-freq-rel,r", po::value<double>(&m_builder.min_freq), "Minimum relative frequency of patterns")
+		("min-freq-abs,a", po::value<double>(&m_builder.min_freq_abs)->default_value(1.5), "Minimum absolute frequency of patterns")
 		("num-patterns,n", po::value<int>(&m_builder.num_patterns), "Maximum number of patterns")
 		("min-pattern-len", po::value<int>(&m_builder.min_pattern_len)->default_value(1), "Minimum length of patterns")
 		("max-pattern-len", po::value<int>(&m_builder.max_pattern_len)->default_value(30), "Maximum length of patterns")
 		("mc-order,o", po::value<int>(&m_builder.mc_order)->default_value(1), "Markov chain order")
-		("re-estimate-without-sampling", po::value<bool>(&m_builder.re_estimate_without_sampling)->default_value(false), "Re-estimate frequency without sampling")
+		("exact-estimate", po::bool_switch(&m_builder.exact_estimate), "Re-estimate frequency exactly (i.e. not using sampling)")
 		("sample-size", po::value<int>(&m_builder.sample_size)->default_value(10), "Sample some most probable configurations")
 		("max-sample-size", po::value<int>(&m_builder.max_sample_size), "Maximum sample size")
 		("final-sample-size", po::value<int>(&m_builder.final_sample_size)->default_value(1), "Final sample size")
@@ -48,8 +49,8 @@ HMC::HMC(int argc, char *argv[])
 
 	po::options_description utilities("Utility options");
 	utilities.add_options()
-		("compare-with,w", po::value<string>(), "Compare input data with target data")
-		("convert-to,t", po::value<string>(&m_convert_format), "Convert input data to specified format")
+		("compare,e", "Compare input data with target data")
+		("convert,t", po::value<string>(&m_convert_format), "Convert input data to specified format")
 		("randomize", "Randomize genotype phases when converting format")
 		("simplify", "Simplify allele symbols when converting format")
 		;
@@ -76,7 +77,9 @@ HMC::HMC(int argc, char *argv[])
 
 	po::notify(m_args);
 
+	conflicting_options(m_args, "convert", "compare");
 	conflicting_options(m_args, "min-freq", "num-patterns");
+	conflicting_options(m_args, "min-freq-abs", "num-patterns");
 
 	parseOptions();
 	parseFileNames();
@@ -102,9 +105,10 @@ void HMC::copyright()
 
 void HMC::printOptions()
 {
-	cout << "Used options:" << endl;
-	print_options(m_args, cout, DisplayOption::defaulted);
+	cout << "Used options (user specified):" << endl;
 	print_options(m_args, cout, DisplayOption::specified);
+	cout << "Used options (default):" << endl;
+	print_options(m_args, cout, DisplayOption::defaulted);
 	cout << endl;
 }
 
@@ -145,7 +149,7 @@ void HMC::parseFileNames()
 		Logger::error("Unknown input format %s!", m_input_format.c_str());
 		exit(1);
 	}
-	if (m_args.count("convert-to")) {
+	if (m_args.count("convert")) {
 		nc = HaploFile::getFileNameNum(m_convert_format);
 		if (nc == 0) {
 			Logger::error("Unknown convert format %s!", m_convert_format.c_str());

@@ -13,6 +13,7 @@ protected:
 
 public:
 	double min_freq;
+	double min_freq_abs;
 	int num_patterns;
 	int min_pattern_len;
 	int max_pattern_len;
@@ -22,7 +23,7 @@ public:
 	int sample_size;
 	int max_sample_size;
 	int final_sample_size;
-	bool re_estimate_without_sampling;
+	bool exact_estimate;
 
 public:
 	HaploModel();

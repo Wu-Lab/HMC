@@ -21,7 +21,7 @@ HaploModel::HaploModel()
 	sample_size = 1;
 	max_sample_size = 1;
 	final_sample_size = 1;
-	re_estimate_without_sampling = false;
+	exact_estimate = false;
 }
 
 void HaploModel::setModel(string model)
@@ -51,6 +51,9 @@ void HaploModel::build(GenoData &genos)
 
 void HaploModel::findPatterns()
 {
+	if (min_freq_abs > 0) {
+		min_freq = min_freq_abs / (2.0 * genos()->genotype_num());
+	}
 	if (m_model == "MV") {
 		if (num_patterns > 0) {
 			m_patterns.findPatternByNum(num_patterns, min_pattern_len, max_pattern_len);
@@ -93,6 +96,12 @@ double HaploModel::resolveAll(GenoData &genos, GenoData &resolutions)
 				for (j=0; j<n; ++j) {
 					res_list[j](0).setWeight(res_list[j].posterior_probability() / sampling_coverage);
 					res_list[j](1).setWeight(res_list[j].posterior_probability() / sampling_coverage);
+// 					for (int k=0; k<genos.genotype_len(); ++k) {
+// 						if (genos[i].isMissing(k)) {
+// 							res_list[j](0)[k] = -1;
+// 							res_list[j](1)[k] = -1;
+// 						}
+// 					}
 					samples()->addHaplotype(res_list[j](0));
 					samples()->addHaplotype(res_list[j](1));
 				}
@@ -128,7 +137,7 @@ void HaploModel::run(const GenoData &genos, GenoData &resolutions)
 			compare.switch_error(), compare.incorrect_haplotype_percentage(), compare.incorrect_genotype_percentage(), ll);
 
 		if (iter < max_iteration && ll >= old_ll && (old_ll - ll) / old_ll > 0.0001) {
- 			if (re_estimate_without_sampling) {
+ 			if (exact_estimate) {
 				m_patterns.estimatePatterns();
 			}
 			else {

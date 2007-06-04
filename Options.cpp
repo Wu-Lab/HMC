@@ -17,6 +17,9 @@ void DisplayOption::operator()(const pair<string, po::variable_value> &opt) cons
 		else if (type == typeid(double)) {
 			os << opt.second.as<double>();
 		}
+		else if (type == typeid(bool)) {
+			os << (opt.second.as<bool>() ? "TRUE" : "FALSE");
+		}
 		else if (type == typeid(string)) {
 			os << opt.second.as<string>();
 		}
@@ -30,7 +33,7 @@ void DisplayOption::operator()(const pair<string, po::variable_value> &opt) cons
 	else {
 		os << " <empty> ";
 	}
-	os << (opt.second.defaulted() ? " (default) " : "") << endl;
+	os << endl;
 }
 
 
