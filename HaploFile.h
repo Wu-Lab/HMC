@@ -105,6 +105,8 @@ public:
 
 protected:
 	void readHaploFile(vector<Haplotype*> &haplos, const char *filename);
+	void readPositionInfo(const char *filename);
+	void writePositionInfo(const char *filename);
 	char *readHaplotype(Haplotype &h, char *buffer, int heterozygous);
 	char *writeHaplotype(const Haplotype &h, char *buffer);
 };

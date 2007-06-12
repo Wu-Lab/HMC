@@ -459,6 +459,8 @@ void HaploFileBench::readGenoData(GenoData &genos)
 		m_genos[i].setID(haplos[2*i]->id());
 	}
 	m_genos.checkAlleleSymbol();
+	// get position info
+	readPositionInfo(m_posinfo_file.c_str());
 	genos = m_genos;
 }
 
@@ -476,10 +478,11 @@ void HaploFileBench::writeGenoData(GenoData &genos, const char *suffix)
 	}
 	for (i=0; i<m_genos.genotype_num(); i++) {
 		for (j=0; j<2; j++) {
-			fprintf(fp, "%s   %d 0 %s\n", writeHaplotype(m_genos[i](j), buf), i+2*j, m_genos[i](j).id().c_str());
+			fprintf(fp, "%s   %d 0 %s\n", writeHaplotype(m_genos[i](j), buf), 2*i+j, m_genos[i](j).id().c_str());
 		}
 	}
 	fclose(fp);
+	writePositionInfo(m_posinfo_file.c_str());
 }
 
 void HaploFileBench::writeGenoDataWithFreq(GenoData &genos, const char *suffix)
@@ -500,6 +503,7 @@ void HaploFileBench::writeGenoDataWithFreq(GenoData &genos, const char *suffix)
 		}
 	}
 	fclose(fp);
+	writePositionInfo(m_posinfo_file.c_str());
 }
 
 void HaploFileBench::readHaploFile(vector<Haplotype*> &haplos, const char *filename)
@@ -536,6 +540,45 @@ void HaploFileBench::readHaploFile(vector<Haplotype*> &haplos, const char *filen
 	if (haplos.size() % 2 != 0) {
 		Logger::error("Incorrect haplotype data in line %d!", haplos.size()+2);
 		exit(1);
+	}
+	fclose(fp);
+}
+
+void HaploFileBench::readPositionInfo(const char *filename)
+{
+	FILE *fp;
+	char line[BUFFER_LENGTH];
+	char *s, *delim = " \t\r\n";
+	int i;
+	fp = fopen(filename, "r");
+	if (fp == NULL) {
+		Logger::error("Can not open file %s!", filename);
+		exit(1);
+	}
+	while(fgets(line, BUFFER_LENGTH, fp) != NULL) {
+		s = strtok(line, delim);
+		i = atoi(s);
+		if (i >= 0 && i < m_genos.genotype_len()) {
+			s = strtok(NULL, delim);
+			m_genos.setAlleleName(i, s);
+			s = strtok(NULL, delim);
+			m_genos.setAllelePosition(i, atoi(s));
+		}
+	}
+	fclose(fp);
+}
+
+void HaploFileBench::writePositionInfo(const char *filename)
+{
+	FILE *fp;
+	int i;
+	fp = fopen(filename, "w");
+	if (fp == NULL) {
+		Logger::error("Can not open file %s!", filename);
+		exit(1);
+	}
+	for (i=0; i<m_genos.genotype_len(); ++i) {
+		fprintf(fp, " %d   %s   %d\n", i, m_genos.allele_name(i).c_str(), m_genos.allele_postition(i));
 	}
 	fclose(fp);
 }
