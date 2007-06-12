@@ -156,17 +156,23 @@ void HMC::parseFileNames()
 			exit(1);
 		}
 	}
+	else if (m_args.count("compare")) {
+		nc = ni;
+	}
 	if (m_filenames.size() != (ni + nc)) {
 		Logger::error("Input format %s require %d filenames!", m_input_format.c_str(), ni);
-		if (m_args.count("convert-to")) {
+		if (m_args.count("convert")) {
 			Logger::error("Convert format %s require %d filenames!", m_convert_format.c_str(), nc);
 		}
 		exit(1);
 	}
 
 	m_input_file.reset(HaploFile::getHaploFile(m_input_format, m_filenames.begin()));
-	if (m_args.count("convert-to")) {
-		m_convert_file.reset(HaploFile::getHaploFile(m_convert_format, m_filenames.begin()+ni));
+	if (m_args.count("convert")) {
+		m_target_file.reset(HaploFile::getHaploFile(m_convert_format, m_filenames.begin()+ni));
+	}
+	else if (m_args.count("compare")) {
+		m_target_file.reset(HaploFile::getHaploFile(m_input_format, m_filenames.begin()+ni));
 	}
 }
 
@@ -178,11 +184,11 @@ void HMC::run()
 	Logger::info("Succesfully read Haplotype file with %d markers and %d genotypes.",
 					m_genos.genotype_len(), m_genos.genotype_num());
 
-	if (m_args.count("compare-with")) {
-		compareWith(m_args["compare-with"].as<string>());
+	if (m_args.count("compare")) {
+		compare();
 	}
-	else if (m_args.count("convert-to")) {
-		convertFormat();
+	else if (m_args.count("convert")) {
+		convert();
 	}
 	else {
 		resolve();
@@ -226,7 +232,7 @@ void HMC::resolve()
 	}
 }
 
-void HMC::convertFormat()
+void HMC::convert()
 {
 	if (m_args.count("simplify")) {
 		m_genos.simplify();
@@ -234,19 +240,17 @@ void HMC::convertFormat()
 	if (m_args.count("randomize")) {
 		m_genos.randomizePhase();
 	}
-	m_convert_file->writeGenoData(m_genos);
+	m_target_file->writeGenoData(m_genos);
 }
 
-void HMC::compareWith(const string &filename)
+void HMC::compare()
 {
-	HaploFile comp_file;
-	GenoData comp_genos;
+	GenoData target_genos;
 
-	comp_file.setFileName(filename);
-	comp_file.readGenoData(comp_genos);
+	m_target_file->readGenoData(target_genos);
 	Logger::info("Succesfully read Haplotype file with %d markers and %d genotypes.",
-					comp_genos.genotype_len(), comp_genos.genotype_num());
-	HaploComp compare(&comp_genos, &m_genos);
+					target_genos.genotype_len(), target_genos.genotype_num());
+	HaploComp compare(&target_genos, &m_genos);
 	Logger::info("");
 	Logger::info("Switch Error = %f, IHP = %f, IGP = %f",
 		compare.switch_error(), compare.incorrect_haplotype_percentage(), compare.incorrect_genotype_percentage());

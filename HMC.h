@@ -22,7 +22,7 @@ class HMC {
 	po::variables_map m_args;
 	vector<string> m_filenames;
 	string m_input_format, m_convert_format;
-	tr1::shared_ptr<HaploFile> m_input_file, m_convert_file;
+	tr1::shared_ptr<HaploFile> m_input_file, m_target_file;
 
 	HaploModel m_builder;
 	GenoData m_genos;
@@ -46,8 +46,8 @@ public:
 
 	void resolve();
 
-	void convertFormat();
-	void compareWith(const string &filename);
+	void convert();
+	void compare();
 };
 
 
