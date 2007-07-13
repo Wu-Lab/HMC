@@ -38,7 +38,7 @@ public:
 	double genotype_probability() const { return m_genotype_probability; }
 	bool isPhased() const { return m_is_phased; }
 
-	void setID(const string &id) { m_id = id; string_replace(m_id, " ", "_"); }
+	void setID(const string &id);
 	void setLength(int len) { m_haplotypes[0].setLength(len); m_haplotypes[1].setLength(len); }
 	void setPriorProbability(double p) { m_prior_probability = p; }
 	void setPosteriorProbability(double p) { m_posterior_probability = p; }
@@ -102,6 +102,14 @@ inline Genotype::Genotype(int len)
 {
   m_haplotypes[0].setLength(len);
   m_haplotypes[1].setLength(len);
+}
+
+inline void Genotype::setID(const string &id)
+{
+	m_id = id;
+	string_replace(m_id, " ", "_");
+	m_haplotypes[0].setID(m_id);
+	m_haplotypes[1].setID(m_id);
 }
 
 inline bool Genotype::isMissing(int locus) const

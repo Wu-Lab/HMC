@@ -23,7 +23,7 @@ public:
 	const string &id() const { return m_id; }
 	double weight() const { return m_weight; }
 
-	void setID(const string &id) { m_id = id; }
+	void setID(const string &id) { m_id = id; string_replace(m_id, " ", "_"); }
 	void setWeight(double weight) { m_weight = weight; }
 };
 

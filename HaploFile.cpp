@@ -110,8 +110,6 @@ void HaploFile::readGenoData(GenoData &genos)
 			Logger::error("Incorrect haplotype data for individual %d!", i);
 			exit(1);
 		}
-		h1.setID(m_genos[i].id());
-		h2.setID(m_genos[i].id());
 		m_genos[i].setHaplotypes(h1, h2);
 	}
 	fclose(fp);
@@ -233,8 +231,8 @@ void HaploFileHPM::readGenoData(GenoData &genos)
 	}
 	m_genos.setGenotypeNum(haplos.size()/2);
 	for (i=0; i<m_genos.genotype_num(); i++) {
-		m_genos[i].setHaplotypes(*haplos[2*i], *haplos[2*i+1]);
 		m_genos[i].setID(haplos[2*i]->id());
+		m_genos[i].setHaplotypes(*haplos[2*i], *haplos[2*i+1]);
 	}
 	fclose(fp);
 	m_genos.checkAlleleSymbol();
@@ -455,8 +453,8 @@ void HaploFileBench::readGenoData(GenoData &genos)
 	m_genos.setGenotypeNum(m_parents_num + m_children_num);
 	m_genos.setUnphasedNum(m_parents_num);
 	for (i=0; i<m_genos.genotype_num(); i++) {
-		m_genos[i].setHaplotypes(*haplos[2*i], *haplos[2*i+1]);
 		m_genos[i].setID(haplos[2*i]->id());
+		m_genos[i].setHaplotypes(*haplos[2*i], *haplos[2*i+1]);
 	}
 	m_genos.checkAlleleSymbol();
 	// get position info

@@ -32,6 +32,8 @@ void Genotype::setHaplotypes(Haplotype &h1, Haplotype &h2)
 {
 	m_haplotypes[0] = h1;
 	m_haplotypes[1] = h2;
+	m_haplotypes[0].setID(m_id);
+	m_haplotypes[1].setID(m_id);
 	m_prior_probability = 1.0;
 	m_posterior_probability = 1.0;
 	m_genotype_probability = 1.0;
