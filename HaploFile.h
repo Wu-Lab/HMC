@@ -70,6 +70,8 @@ protected:
 	void checkHeader(char *buffer);
 	virtual char *readHaplotype(Haplotype &h, char *buffer);
 	virtual char *writeHaplotype(const Haplotype &h, char *buffer);
+	virtual void alleleTypeM2S(Allele &a);
+	virtual void alleleTypeS2M(Allele &a);
 };
 
 

@@ -208,7 +208,7 @@ void HaploFileHPM::readGenoData(GenoData &genos)
 	char line[BUFFER_LENGTH];
 	vector<Haplotype*> haplos;
 	Haplotype *h;
-	int i;
+	int i, j;
 	fp = fopen(m_filename.c_str(), "r");
 	if (fp == NULL) {
 		Logger::error("Can not open file %s!", m_filename.c_str());
@@ -225,18 +225,42 @@ void HaploFileHPM::readGenoData(GenoData &genos)
 		}
 		haplos.push_back(h);
 	}
+	fclose(fp);
 	if (haplos.size() % 2 != 0) {
 		Logger::error("Incorrect haplotype data in line %d!", haplos.size()+2);
 		exit(1);
 	}
 	m_genos.setGenotypeNum(haplos.size()/2);
-	for (i=0; i<m_genos.genotype_num(); i++) {
+	for (i=0; i<m_genos.genotype_num(); ++i) {
 		m_genos[i].setID(haplos[2*i]->id());
 		m_genos[i].setHaplotypes(*haplos[2*i], *haplos[2*i+1]);
 	}
-	fclose(fp);
+	DeleteAll_Clear()(haplos);
+	m_genos.checkAlleleSymbol();
+	for (i=0; i<m_genos.genotype_len(); ++i) {
+		if (m_genos.allele_num(i) <= 2) {
+			m_genos.setAlleleType(i, 'S');
+			for (j=0; j<m_genos.genotype_num(); ++j) {
+				alleleTypeM2S(m_genos[j](0)[i]);
+				alleleTypeM2S(m_genos[j](1)[i]);
+			}
+		}
+	}
 	m_genos.checkAlleleSymbol();
 	genos = m_genos;
+}
+
+void HaploFileHPM::alleleTypeM2S(Allele &a)
+{
+	if (a >= Allele(1) && a <= Allele(9)) a = a.asChar() + '0';
+	else if (a >= Allele(10) && a <= Allele(35)) a = a.asChar() + 'A' - 10;
+}
+
+void HaploFileHPM::alleleTypeS2M(Allele &a)
+{
+	if (a >= Allele('1') && a <= Allele('9')) a = a.asChar() - '0';
+	else if (a >= Allele('A') && a <= Allele('Z')) a = a.asChar() - 'A' + 10;
+	else if (a >= Allele('a') && a <= Allele('z')) a = a.asChar() - 'a' + 10;
 }
 
 void HaploFileHPM::writeGenoData(GenoData &genos, const char *suffix)
@@ -386,9 +410,7 @@ char *HaploFileHPM2::readHaplotype(Haplotype &h, char *buffer)
 	}
 	for (i=0; i<h.length(); ++i) {
 		if (h[i] == Allele('0')) h[i] = -1;
-		else if (h[i] >= Allele('1') && h[i] <= Allele('9')) h[i] = h[i].asChar() - '0';
-		else if (h[i] >= Allele('A') && h[i] <= Allele('Z')) h[i] = h[i].asChar() - 'A' + 10;
-		else if (h[i] >= Allele('a') && h[i] <= Allele('z')) h[i] = h[i].asChar() - 'a' + 10;
+		else alleleTypeS2M(h[i]);
 	}
 	return s;
 }
@@ -405,8 +427,7 @@ char *HaploFileHPM2::writeHaplotype(const Haplotype &h, char *buffer)
 		else {
 			allele_type[i] = 'S';
 			if (hh[i].isMissing()) hh[i] = 0;
-			else if (hh[i] >= Allele(1) && hh[i] <= Allele(9)) hh[i] = hh[i].asChar() + '0';
-			else if (hh[i] >= Allele(10) && hh[i] <= Allele(35)) hh[i] = hh[i].asChar() + 'A' - 10;
+			else alleleTypeM2S(hh[i]);
 		}
 	}
 	char *s = buffer;
