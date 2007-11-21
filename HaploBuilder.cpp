@@ -80,6 +80,9 @@ double HaploBuilder::resolve(const Genotype &genotype, Genotype &resolution, vec
 		if (m_haplopairs[i+1].size() <= 0) {
 			break;
 		}
+		else {
+			for_each(m_haplopairs[i+1].begin(), m_haplopairs[i+1].end(), HaploPair::pack_size());
+		}
 	}
 	if (m_haplopairs[genotype_len()].size() > 0) {
 		total_likelihood = 0;

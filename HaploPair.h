@@ -100,9 +100,17 @@ public:
 	static void operator delete(void *pMemory) { m_pool.free(pMemory); }
 
 	struct greater_likelihood {
-		bool operator()(const HaploPair *hp1, const HaploPair *hp2) const
-		{
+		bool operator()(const HaploPair *hp1, const HaploPair *hp2) const {
 			return hp1->getLikelihood() > hp2->getLikelihood();
+		}
+	};
+
+	struct pack_size {
+		void operator()(HaploPair *hp) {
+			if (hp->m_best_links.capacity() > hp->m_best_links.size()) {
+				vector<HaploPairLink> links = hp->m_best_links;
+				hp->m_best_links.swap(links);
+			}
 		}
 	};
 

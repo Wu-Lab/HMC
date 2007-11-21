@@ -7,7 +7,7 @@
 #include "MemLeak.h"
 
 
-#define BUFFER_LENGTH 10000
+#define BUFFER_LENGTH 409600
 
 
 int HaploFile::getFileNameNum(const string &format)
@@ -422,11 +422,11 @@ char *HaploFileHPM2::writeHaplotype(const Haplotype &h, char *buffer)
 	Haplotype hh = h;
 	for (i=0; i<hh.length(); ++i) {
 		if (allele_type[i] == 'S') {
-			if (hh[i].isMissing()) hh[i] = 0;
+			if (hh[i].isMissing()) hh[i] = '0';
 		}
 		else {
 			allele_type[i] = 'S';
-			if (hh[i].isMissing()) hh[i] = 0;
+			if (hh[i].isMissing()) hh[i] = '0';
 			else alleleTypeM2S(hh[i]);
 		}
 	}
